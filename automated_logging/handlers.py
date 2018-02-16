@@ -22,36 +22,45 @@ class DatabaseHandler(Handler):
 
             if hasattr(record, 'action'):
                 if record.action == 'model':
-                    # print(record.data['instance'].__dict__)
-                    entry = Model()
-                    entry.user = record.data['user']
-                    entry.application = Application.objects.get_or_create(name=record.data['instance']._meta.app_label)[0]
-
-                    entry.message = record.message
-
-                    if record.data['status'] == 'add':
-                        status = 1
-                    elif record.data['status'] == 'change':
-                        status = 2
-                    elif record.data['status'] == 'delete':
-                        status = 3
+                    if 'al_evt' in record.data['instance'].__dict__.keys():
+                        entry = record.data['instance'].al_evt
                     else:
-                        status = 0
+                        entry = Model()
+                        entry.user = record.data['user']
+                        entry.application = Application.objects.get_or_create(name=record.data['instance']._meta.app_label)[0]
 
-                    entry.action = status
-                    entry.information = ModelObject()
-                    entry.information.value = repr(record.data['instance'])
+                        entry.message = record.message
 
-                    entry.information.type = ContentType.objects.get_for_model(record.data['instance'])
-                    entry.information.save()
+                        if record.data['status'] == 'add':
+                            status = 1
+                        elif record.data['status'] == 'change':
+                            status = 2
+                        elif record.data['status'] == 'delete':
+                            status = 3
+                        else:
+                            status = 0
 
-                    if record.data['status'] == 'modified':
-                        # print(record.data['instance'].__dict__)
-                        if 'al_chl' in record.data['instance'].__dict__.keys():
-                            entry.modification = record.data['instance'].al_chl
+                        entry.action = status
+                        entry.information = ModelObject()
+                        entry.information.value = repr(record.data['instance'])
+                        ct = ContentType.objects.get_for_model(record.data['instance'])
+
+                        try:
+                            assert_ct = ContentType.objects.get(pk=ct.pk)
+                            ct_exists = True
+                        except ContentType.DoesNotExist:
+                            ct_exists = False
+
+                        if ct_exists:
+                            entry.information.type = ct
+                        entry.information.save()
+
+                        record.data['instance'].al_evt = entry
+
+                    if record.data['status'] == 'modified' and 'al_chl' in record.data['instance'].__dict__.keys():
+                        entry.modification = record.data['instance'].al_chl
+
                     entry.save()
-
-                    record.data['instance'].al_evt = entry
 
                 elif record.action == 'request':
                     from .models import Request

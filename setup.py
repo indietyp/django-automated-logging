@@ -15,10 +15,10 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='django-automated-logging',
-    version='1.0.0a1',
-    description='Django model based logging - solved',
+    version='2.0.0a1',
+    description='Django model based logging - solved and done right.',
     long_description=long_description,
-    url='https://github.com/pypa/sampleproject',
+    url='https://github.com/indietyp/django-automated-logging',
     author='Bilal Mahmoud',
     author_email='opensource@indietyp.com',
     classifiers=[

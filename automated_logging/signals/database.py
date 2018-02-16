@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_delete
 from django.db.models.signals import post_save, pre_save
 
-from ..models import ModelChangelog, ModelModification, ModelObject
+from ..models import ModelChangelog, ModelModification, ModelObject, ModelStorage, Field
 from django.contrib.contenttypes.models import ContentType
 from . import validate_instance, processor
 
@@ -41,12 +41,15 @@ def comparison_callback(sender, instance, **kwargs):
                         changed = True
                         new[k] = ModelObject()
                         new[k].value = str(ins[k])
+                        new[k].save()
 
                         try:
                             new[k].type = ContentType.objects.get_for_model(ins[k])
                         except Exception:
                             pass
 
+                        mdl = ModelStorage.objects.get_or_create(name=instance.__class__.__name__)[0]
+                        new[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                         new[k].save()
 
                 else:
@@ -55,12 +58,15 @@ def comparison_callback(sender, instance, **kwargs):
                 if changed:
                     old[k] = ModelObject()
                     old[k].value = str(cur[k])
+                    old[k].save()
 
                     try:
                         old[k].type = ContentType.objects.get_for_model(cur[k])
                     except Exception:
                         pass
 
+                    mdl = ModelStorage.objects.get_or_create(name=instance.__class__.__name__)[0]
+                    old[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                     old[k].save()
 
             if old and new:
@@ -95,10 +101,9 @@ def save_callback(sender, instance, created, update_fields, **kwargs):
         Save object & link logging entry
     """
     if validate_instance(instance):
-        status = 'created' if created is True else 'modified'
+        status = 'add' if created is True else 'change'
         change = ''
 
-        # print(instance.__dict__.keys())
         if status == 'modified' and 'al_chl' in instance.__dict__.keys():
             changelog = instance.al_chl.modification
             change = ' and changed {0} to {1}'.format(changelog.previously, changelog.currently)
@@ -112,5 +117,5 @@ def delete_callback(sender, instance, **kwargs):
     """
         Triggered when deleted -> logged
     """
-    status = 'purged'
+    status = 'delete'
     processor(status, sender, instance)

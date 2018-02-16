@@ -45,8 +45,8 @@ def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwar
 
             changelog.save()
 
-            if 'alevt' in instance.__dict__.keys():
-                target = instance.al__evt
+            if 'al_evt' in instance.__dict__.keys():
+                target = instance.al_evt
             else:
                 target = Model()
                 target.user = get_current_user()
@@ -59,6 +59,8 @@ def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwar
                 target.information.value = repr(instance)
                 target.information.type = ContentType.objects.get_for_model(instance)
                 target.information.save()
+
+                instance.al_evt = target
 
             target.modification = changelog
             target.save()

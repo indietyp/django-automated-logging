@@ -17,15 +17,50 @@ class BaseModel(models.Model):
 class Application(BaseModel):
     name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.name
+
+
+class ModelStorage(BaseModel):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class Field(BaseModel):
+    name = models.CharField(max_length=255)
+    model = models.ForeignKey(ModelStorage, null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{} - {}'.format(self.name, self.model)
+
 
 class ModelObject(BaseModel):
     value = models.CharField(max_length=255, null=True)
+    field = models.ForeignKey(Field, null=True, on_delete=models.CASCADE)
     type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE, related_name='atl_modelobject_application')
+
+    def __str__(self):
+        output = '{}'.format(self.value)
+
+        if self.field is not None:
+            output += " of field {}".format(self.field)
+
+        if self.type is not None:
+            output += " in model {}.{}".format(self.type.app_label, self.type.model)
+
+        return output
 
 
 class ModelModification(BaseModel):
     previously = models.ManyToManyField(ModelObject, related_name='changelog_previous')
     currently = models.ManyToManyField(ModelObject, related_name='changelog_current')
+
+    def __str__(self):
+        print([str(v) for v in self.previously.all()])
+        return ' {0} changed to {1}; '.format(", ".join(str(v) for v in self.previously.all()),
+                                              ", ".join(str(v) for v in self.currently.all()))
 
 
 class ModelChangelog(BaseModel):
@@ -35,20 +70,16 @@ class ModelChangelog(BaseModel):
 
     information = models.OneToOneField(ModelObject, null=True, on_delete=models.CASCADE)
 
-    # def __str__(self):
-    #     return_string = ''
-    #     if self.modified_before is not None and self.modified_before != '':
-    #         return_string += ' {0} changed to {1}; '.format(self.modified_before, self.modified_now)
-    #     if self.added is not None and self.added != '':
-    #         return_string += ' added {0}; '.format(self.added)
-    #     if self.removed is not None and self.removed != '':
-    #         return_string += ' removed {0}; '.format(self.removed)
+    def __str__(self):
+        output = ''
+        if self.modification is not None:
+            output += '{0} in {1}'.format(self.modification, self.information)
+        if self.inserted.count() > 0:
+            output += '{0} was inserted into {1}; '.format(", ".join(str(v) for v in self.inserted.all()), self.information)
+        if self.removed.count() > 0:
+            output += '{0} was removed from {1}; '.format(", ".join(str(v) for v in self.removed.all()), self.information)
 
-    #     return return_string
-
-    class Meta:
-        verbose_name = "Model entry change"
-        verbose_name_plural = "Model entry changes"
+        return output
 
 
 class Model(BaseModel):
@@ -72,14 +103,13 @@ class Model(BaseModel):
         return '{0} - {1}'.format(self.created_at, self.message)
 
     class Meta:
-        verbose_name = 'model log entry'
-        verbose_name_plural = 'model log entries'
+        verbose_name = 'Changelog'
+        verbose_name_plural = 'Changelogs'
 
 
 class Request(BaseModel):
     application = models.ForeignKey(Application, on_delete=models.CASCADE, null=True)
 
-    # request = models.CharField(max_length=255)  # ??
     url = models.URLField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)
 
@@ -87,8 +117,8 @@ class Request(BaseModel):
         return '{2} - {0} performed request at {3} ({1})'.format(self.user, self.created_at, self.url, self.application)
 
     class Meta:
-        verbose_name = "request event entry"
-        verbose_name_plural = "request event entries"
+        verbose_name = "Request"
+        verbose_name_plural = "Requests"
 
 
 class Unspecified(BaseModel):
@@ -99,7 +129,6 @@ class Unspecified(BaseModel):
     line = models.PositiveIntegerField(null=True)
 
     def __str__(self):
-        # conversion to python levels
         if self.level == 10:
             level = 'DEBUG'
         elif self.level == 20:
@@ -116,8 +145,8 @@ class Unspecified(BaseModel):
         return '{} - {} - {} ({} - {})'.format(self.created_at, level, self.message, self.path, self.line)
 
     class Meta:
-        verbose_name = " logging entry (Errors, Warnings, Info)"
-        verbose_name_plural = " logging entries (Errors, Warnings, Info)"
+        verbose_name = "Non DJL Message"
+        verbose_name_plural = "Non DJL Messages"
 
 
 class LDAP(BaseModel):

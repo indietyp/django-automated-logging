@@ -17,7 +17,7 @@ class Base(BaseModel):
 
 
 class M2MTest(BaseModel):
-    test = models.ManyToManyField(Base, null=True)
+    test = models.ManyToManyField(Base)
 
 
 class ForeignTest(BaseModel):

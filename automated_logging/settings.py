@@ -1,12 +1,12 @@
 from django.conf import settings as st
-from logging import ERROR
+from logging import INFO
 
 DEFAULT_AUTOMATED_LOGGING = {
-    'exclude': ['Session', 'automated_logging'],
+    'exclude': ['Session', 'automated_logging', 'django'],
     'modules': ['request', 'model'],
     'to_database': True,
-    'loglevel': {'model': ERROR,
-                 'request': ERROR}
+    'loglevel': {'model': INFO,
+                 'request': INFO}
 }
 
 
@@ -24,6 +24,3 @@ if hasattr(st, 'AUTOMATED_LOGGING'):
   AUTOMATED_LOGGING = auto_complete(st.AUTOMATED_LOGGING, DEFAULT_AUTOMATED_LOGGING)
 else:
   AUTOMATED_LOGGING = DEFAULT_AUTOMATED_LOGGING
-
-
-print(AUTOMATED_LOGGING)
