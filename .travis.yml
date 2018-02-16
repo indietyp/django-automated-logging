@@ -8,7 +8,7 @@ env:
   - DJANGO_VERSION=1.11
   - DJANGO_VERSION=2.0
 install:
-  - pip instaall test_env.txt
+  - pip install -r test_env.txt
   - pip install Django~=$DJANGO_VERSION
 
 script:
