@@ -5,7 +5,7 @@ __pycache__/
 build
 .coverage
 dist
-django_debug_toolbar.egg-info
+django_automated_logging.egg-info
 docs/_build
 logtest/db.sqlite3
 htmlcov
