@@ -21,7 +21,6 @@ class Application(BaseModel):
 class ModelObject(BaseModel):
     value = models.CharField(max_length=255, null=True)
     type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE, related_name='atl_modelobject_application')
-    # application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='atl_modelobject_application')
 
 
 class ModelModification(BaseModel):
