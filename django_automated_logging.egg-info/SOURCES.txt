@@ -1,0 +1,16 @@
+README.rst
+setup.cfg
+setup.py
+automated_logging/__init__.py
+automated_logging/admin.py
+automated_logging/apps.py
+automated_logging/handler.py
+automated_logging/middleware.py
+automated_logging/models.py
+automated_logging/tests.py
+django_automated_logging.egg-info/PKG-INFO
+django_automated_logging.egg-info/SOURCES.txt
+django_automated_logging.egg-info/dependency_links.txt
+django_automated_logging.egg-info/not-zip-safe
+django_automated_logging.egg-info/requires.txt
+django_automated_logging.egg-info/top_level.txt

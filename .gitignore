@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.DS_Store
+*~
+build
+.coverage
+dist
+django_debug_toolbar.egg-info
+docs/_build
+logtest/db.sqlite3
+htmlcov
+.tox
+node_modules
