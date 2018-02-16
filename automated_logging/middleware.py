@@ -1,5 +1,10 @@
 import threading
-from django.core.urlresolvers import resolve
+import django
+
+if django.VERSION[0] == 1 and django.VERSION[1] < 10:
+  from django.core.urlresolvers import resolve
+else:
+  from django.urls import resolve
 
 
 class AutomatedLoggingMiddleware:
