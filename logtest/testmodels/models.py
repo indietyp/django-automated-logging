@@ -25,7 +25,7 @@ class ForeignTest(BaseModel):
 
 
 class OneToOneTest(BaseModel):
-    test = models.OneToOneField(Base, null=True)
+    test = models.OneToOneField(Base, null=True, on_delete=models.CASCADE)
 
 
 class OrdinaryTest(BaseModel):
