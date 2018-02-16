@@ -11,4 +11,4 @@ install:
   - pip install Django==$DJANGO_VERSION
 
 script:
-  - python manage.py test automated_logging
+  - python logtest/manage.py test automated_logging
