@@ -10,6 +10,9 @@ Django Database Based Automated Logging
 .. image:: https://img.shields.io/pypi/pyversions/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 
+.. image:: https://travis-ci.org/indietyp/django-automated-logging.svg?branch=master
+  :target: https://travis-ci.org/indietyp/django-automated-logging
+
 .. image:: https://coveralls.io/repos/github/indietyp/django-automated-logging/badge.svg?branch=master
   :target: https://coveralls.io/github/indietyp/django-automated-logging?branch=master
 
