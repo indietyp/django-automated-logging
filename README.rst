@@ -24,6 +24,7 @@ Introduction
 ------------
 
 Django Automated Logging - **finally** solved and done in a proper way.
+
 *This package automaticially tracks, requests, model changes, requests - to a database or to another logger.*
 **It is your choice what to do.**
 
