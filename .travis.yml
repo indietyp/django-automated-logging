@@ -13,3 +13,6 @@ install:
 
 script:
   - python logtest/manage.py test automated_logging
+
+after_success:
+  - coveralls
