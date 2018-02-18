@@ -20,6 +20,9 @@ Django Database Based Automated Logging
   :target: https://landscape.io/github/indietyp/django-automated-logging/master
   :alt: Code Health
 
+.. image:: https://api.codacy.com/project/badge/Grade/96fdb764fc34486399802b2f8267efcc
+  :target: https://www.codacy.com/app/bilalmahmoud/django-automated-logging?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=indietyp/django-automated-logging&amp;utm_campaign=Badge_Grade
+
 .. image:: https://img.shields.io/pypi/status/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 
@@ -72,6 +75,7 @@ Everything changed needs to be changed in the ``settings.py``
         'handlers': ['db'],
         'propagate': True,
     },
+5. `python3 manage.py migrate automated_logging`
 
 ``LOGGING`` attributes are just for recommondations and can be of course modified to your liking.
 
