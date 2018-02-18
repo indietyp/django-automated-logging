@@ -73,7 +73,8 @@ Configuration
 -------------
 
 You can configure the plugin by adding the variable ``AUTOMATED_LOGGING``
-The defaults are, these can be partially overwritten:: python
+The defaults are, these can be partially overwritten
+.. code:: python
     from logging impoty INFO
     AUTOMATED_LOGGING = {
         'exclude': ['Session', 'automated_logging', 'basehttp'],
