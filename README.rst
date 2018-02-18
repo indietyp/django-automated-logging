@@ -1,6 +1,3 @@
-.. image:: https://badge.fury.io/py/django-automated-logging.svg
-  :target: https://badge.fury.io/py/django-automated-logging
-
 .. image:: https://coveralls.io/repos/github/indietyp/django-automated-logging/badge.svg?branch=master
   :target: https://coveralls.io/github/indietyp/django-automated-logging?branch=master
 
