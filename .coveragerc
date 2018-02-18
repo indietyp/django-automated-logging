@@ -1,0 +1,6 @@
+[run]
+source = automated_logging
+branch = 1
+
+[report]
+omit = *tests*,*migrations*

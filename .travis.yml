@@ -12,7 +12,7 @@ install:
   - pip install Django~=$DJANGO_VERSION
 
 script:
-  - python logtest/manage.py test automated_logging
+  - coverage run --source=automated_logging logtest/manage.py test automated_logging
 
 after_success:
   - coveralls
