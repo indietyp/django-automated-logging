@@ -38,7 +38,7 @@ What are the features?
 5. many options to choose from - including the exclusion of certain packages, aswell as the disabling of database based logger
 6. does what it needs to do - **nothing more**.
 7. completely automated - nothing needs to be included from you, besides in the ``settings.py`` of your project.
-8. This package also catches logging messages unrelated to the package, if wanted - like logging statements in your own application - these statements need then be included in the LOGGING variable and forwarded to the DatabaseLogger.
+8. This python package also catches logging messages unrelated to the package itself, if this is wanted - unrelated logging statements from e.g. your code, or djangos code can be catched. You just need to include the database handler to your handlers in ``LOGGING`` and enable the module ``unspecified``.
 
 
 Setup
@@ -84,7 +84,7 @@ The defaults are, these can be partially overwritten
     from logging impoty INFO
     AUTOMATED_LOGGING = {
         'exclude': ['Session', 'automated_logging', 'basehttp'],
-        'modules': ['request', 'model'],
+        'modules': ['request', 'model', 'unspecified'],
         'to_database': True,
         'loglevel': {'model': INFO,
                      'request': INFO}
