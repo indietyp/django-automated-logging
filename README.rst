@@ -18,7 +18,7 @@
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 
 =======================================
-Django Database-based Automated logging
+Django Database Based Automated Logging
 =======================================
 **Finally** solved and done in a proper way.
 --------------------------------------------
