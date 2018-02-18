@@ -81,6 +81,9 @@ class DatabaseHandler(Handler):
                         signal = False
                         break
 
+                if 'unspecified' not in AUTOMATED_LOGGING['modules']:
+                    signal = False
+
                 if signal:
                     from .models import Unspecified
 

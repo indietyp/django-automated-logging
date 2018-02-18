@@ -3,7 +3,7 @@ from logging import INFO
 
 DEFAULT_AUTOMATED_LOGGING = {
     'exclude': ['Session', 'automated_logging', 'basehttp'],
-    'modules': ['request', 'model'],
+    'modules': ['request', 'model', 'unspecified'],
     'to_database': True,
     'loglevel': {'model': INFO,
                  'request': INFO}
