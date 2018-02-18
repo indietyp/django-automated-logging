@@ -67,23 +67,33 @@ class DatabaseHandler(Handler):
 
                     entry = Request()
                     entry.application = record.data['application']
-                    entry.request = record.data['uri']
+                    entry.uri = record.data['uri']
                     entry.user = record.data['user']
+                    entry.method = record.data['method']
                     entry.save()
 
             else:
-                from .models import Unspecified
+                from .settings import AUTOMATED_LOGGING
 
-                entry = Unspecified()
+                signal = True
+                for excluded in AUTOMATED_LOGGING['exclude']:
+                    if record.module.startswith(excluded):
+                        signal = False
+                        break
 
-                if hasattr(record, 'message'):
-                    entry.message = record.message
+                if signal:
+                    from .models import Unspecified
 
-                entry.level = record.levelno
-                entry.file = record.pathname
-                entry.line = record.lineno
+                    entry = Unspecified()
 
-                entry.save()
+                    if hasattr(record, 'message'):
+                        entry.message = record.message
+
+                    entry.level = record.levelno
+                    entry.file = record.pathname
+                    entry.line = record.lineno
+
+                    entry.save()
         except Exception as e:
             print(e)
             pass

@@ -21,7 +21,7 @@ class RequestTestCase(TestCase):
     assert Request.objects.all().count() == 1
 
     entry = Request.objects.all()[0]
-    assert entry.url == ''
+    assert entry.uri == '/'
     assert entry.user == self.user
 
     self.c.logout()
@@ -32,10 +32,11 @@ class RequestTestCase(TestCase):
     assert Request.objects.all().count() == 1
 
     entry = Request.objects.all().order_by('-created_at')[0]
-    assert entry.url == ''
+    assert entry.uri == '/'
     assert entry.user is None
 
 
+# add database test, thx
 class ModeltestCase(TestCase):
   def setUp(self):
     self.c = Client()
@@ -88,4 +89,3 @@ class HandlerTestCase(TestCase):
     self.logger.error('TEST')
     assert Unspecified.objects.all().count() == 1
     assert Unspecified.objects.all()[0].message == 'TEST'
-    assert Unspecified.objects.all()[0].line == 88

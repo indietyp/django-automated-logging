@@ -36,22 +36,20 @@ def comparison_callback(sender, instance, **kwargs):
                     continue
 
                 changed = False
-                if k in ins.keys():
-                    if cur[k] != ins[k]:
-                        changed = True
-                        new[k] = ModelObject()
-                        new[k].value = str(ins[k])
-                        new[k].save()
+                if k in ins.keys() and cur[k] != ins[k]:
+                    changed = True
+                    new[k] = ModelObject()
+                    new[k].value = str(ins[k])
+                    new[k].save()
 
-                        try:
-                            new[k].type = ContentType.objects.get_for_model(ins[k])
-                        except Exception:
-                            pass
+                    try:
+                        new[k].type = ContentType.objects.get_for_model(ins[k])
+                    except Exception:
+                        pass
 
-                        mdl = ModelStorage.objects.get_or_create(name=instance.__class__.__name__)[0]
-                        new[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
-                        new[k].save()
-
+                    mdl = ModelStorage.objects.get_or_create(name=instance.__class__.__name__)[0]
+                    new[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
+                    new[k].save()
                 else:
                     changed = True
 
@@ -69,7 +67,7 @@ def comparison_callback(sender, instance, **kwargs):
                     old[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                     old[k].save()
 
-            if old and new:
+            if old:
                 changelog = ModelChangelog()
                 changelog.save()
 

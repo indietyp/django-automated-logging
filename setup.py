@@ -15,8 +15,8 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='django-automated-logging',
-    version='3.0.0a1',
-    description='Django model based logging - solved and done right.',
+    version='3.1.0',
+    description='Django Database-based Automated logging - finally solved and done in a proper way.',
     long_description=long_description,
     url='https://github.com/indietyp/django-automated-logging',
     author='Bilal Mahmoud',
@@ -26,10 +26,10 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Framework :: Django',
-	'Framework :: Django :: 1.10'
+        'Framework :: Django :: 1.10',
         'Framework :: Django :: 1.11',
         'Framework :: Django :: 2.0',
         'Intended Audience :: Developers',
@@ -38,8 +38,9 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-	'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
+    include_package_data=True,
     keywords='django automation tools backend',
     packages=find_packages(exclude=(['logtest', 'test*'])),
     install_requires=['Django>1.10'],

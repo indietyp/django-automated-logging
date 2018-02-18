@@ -18,13 +18,14 @@ def request_finished_callback(sender, **kwargs):
     level = settings.AUTOMATED_LOGGING['loglevel']['request']
 
     user = get_current_user()
-    uri, application = get_current_environ()
+    uri, application, method = get_current_environ()
 
     logger.log(level, ('%s performed request at %s' % (user, uri)).replace("  ", " "), extra={
         'action': 'request',
         'data': {
             'user': user,
             'uri': uri,
+            'method': method,
             'application': application
         }
     })

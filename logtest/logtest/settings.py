@@ -159,6 +159,11 @@ LOGGING = {
         }
     },
     'loggers': {
+        'automated_logging': {
+            'level': 'INFO',
+            'handlers': ['console', 'db'],
+            'propagate': False,
+        },
         'django': {
             'level': 'INFO',
             'handlers': ['console', 'db'],

@@ -50,11 +50,10 @@ def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwar
             else:
                 target = Model()
                 target.user = get_current_user()
-                target.action = 1 if action == 'post_add' else 2
+                target.action = 2 if action == 'post_add' else 2
                 target.save()
 
                 target.application = Application.objects.get_or_create(name=ContentType.objects.get_for_model(instance).app_label)[0]
-
                 target.information = ModelObject()
                 target.information.value = repr(instance)
                 target.information.type = ContentType.objects.get_for_model(instance)

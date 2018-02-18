@@ -110,11 +110,13 @@ class Model(BaseModel):
 class Request(BaseModel):
     application = models.ForeignKey(Application, on_delete=models.CASCADE, null=True)
 
-    url = models.URLField()
+    uri = models.URLField()
+    method = models.CharField(max_length=64)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{2} - {0} performed request at {3} ({1})'.format(self.user, self.created_at, self.url, self.application)
+        return '{2} - {0} performed request at {3} ({1})'.format(self.user, self.created_at, self.uri, self.application)
 
     class Meta:
         verbose_name = "Request"
@@ -142,7 +144,7 @@ class Unspecified(BaseModel):
         else:
             level = 'NOTSET'
 
-        return '{} - {} - {} ({} - {})'.format(self.created_at, level, self.message, self.path, self.line)
+        return '{} - {} - {} ({} - {})'.format(self.created_at, level, self.message, self.file, self.line)
 
     class Meta:
         verbose_name = "Non DJL Message"

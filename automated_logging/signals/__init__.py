@@ -24,7 +24,7 @@ def validate_instance(instance):
     excludes = settings.AUTOMATED_LOGGING['exclude']
 
     for excluded in excludes:
-        if excluded in [instance._meta.app_label, instance.__class__.__name__]:
+        if excluded in [instance._meta.app_label, instance.__class__.__name__] or instance.__module__.startswith(excluded):
             return False
 
     return True
@@ -57,7 +57,12 @@ def get_current_environ():
     else:
         application = None
 
-    return request_uri, application
+    if hasattr(thread_local, 'method'):
+        method = thread_local.method
+    else:
+        method = None
+
+    return request_uri, application, method
 
 
 def processor(status, sender, instance, updated=None, addition=''):

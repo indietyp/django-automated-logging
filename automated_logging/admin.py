@@ -2,41 +2,36 @@ from django.contrib import admin
 from . import models
 
 
-# class ApplicationAdmin(admin.ModelAdmin):
+class ReadOnlyAdminMixin(admin.ModelAdmin):
+    """Disables all editing capabilities."""
+    change_form_template = "admin/view.html"
 
-#     list_display = ('name', )
-#     list_filter = ('created_at', 'updated_at')
-#     search_fields = ('name',)
-#     date_hierarchy = 'created_at'
+    def __init__(self, *args, **kwargs):
+        super(ReadOnlyAdminMixin, self).__init__(*args, **kwargs)
+        self.readonly_fields = [f.name for f in self.model._meta.get_fields()]
 
+    def get_actions(self, request):
+        actions = super(ReadOnlyAdminMixin, self).get_actions(request)
+        del actions["delete_selected"]
+        return actions
 
-# class ModelObjectAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
 
-#     list_display = ('value', 'type')
-#     list_filter = ('created_at', 'updated_at', 'type')
-#     date_hierarchy = 'created_at'
+    def has_delete_permission(self, request, obj=None):
+        return False
 
+    def save_model(self, request, obj, form, change):
+        pass
 
-# class ModelModificationAdmin(admin.ModelAdmin):
+    def delete_model(self, request, obj):
+        pass
 
-#     list_display = ('id', 'created_at', 'updated_at')
-#     list_filter = ('created_at', 'updated_at')
-#     raw_id_fields = ('previously', 'currently')
-#     date_hierarchy = 'created_at'
-
-
-# class ModelChangelogAdmin(admin.ModelAdmin):
-
-#     list_display = (
-#         'modification',
-#         'information',
-#     )
-#     list_filter = ('created_at', 'updated_at', 'modification', 'information')
-#     raw_id_fields = ('inserted', 'removed')
-#     date_hierarchy = 'created_at'
+    def save_related(self, request, form, formsets, change):
+        pass
 
 
-class ModelAdmin(admin.ModelAdmin):
+class ModelAdmin(ReadOnlyAdminMixin):
     def get_prev(self, obj):
         if obj.modification is not None and obj.modification.modification is not None:
             return ", ".join(str(v) for v in obj.modification.modification.previously.all())
@@ -89,21 +84,24 @@ class ModelAdmin(admin.ModelAdmin):
     )
 
     date_hierarchy = 'updated_at'
+    ordering = ('-updated_at',)
 
 
-class RequestAdmin(admin.ModelAdmin):
+class RequestAdmin(ReadOnlyAdminMixin):
 
     list_display = (
         'user',
+        'method',
+        'uri',
         'application',
-        'url',
         'updated_at'
     )
-    list_filter = ('created_at', 'updated_at', 'application', 'user')
-    date_hierarchy = 'created_at'
+    list_filter = ('updated_at', 'application', 'user')
+    date_hierarchy = 'updated_at'
+    ordering = ('-updated_at',)
 
 
-class UnspecifiedAdmin(admin.ModelAdmin):
+class UnspecifiedAdmin(ReadOnlyAdminMixin):
 
     list_display = (
         'level',
@@ -114,9 +112,10 @@ class UnspecifiedAdmin(admin.ModelAdmin):
     )
     list_filter = ('created_at', 'updated_at')
     date_hierarchy = 'created_at'
+    ordering = ('-updated_at',)
 
 
-# class LDAPAdmin(admin.ModelAdmin):
+# class LDAPAdmin(ReadOnlyAdminMixin):
 
 #     list_display = (
 #         'action',
@@ -138,10 +137,6 @@ def _register(model, admin_class):
     admin.site.register(model, admin_class)
 
 
-# _register(models.Application, ApplicationAdmin)
-# _register(models.ModelObject, ModelObjectAdmin)
-# _register(models.ModelModification, ModelModificationAdmin)
-# _register(models.ModelChangelog, ModelChangelogAdmin)
 _register(models.Model, ModelAdmin)
 _register(models.Request, RequestAdmin)
 _register(models.Unspecified, UnspecifiedAdmin)
