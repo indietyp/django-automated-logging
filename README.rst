@@ -88,3 +88,10 @@ In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommend
 Two modules are available: ``request`` and ``model``, these can be disabled, if needed.
 The database integration can be - not recommended - be disabled. **The logger also needs to be disabled**.
 The loglevel does indicate on which level things should be reported to other loggers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
+
+
+.. code:: javascript
+
+    function whatever() {
+        return "such color"
+    }
