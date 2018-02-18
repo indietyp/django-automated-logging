@@ -1,6 +1,9 @@
 =======================================
 Django Database Based Automated Logging
 =======================================
+**Finally** solved and done in a proper way.
+--------------------------------------------
+
 .. image:: https://img.shields.io/pypi/v/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 
@@ -20,8 +23,6 @@ Django Database Based Automated Logging
 .. image:: https://img.shields.io/pypi/status/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 
-**Finally** solved and done in a proper way.
---------------------------------------------
 *This package automaticially tracks, requests, model changes, requests - to a database or to another logger.*
 **It is your choice what to do.**
 
