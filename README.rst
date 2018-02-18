@@ -48,13 +48,16 @@ Everything changed needs to be changed in the ``settings.py``
 1. In the variable ``MIDDLEWARE`` append: ``'automated_logging.middleware.AutomatedLoggingMiddleware'``
 2. In the variable ``INSTALLED_APPS`` append ``'automated_logging'``
 3. In the variable ``LOGGING`` add in the ``handlers`` section (this is only required if you want database based logging):
-   :: python
+
+   .. code:: python
     'db': {
         'level': 'INFO',
         'class': 'automated_logging.handlers.DatabaseHandler',
     }
 4. In the variable ``LOGGING`` add to the ``loggers`` section (this is only required if you want database based logging):
-   :: python
+
+   .. code:: python
+
     'automated_logging': {
         'level': 'INFO',
         'handlers': ['db'],
@@ -85,7 +88,6 @@ The defaults are, these can be partially overwritten
         'loglevel': {'model': INFO,
                      'request': INFO}
     }
-
 
 In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries.
 Two modules are available: ``request`` and ``model``, these can be disabled, if needed.
