@@ -15,12 +15,13 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='django-automated-logging',
-    version='3.1.0',
+    version='3.1.1',
     description='Django Database-based Automated logging - finally solved and done in a proper way.',
     long_description=long_description,
     url='https://github.com/indietyp/django-automated-logging',
     author='Bilal Mahmoud',
     author_email='opensource@indietyp.com',
+    license='MIT',
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
