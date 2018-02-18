@@ -85,6 +85,7 @@ The defaults are, these can be partially overwritten
                      'request': INFO}
     }
 
+
 In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries.
 Two modules are available: ``request`` and ``model``, these can be disabled, if needed.
 The database integration can be - not recommended - be disabled. **The logger also needs to be disabled**.
