@@ -47,22 +47,22 @@ Everything changed needs to be changed in the ``settings.py``
 
 1. In the variable ``MIDDLEWARE`` append: ``'automated_logging.middleware.AutomatedLoggingMiddleware'``
 2. In the variable ``INSTALLED_APPS`` append ``'automated_logging'``
-3. In the variable ``LOGGING`` add in the ``handlers`` section (this is only required if you want database based logging):
-    'db': {
-        'level': 'INFO',
-        'class': 'automated_logging.handlers.DatabaseHandler',
-    }
-4. In the variable ``LOGGING`` add to the ``loggers`` section (this is only required if you want database based logging):
-    'automated_logging': {
-        'level': 'INFO',
-        'handlers': ['db'],
-        'propagate': True,
-    },
-    'django': {
-        'level': 'INFO',
-        'handlers': ['db'],
-        'propagate': True,
-    },
+3. In the variable ``LOGGING`` add in the ``handlers`` section (this is only required if you want database based logging)::
+  'db': {
+      'level': 'INFO',
+      'class': 'automated_logging.handlers.DatabaseHandler',
+  }
+4. In the variable ``LOGGING`` add to the ``loggers`` section (this is only required if you want database based logging)::
+  'automated_logging': {
+      'level': 'INFO',
+      'handlers': ['db'],
+      'propagate': True,
+  },
+  'django': {
+      'level': 'INFO',
+      'handlers': ['db'],
+      'propagate': True,
+  },
 
 ``LOGGING`` attributes are just for recommondations and can be of course modified to your liking.
 
@@ -71,7 +71,7 @@ Configuration
 -------------
 
 You can configure the plugin by adding the variable ``AUTOMATED_LOGGING``
-The defaults are, these can be partially overwritten:
+The defaults are, these can be partially overwritten::
     from logging impoty INFO
     AUTOMATED_LOGGING = {
         'exclude': ['Session', 'automated_logging', 'basehttp'],
@@ -82,6 +82,6 @@ The defaults are, these can be partially overwritten:
     }
 
 In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries.
-Two modules are available: ``request`` and ``model``, these can be disabled, if needed
-The database integration can be - not recommended - be disabled. **The logger also needs to be disabled**
+Two modules are available: ``request`` and ``model``, these can be disabled, if needed.
+The database integration can be - not recommended - be disabled. **The logger also needs to be disabled**.
 The loglevel does indicate on which level things should be reported to other loggers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
