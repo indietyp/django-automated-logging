@@ -1,25 +1,25 @@
-.. image:: https://coveralls.io/repos/github/indietyp/django-automated-logging/badge.svg?branch=master
-  :target: https://coveralls.io/github/indietyp/django-automated-logging?branch=master
-
-.. image:: https://img.shields.io/pypi/pyversions/django-automated-logging.svg
-  :target: https://pypi.python.org/pypi?name=django-automated-logging
-
-.. image:: https://landscape.io/github/indietyp/django-automated-logging/master/landscape.svg?style=flat
-  :target: https://landscape.io/github/indietyp/django-automated-logging/master
-  :alt: Code Health
-
+=======================================
+Django Database Based Automated Logging
+=======================================
 .. image:: https://img.shields.io/pypi/v/django-automated-logging.svg
-  :target: https://pypi.python.org/pypi?name=django-automated-logging
-
-.. image:: https://img.shields.io/pypi/status/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 
 .. image:: https://img.shields.io/pypi/l/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 
-=======================================
-Django Database Based Automated Logging
-=======================================
+.. image:: https://img.shields.io/pypi/pyversions/django-automated-logging.svg
+  :target: https://pypi.python.org/pypi?name=django-automated-logging
+
+.. image:: https://coveralls.io/repos/github/indietyp/django-automated-logging/badge.svg?branch=master
+  :target: https://coveralls.io/github/indietyp/django-automated-logging?branch=master
+
+.. image:: https://landscape.io/github/indietyp/django-automated-logging/master/landscape.svg?style=flat
+  :target: https://landscape.io/github/indietyp/django-automated-logging/master
+  :alt: Code Health
+
+.. image:: https://img.shields.io/pypi/status/django-automated-logging.svg
+  :target: https://pypi.python.org/pypi?name=django-automated-logging
+
 **Finally** solved and done in a proper way.
 --------------------------------------------
 *This package automaticially tracks, requests, model changes, requests - to a database or to another logger.*
