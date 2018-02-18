@@ -74,10 +74,16 @@ Configuration
 
 You can configure the plugin by adding the variable ``AUTOMATED_LOGGING``
 The defaults are, these can be partially overwritten
-.. code:: javascript
 
-    function whatever() {
-        return "such color"
+.. code:: python
+
+    from logging impoty INFO
+    AUTOMATED_LOGGING = {
+        'exclude': ['Session', 'automated_logging', 'basehttp'],
+        'modules': ['request', 'model'],
+        'to_database': True,
+        'loglevel': {'model': INFO,
+                     'request': INFO}
     }
 
 
