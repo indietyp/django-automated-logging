@@ -3,7 +3,7 @@ See:
 https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
-from setuptools import setup
+from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
@@ -15,7 +15,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='django-automated-logging',
-    version='2.0.0a1',
+    version='3.0.0a1',
     description='Django model based logging - solved and done right.',
     long_description=long_description,
     url='https://github.com/indietyp/django-automated-logging',
@@ -27,16 +27,21 @@ setup(
         #   4 - Beta
         #   5 - Production/Stable
         'Development Status :: 3 - Alpha',
+        'Environment :: Web Environment',
+        'Framework :: Django',
+	'Framework :: Django :: 1.10'
+        'Framework :: Django :: 1.11',
+        'Framework :: Django :: 2.0',
         'Intended Audience :: Developers',
-        'Topic :: Internet',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+	'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     keywords='django automation tools backend',
-    packages=['automated_logging'],
+    packages=find_packages(exclude=(['logtest', 'test*'])),
     install_requires=['Django>1.10'],
     zip_safe=False
 )
