@@ -50,6 +50,7 @@ Everything changed needs to be changed in the ``settings.py``
 3. In the variable ``LOGGING`` add in the ``handlers`` section (this is only required if you want database based logging):
 
    .. code:: python
+
     'db': {
         'level': 'INFO',
         'class': 'automated_logging.handlers.DatabaseHandler',
