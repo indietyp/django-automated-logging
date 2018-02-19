@@ -91,7 +91,7 @@ class DatabaseHandler(Handler):
 
                     record.data['instance'].al_evt = entry
 
-                if record.data['status'] == 'change' and 'al_chl' in record.data['instance'].__dict__.keys():
+                if 'al_chl' in record.data['instance'].__dict__.keys():
                     entry.modification = record.data['instance'].al_chl
 
                 entry.save()

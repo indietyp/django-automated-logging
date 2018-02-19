@@ -33,6 +33,13 @@ class ReadOnlyAdminMixin(admin.ModelAdmin):
 
 
 class ModelAdmin(ReadOnlyAdminMixin):
+    def get_who(self, obj):
+        if obj.information is not None and obj.information.value is not None:
+            return obj.information.value
+        else:
+            return ''
+    get_who.short_description = 'Who'
+
     def get_prev(self, obj):
         if obj.modification is not None and obj.modification.modification is not None:
             return ", ".join(str(v) for v in obj.modification.modification.previously.all())
@@ -71,6 +78,7 @@ class ModelAdmin(ReadOnlyAdminMixin):
     list_display = (
         'user',
         'action',
+        'get_who',
         'get_prev',
         'get_curr',
         'get_remo',

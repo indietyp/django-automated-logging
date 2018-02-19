@@ -78,7 +78,6 @@ class ModelModification(BaseModel):
     currently = models.ManyToManyField(ModelObject, related_name='changelog_current')
 
     def __str__(self):
-        print([str(v) for v in self.previously.all()])
         return ' {0} changed to {1}; '.format(", ".join(str(v) for v in self.previously.all()),
                                               ", ".join(str(v) for v in self.currently.all()))
 
