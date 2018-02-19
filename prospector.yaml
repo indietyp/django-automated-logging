@@ -15,6 +15,9 @@ pep8:
     - W601
     - W391
     - W191
+  disable:
+    - D209
+    - D205
   options:
     max-line-length: 135
 
