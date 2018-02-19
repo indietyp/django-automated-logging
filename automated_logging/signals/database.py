@@ -66,7 +66,7 @@ def comparison_callback(sender, instance, **kwargs):
                     old[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                     old[k].save()
 
-            if old:
+            if old or new:
                 changelog = ModelChangelog()
                 changelog.save()
 
