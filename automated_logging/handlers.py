@@ -72,6 +72,12 @@ class DatabaseHandler(Handler):
                     else:
                         status = 0
 
+                        from automated_logging.settings import AUTOMATED_LOGGING
+                        if not AUTOMATED_LOGGING['save_na']:
+                            entry.delete()
+
+                            return None
+
                     entry.action = status
                     entry.information = ModelObject()
                     entry.information.value = repr(record.data['instance'])

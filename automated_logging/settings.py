@@ -6,7 +6,8 @@ DEFAULT_AUTOMATED_LOGGING = {
     'modules': ['request', 'model', 'unspecified'],
     'to_database': True,
     'loglevel': {'model': INFO,
-                 'request': INFO}
+                 'request': INFO},
+    'save_na': True,
 }
 
 
