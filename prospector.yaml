@@ -1,0 +1,17 @@
+output-format: json
+
+strictness: medium
+test-warnings: true
+doc-warnings: true
+
+ignore-paths:
+  - docs
+  - migrations
+
+pep8:
+  enable:
+    - W601
+    - W391
+    - W191
+  options:
+    max-line-length: 130

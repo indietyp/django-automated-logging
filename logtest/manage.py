@@ -21,5 +21,5 @@ if __name__ == "__main__":
         raise
 
     from django.conf import settings
-    sys.path.append(os.path.dirname(settings.BASE_DIR))
+    #sys.path.append(os.path.dirname(settings.BASE_DIR))
     execute_from_command_line(sys.argv)

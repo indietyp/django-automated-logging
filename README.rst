@@ -88,7 +88,7 @@ The defaults are, these can be partially overwritten
 
 .. code:: python
 
-    from logging impoty INFO
+    from logging import INFO
     AUTOMATED_LOGGING = {
         'exclude': ['Session', 'automated_logging', 'basehttp'],
         'modules': ['request', 'model', 'unspecified'],
