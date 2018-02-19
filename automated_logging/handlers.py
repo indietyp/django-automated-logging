@@ -1,12 +1,16 @@
 """
 This file contains the custom database based django ORM handler. This is just a bit hacky.
-Some might even say this is jst sorcery and magic.
+Some might even say this is just sorcery and magic.
+
+Hopefully it is not.
 """
 from logging import Handler
 
 
 class DatabaseHandler(Handler):
+
     """Handler for logging into any database"""
+
     def __init__(self):
         super(DatabaseHandler, self).__init__()
 

@@ -73,6 +73,7 @@ def get_current_environ():
 def processor(status, sender, instance, updated=None, addition=''):
     """
     This is the standard logging processor.
+
     This is used to send the log to the handler and to other systems.
     """
     logger = logging.getLogger(__name__)

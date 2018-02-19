@@ -1,6 +1,4 @@
-"""
-    This file handles everything related to saving and deleting model objects.
-"""
+"""This file handles everything related to saving and deleting model objects."""
 import re
 import logging
 
@@ -17,9 +15,7 @@ from . import validate_instance, processor
 
 @receiver(pre_save, weak=False)
 def comparison_callback(sender, instance, **kwargs):
-    """
-        comparing old and new object to determin which fields changed how
-    """
+    """Comparing old and new object to determin which fields changed how"""
     if validate_instance(instance) and settings.AUTOMATED_LOGGING['to_database']:
         try:
             old = sender.objects.get(pk=instance.pk)
@@ -46,7 +42,8 @@ def comparison_callback(sender, instance, **kwargs):
                     try:
                         new[k].type = ContentType.objects.get_for_model(ins[k])
                     except Exception:
-                        pass
+                        logger = logging.getLogger(__name__)
+                        logger.debug('Could not dermin the content type of the field')
 
                     new[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                     new[k].save()
@@ -61,7 +58,8 @@ def comparison_callback(sender, instance, **kwargs):
                     try:
                         old[k].type = ContentType.objects.get_for_model(cur[k])
                     except Exception:
-                        pass
+                        logger = logging.getLogger(__name__)
+                        logger.debug('Could not dermin the content type of the field')
 
                     old[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                     old[k].save()
@@ -94,9 +92,7 @@ def comparison_callback(sender, instance, **kwargs):
 
 @receiver(post_save, weak=False)
 def save_callback(sender, instance, created, update_fields, **kwargs):
-    """
-        Save object & link logging entry
-    """
+    """Save object & link logging entry"""
     if validate_instance(instance):
         status = 'add' if created is True else 'change'
         change = ''
@@ -111,8 +107,6 @@ def save_callback(sender, instance, created, update_fields, **kwargs):
 @receiver(post_delete, weak=False)
 @transaction.atomic
 def delete_callback(sender, instance, **kwargs):
-    """
-        Triggered when deleted -> logged
-    """
+    """Triggered when deleted -> logged"""
     status = 'delete'
     processor(status, sender, instance)

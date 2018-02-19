@@ -1,6 +1,4 @@
-"""
-Database table definitions for the application, everything is logging related.
-"""
+"""Database table definitions for the application, everything is logging related."""
 from django.conf import settings
 import uuid
 from django.db import models
@@ -8,7 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 
 
 class BaseModel(models.Model):
+
     """BaseModel that is inherited from every model. Includes basic information."""
+
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -19,12 +19,14 @@ class BaseModel(models.Model):
 
 
 class Application(BaseModel):
+
     """
     Table for every application that might be used
     - this is not created get_or_create,
     so it is not yet a full representation of every application installed,
     this might follow
     """
+
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -32,10 +34,12 @@ class Application(BaseModel):
 
 
 class Field(BaseModel):
+
     """
     Table definition for a regular field. Is tied to a ContentType
     If the model will be deleted all the related fields will be therefor too.
     """
+
     name = models.CharField(max_length=255)
     model = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE, related_name='dal_field')
 
@@ -44,12 +48,14 @@ class Field(BaseModel):
 
 
 class ModelObject(BaseModel):
+
     """
     BaseObject for everything logging related.
     consists of a value: gathered through repr()
     field - which is a definition of the field
     and if it refers to a relationship the model
     """
+
     value = models.CharField(max_length=255, null=True)
     field = models.ForeignKey(Field, null=True, on_delete=models.CASCADE)
     type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE, related_name='atl_modelobject_application')
@@ -67,9 +73,9 @@ class ModelObject(BaseModel):
 
 
 class ModelModification(BaseModel):
-    """
-    Saves the two states of several fields.
-    """
+
+    """Saves the two states of several fields."""
+
     previously = models.ManyToManyField(ModelObject, related_name='changelog_previous')
     currently = models.ManyToManyField(ModelObject, related_name='changelog_current')
 
@@ -80,10 +86,12 @@ class ModelModification(BaseModel):
 
 
 class ModelChangelog(BaseModel):
+
     """
     General changelog, saves which fields are removede, inserted (both m2m) and which
     are modified.
     """
+
     modification = models.OneToOneField(ModelModification, null=True, on_delete=models.CASCADE)
     inserted = models.ManyToManyField(ModelObject, related_name='changelog_inserted')
     removed = models.ManyToManyField(ModelObject, related_name='changelog_removed')
@@ -103,9 +111,9 @@ class ModelChangelog(BaseModel):
 
 
 class Model(BaseModel):
-    """
-    This ties a changelog to a specific user, this is used by the DatabaseHandler.
-    """
+
+    """This ties a changelog to a specific user, this is used by the DatabaseHandler."""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='atl_model_application', null=True)
 
@@ -131,9 +139,9 @@ class Model(BaseModel):
 
 
 class Request(BaseModel):
-    """
-    The model where every request is saved.
-    """
+
+    """The model where every request is saved."""
+
     application = models.ForeignKey(Application, on_delete=models.CASCADE, null=True)
 
     uri = models.URLField()
@@ -151,9 +159,9 @@ class Request(BaseModel):
 
 
 class Unspecified(BaseModel):
-    """
-    Logging messages that are saved by non DAL systems.
-    """
+
+    """Logging messages that are saved by non DAL systems."""
+
     message = models.TextField(null=True)
     level = models.PositiveSmallIntegerField(default=20)
 
@@ -182,10 +190,12 @@ class Unspecified(BaseModel):
 
 
 class LDAP(BaseModel):
+
     """
     LDAP model definition, not used by DAL
     IS USED IN OTHER SYSTEMS.
     """
+
     action = models.TextField()
     succeeded = models.NullBooleanField(blank=True, null=True)
     errorMessage = models.TextField(blank=True, null=True)
