@@ -3,7 +3,6 @@ from . import models
 
 
 class ReadOnlyAdminMixin(admin.ModelAdmin):
-
     """Disables all editing capabilities."""
 
     change_form_template = "admin/view.html"

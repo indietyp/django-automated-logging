@@ -6,7 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 
 
 class BaseModel(models.Model):
-
     """BaseModel that is inherited from every model. Includes basic information."""
 
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
@@ -19,7 +18,6 @@ class BaseModel(models.Model):
 
 
 class Application(BaseModel):
-
     """
     Table for every application that might be used
     - this is not created get_or_create,
@@ -34,7 +32,6 @@ class Application(BaseModel):
 
 
 class Field(BaseModel):
-
     """
     Table definition for a regular field. Is tied to a ContentType
     If the model will be deleted all the related fields will be therefor too.
@@ -48,7 +45,6 @@ class Field(BaseModel):
 
 
 class ModelObject(BaseModel):
-
     """
     BaseObject for everything logging related.
     consists of a value: gathered through repr()
@@ -73,7 +69,6 @@ class ModelObject(BaseModel):
 
 
 class ModelModification(BaseModel):
-
     """Saves the two states of several fields."""
 
     previously = models.ManyToManyField(ModelObject, related_name='changelog_previous')
@@ -86,7 +81,6 @@ class ModelModification(BaseModel):
 
 
 class ModelChangelog(BaseModel):
-
     """
     General changelog, saves which fields are removede, inserted (both m2m) and which
     are modified.
@@ -111,7 +105,6 @@ class ModelChangelog(BaseModel):
 
 
 class Model(BaseModel):
-
     """This ties a changelog to a specific user, this is used by the DatabaseHandler."""
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)
@@ -139,7 +132,6 @@ class Model(BaseModel):
 
 
 class Request(BaseModel):
-
     """The model where every request is saved."""
 
     application = models.ForeignKey(Application, on_delete=models.CASCADE, null=True)
@@ -159,7 +151,6 @@ class Request(BaseModel):
 
 
 class Unspecified(BaseModel):
-
     """Logging messages that are saved by non DAL systems."""
 
     message = models.TextField(null=True)
@@ -190,7 +181,6 @@ class Unspecified(BaseModel):
 
 
 class LDAP(BaseModel):
-
     """
     LDAP model definition, not used by DAL
     IS USED IN OTHER SYSTEMS.

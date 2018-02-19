@@ -8,16 +8,17 @@ from logging import Handler
 
 
 class DatabaseHandler(Handler):
-
     """Handler for logging into any database"""
 
     def __init__(self):
         super(DatabaseHandler, self).__init__()
 
     def emit(self, record):
-        # add to database
-        # try - except -> preventing circular import
-        # http://stackoverflow.com/questions/4379042/django-circular-model-import-issue
+        """
+        add to database
+        try - except -> preventing circular import
+        http://stackoverflow.com/questions/4379042/django-circular-model-import-issue
+        """
 
         try:
             from .models import Model, Application, ModelObject
