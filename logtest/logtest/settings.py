@@ -171,3 +171,11 @@ LOGGING = {
         },
     },
 }
+
+
+AUTOMATED_LOGGING = {
+    'exclude': ['Session', 'automated_logging', 'basehttp', 'admin', 'lastlistpage'],
+    'modules': ['request', 'model', 'unspecified'],
+    'to_database': True,
+    'save_na': False
+}

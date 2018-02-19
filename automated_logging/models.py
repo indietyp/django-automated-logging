@@ -63,10 +63,10 @@ class ModelObject(BaseModel):
         output = '{}'.format(self.value)
 
         if self.field is not None:
-            output += " of field {}".format(self.field)
+            output += " of field: {}".format(self.field.name)
 
         if self.type is not None:
-            output += " in model {}.{}".format(self.type.app_label, self.type.model)
+            output += " in model: {}.{}".format(self.type.app_label, self.type.model)
 
         return output
 

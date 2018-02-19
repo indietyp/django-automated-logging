@@ -61,7 +61,9 @@ class DatabaseHandler(Handler):
                     entry.save()
 
                     entry.application = Application.objects.get_or_create(name=record.data['instance']._meta.app_label)[0]
-                    entry.message = record.message
+
+                    if hasattr(record, 'message'):
+                        entry.message = record.message
 
                     if record.data['status'] == 'add':
                         status = 1

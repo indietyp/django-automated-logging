@@ -38,11 +38,11 @@ class ModelAdmin(ReadOnlyAdminMixin):
             return obj.information.value
         else:
             return ''
-    get_who.short_description = 'Who'
+    get_who.short_description = 'Object'
 
     def get_prev(self, obj):
         if obj.modification is not None and obj.modification.modification is not None:
-            return ", ".join(str(v) for v in obj.modification.modification.previously.all())
+            return "\n ".join(str(v) for v in obj.modification.modification.previously.all())
         else:
             return ''
     get_prev.short_description = 'Previous Value'
