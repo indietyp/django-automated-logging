@@ -6,7 +6,7 @@ doc-warnings: true
 
 ignore-paths:
   - docs
-  - migrations
+  - automated_logging/migrations
 
 pep8:
   enable:
