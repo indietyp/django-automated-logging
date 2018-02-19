@@ -11,14 +11,15 @@ ignore-paths:
   - automated_logging/apps.py
 
 pep8:
-  enable:
-    - W601
-    - W391
-    - W191
   disable:
     - D209
     - D205
     - D203
+
+  enable:
+    - W601
+    - W391
+    - W191
 
   options:
     max-line-length: 135
