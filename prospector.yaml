@@ -10,10 +10,12 @@ ignore-paths:
   - logtest
   - automated_logging/apps.py
 
+frosted:
+  disable:
+    - D203
+
 pep8:
   disable:
-    - D209
-    - D205
     - D203
 
   enable:
