@@ -7,6 +7,8 @@ doc-warnings: true
 ignore-paths:
   - docs
   - automated_logging/migrations
+  - logtest
+  - automated_logging/apps.py
 
 pep8:
   enable:
@@ -15,3 +17,6 @@ pep8:
     - W191
   options:
     max-line-length: 130
+
+uses:
+  - django

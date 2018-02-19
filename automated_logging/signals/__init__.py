@@ -1,15 +1,15 @@
 """
-    Helper functions for the files in this dir
+Helper functions for the files in this dir
 
-    A small clarification for the order of event triggering:
+A small clarification for the order of event triggering:
 
-    -> request_started
-    -> pre_save
-    -> (pre_delete)
-    -> post_save
-    -> (post_delete)
-    -> m2m_changed
-    -> request_finished
+-> request_started
+-> pre_save
+-> (pre_delete)
+-> post_save
+-> (post_delete)
+-> m2m_changed
+-> request_finished
 """
 
 import logging
@@ -20,7 +20,7 @@ from ..models import Application
 
 
 def validate_instance(instance):
-    """ validating if the instance should be logged, or is excluded """
+    """Validating if the instance should be logged, or is excluded"""
     excludes = settings.AUTOMATED_LOGGING['exclude']
 
     for excluded in excludes:
@@ -31,7 +31,7 @@ def validate_instance(instance):
 
 
 def get_current_user():
-    """ get current user object from middleware """
+    """Get current user object from middleware"""
     thread_local = AutomatedLoggingMiddleware.thread_local
     if hasattr(thread_local, 'current_user'):
         user = thread_local.current_user
@@ -44,7 +44,7 @@ def get_current_user():
 
 
 def get_current_environ():
-    """ get current application and path object from middleware """
+    """Get current application and path object from middleware"""
     thread_local = AutomatedLoggingMiddleware.thread_local
     if hasattr(thread_local, 'request_uri'):
         request_uri = thread_local.request_uri
@@ -62,11 +62,19 @@ def get_current_environ():
     else:
         method = None
 
-    return request_uri, application, method
+    if hasattr(thread_local, 'status'):
+        status = thread_local.status
+    else:
+        status = None
+
+    return request_uri, application, method, status
 
 
 def processor(status, sender, instance, updated=None, addition=''):
-    """ standard logging """
+    """
+    This is the standard logging processor.
+    This is used to send the log to the handler and to other systems.
+    """
     logger = logging.getLogger(__name__)
     if validate_instance(instance):
         user = get_current_user()

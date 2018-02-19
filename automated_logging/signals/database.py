@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_delete
 from django.db.models.signals import post_save, pre_save
 
-from ..models import ModelChangelog, ModelModification, ModelObject, ModelStorage, Field
+from ..models import ModelChangelog, ModelModification, ModelObject, Field
 from django.contrib.contenttypes.models import ContentType
 from . import validate_instance, processor
 
@@ -27,6 +27,7 @@ def comparison_callback(sender, instance, **kwargs):
             return None
 
         try:
+            mdl = ContentType.objects.get_for_model(instance)
             cur, ins = old.__dict__, instance.__dict__
             old, new = {}, {}
             for k in cur.keys():
@@ -47,7 +48,6 @@ def comparison_callback(sender, instance, **kwargs):
                     except Exception:
                         pass
 
-                    mdl = ModelStorage.objects.get_or_create(name=instance.__class__.__name__)[0]
                     new[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                     new[k].save()
                 else:
@@ -63,7 +63,6 @@ def comparison_callback(sender, instance, **kwargs):
                     except Exception:
                         pass
 
-                    mdl = ModelStorage.objects.get_or_create(name=instance.__class__.__name__)[0]
                     old[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
                     old[k].save()
 

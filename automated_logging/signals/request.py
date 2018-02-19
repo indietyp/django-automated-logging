@@ -1,5 +1,6 @@
 """
-    This files handles processig all the request related Signals - originating from Django.
+This files handles processig all the request related signals.
+These signals are all django interal ones.
 """
 import logging
 from logging import CRITICAL, WARNING
@@ -13,20 +14,21 @@ from . import get_current_environ, get_current_user
 
 @receiver(request_finished, weak=False)
 def request_finished_callback(sender, **kwargs):
-    """ This function logs if the user acceses the page """
+    """This function logs if the user acceses the page"""
     logger = logging.getLogger(__name__)
     level = settings.AUTOMATED_LOGGING['loglevel']['request']
 
     user = get_current_user()
-    uri, application, method = get_current_environ()
+    uri, application, method, status = get_current_environ()
 
-    logger.log(level, ('%s performed request at %s' % (user, uri)).replace("  ", " "), extra={
+    logger.log(level, ('%s performed request at %s (%s %s)' % (user, uri, method, status)).replace("  ", " "), extra={
         'action': 'request',
         'data': {
             'user': user,
             'uri': uri,
             'method': method,
-            'application': application
+            'application': application,
+            'status': status
         }
     })
 
@@ -34,11 +36,10 @@ def request_finished_callback(sender, **kwargs):
 @receiver(got_request_exception, weak=False)
 def request_exception(sender, request, **kwargs):
     """
-        Automated request exception logging
-        The function can also return an WSGIRequest exception,
-        which does not supply either status_code or reason_phrase
+    Automated request exception logging
+    The function can also return an WSGIRequest exception,
+    which does not supply either status_code or reason_phrase.
     """
-
     if not isinstance(request, WSGIRequest):
         logger = logging.getLogger(__name__)
         level = CRITICAL if request.status_code <= 500 else WARNING

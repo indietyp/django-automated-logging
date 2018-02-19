@@ -1,6 +1,5 @@
-"""
-    This file handles eveerything related to saving and deleting model objects.
-"""
+"""This file handles everything related to saving and deleting model objects."""
+import logging
 from .. import settings
 from django.dispatch import receiver
 from django.db.models.signals import m2m_changed
@@ -12,7 +11,10 @@ from . import validate_instance, get_current_user
 
 @receiver(m2m_changed, weak=False)
 def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwargs):
-    """" detect m2m changes and append to existing entry or create - also append to latest model change entry """
+    """
+    Detect Many2Many relationship changes and
+    append these to existing model or create if needed
+    """
     if validate_instance(instance) and settings.AUTOMATED_LOGGING['to_database']:
         if action in ["post_add", 'post_remove']:
             modification = [model.objects.get(pk=x) for x in pk_set]
@@ -35,7 +37,8 @@ def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwar
                 try:
                     obj.type = ContentType.objects.get_for_model(f)
                 except Exception:
-                    pass
+                    logger = logging.getLogger(__name__)
+                    logger.debug('Could not determin the type of the modification.')
 
                 obj.save()
                 if action == 'post_add':
@@ -53,7 +56,8 @@ def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwar
                 target.action = 2 if action == 'post_add' else 2
                 target.save()
 
-                target.application = Application.objects.get_or_create(name=ContentType.objects.get_for_model(instance).app_label)[0]
+                ct = ContentType.objects.get_for_model(instance).app_label
+                target.application = Application.objects.get_or_create(name=ct)[0]
                 target.information = ModelObject()
                 target.information.value = repr(instance)
                 target.information.type = ContentType.objects.get_for_model(instance)

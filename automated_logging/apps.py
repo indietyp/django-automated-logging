@@ -4,7 +4,7 @@ from .settings import AUTOMATED_LOGGING
 
 class AutomatedloggingConfig(AppConfig):
     name = 'automated_logging'
-    verbose_name = 'Django Automated Logging (DJL)'
+    verbose_name = 'Django Automated Logging (DAL)'
 
     def ready(self):
       if 'request' in AUTOMATED_LOGGING['modules']:
