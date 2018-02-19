@@ -14,6 +14,7 @@ from . import validate_instance, processor
 
 
 @receiver(pre_save, weak=False)
+@transaction.atomic
 def comparison_callback(sender, instance, **kwargs):
     """Comparing old and new object to determin which fields changed how"""
     if validate_instance(instance) and settings.AUTOMATED_LOGGING['to_database']:
@@ -33,20 +34,21 @@ def comparison_callback(sender, instance, **kwargs):
                     continue
 
                 changed = False
-                if k in ins.keys() and cur[k] != ins[k]:
-                    changed = True
-                    new[k] = ModelObject()
-                    new[k].value = str(ins[k])
-                    new[k].save()
+                if k in ins.keys():
+                    if cur[k] != ins[k]:
+                        changed = True
+                        new[k] = ModelObject()
+                        new[k].value = str(ins[k])
+                        new[k].save()
 
-                    try:
-                        new[k].type = ContentType.objects.get_for_model(ins[k])
-                    except Exception:
-                        logger = logging.getLogger(__name__)
-                        logger.debug('Could not dermin the content type of the field')
+                        try:
+                            new[k].type = ContentType.objects.get_for_model(ins[k])
+                        except Exception:
+                            logger = logging.getLogger(__name__)
+                            logger.debug('Could not dermin the content type of the field')
 
-                    new[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
-                    new[k].save()
+                        new[k].field = Field.objects.get_or_create(name=k, model=mdl)[0]
+                        new[k].save()
                 else:
                     changed = True
 
@@ -70,8 +72,8 @@ def comparison_callback(sender, instance, **kwargs):
 
                 changelog.modification = ModelModification()
                 changelog.modification.save()
-                changelog.modification.previously.set(old.values())
-                changelog.modification.currently.set(new.values())
+                changelog.modification.previously.add(*old.values())
+                changelog.modification.currently.add(*new.values())
 
                 changelog.information = ModelObject()
                 changelog.information.save()
@@ -91,15 +93,16 @@ def comparison_callback(sender, instance, **kwargs):
 
 
 @receiver(post_save, weak=False)
+@transaction.atomic
 def save_callback(sender, instance, created, update_fields, **kwargs):
     """Save object & link logging entry"""
     if validate_instance(instance):
         status = 'add' if created is True else 'change'
         change = ''
 
-        if status == 'modified' and 'al_chl' in instance.__dict__.keys():
+        if status == 'change' and 'al_chl' in instance.__dict__.keys():
             changelog = instance.al_chl.modification
-            change = ' and changed {0} to {1}'.format(changelog.previously, changelog.currently)
+            change = ' to following changed: {}'.format(changelog)
 
         processor(status, sender, instance, update_fields, addition=change)
 

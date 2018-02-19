@@ -5,7 +5,7 @@ from . import models
 class ReadOnlyAdminMixin(admin.ModelAdmin):
     """Disables all editing capabilities."""
 
-    change_form_template = "admin/view.html"
+    change_form_template = "dal/admin/view.html"
 
     def __init__(self, *args, **kwargs):
         super(ReadOnlyAdminMixin, self).__init__(*args, **kwargs)
@@ -63,7 +63,7 @@ class ModelAdmin(ReadOnlyAdminMixin):
 
     def get_infor(self, obj):
         if obj.information is not None and obj.information.type is not None:
-            return obj.information.type.model + '.' + str(obj.application)
+            return str(obj.application) + '.' + obj.information.type.model
         else:
             return ''
     get_infor.short_description = 'Object'

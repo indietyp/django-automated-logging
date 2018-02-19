@@ -1,6 +1,7 @@
 import logging
 from django.test import TestCase
 from django.test import Client
+from django.db import transaction
 from django.contrib.auth.models import User
 from .models import *
 from testmodels.models import Base, M2MTest, ForeignTest, OneToOneTest, OrdinaryTest
@@ -15,7 +16,9 @@ class RequestTestCase(TestCase):
     self.user.save()
 
   def test_request_based_database_logging_logged_in(self):
+
     self.c.login(username='example', password='example')
+
     response = self.c.get('')
     assert response.status_code == 200
     assert Request.objects.all().count() == 1
@@ -37,6 +40,7 @@ class RequestTestCase(TestCase):
 
 
 # add database test, thx
+# add transation atomic test
 class ModeltestCase(TestCase):
   def setUp(self):
     self.c = Client()

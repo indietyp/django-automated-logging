@@ -58,8 +58,9 @@ class DatabaseHandler(Handler):
                 else:
                     entry = Model()
                     entry.user = record.data['user']
-                    entry.application = Application.objects.get_or_create(name=record.data['instance']._meta.app_label)[0]
+                    entry.save()
 
+                    entry.application = Application.objects.get_or_create(name=record.data['instance']._meta.app_label)[0]
                     entry.message = record.message
 
                     if record.data['status'] == 'add':
@@ -90,7 +91,7 @@ class DatabaseHandler(Handler):
 
                     record.data['instance'].al_evt = entry
 
-                if record.data['status'] == 'modified' and 'al_chl' in record.data['instance'].__dict__.keys():
+                if record.data['status'] == 'change' and 'al_chl' in record.data['instance'].__dict__.keys():
                     entry.modification = record.data['instance'].al_chl
 
                 entry.save()
@@ -98,13 +99,14 @@ class DatabaseHandler(Handler):
             elif record.action == 'request':
                 from .models import Request
 
-                entry = Request()
-                entry.application = record.data['application']
-                entry.uri = record.data['uri']
-                entry.user = record.data['user']
-                entry.status = record.data['status']
-                entry.method = record.data['method']
-                entry.save()
+                if record.data['uri'] is not None:
+                    entry = Request()
+                    entry.application = record.data['application']
+                    entry.uri = record.data['uri']
+                    entry.user = record.data['user']
+                    entry.status = record.data['status']
+                    entry.method = record.data['method']
+                    entry.save()
 
         except Exception as e:
             print(e)

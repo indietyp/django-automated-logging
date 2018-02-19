@@ -83,8 +83,15 @@ def processor(status, sender, instance, updated=None, addition=''):
         model_name = instance.__class__.__name__
         level = settings.AUTOMATED_LOGGING['loglevel']['model']
 
+        if status == 'change':
+            corrected = 'changed'
+        elif status == 'add':
+            corrected = 'added'
+        elif status == 'delete':
+            corrected = 'deleted'
+
         logger.log(level,
-                   ('%s %s %s(%s) in %s%s' % (user, status, instance, model_name, application, addition)).replace("  ", " "),
+                   ('%s %s %s(%s) in %s%s' % (user, corrected, instance, model_name, application, addition)).replace("  ", " "),
                    extra={'action': 'model',
                           'data': {
                               'status': status,
