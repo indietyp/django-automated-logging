@@ -28,6 +28,7 @@ class Application(BaseModel):
     name = models.CharField(max_length=255)
 
     def __str__(self):
+        """Returns name of application."""
         return self.name
 
 
@@ -49,7 +50,9 @@ class ModelObject(BaseModel):
     BaseObject for everything logging related.
     consists of a value: gathered through repr()
     field - which is a definition of the field
-    and if it refers to a relationship the model
+    and if it refers to a relationship the model.
+
+    BaseObject of system.
     """
 
     value = models.CharField(max_length=255, null=True)
@@ -81,10 +84,7 @@ class ModelModification(BaseModel):
 
 
 class ModelChangelog(BaseModel):
-    """
-    General changelog, saves which fields are removede, inserted (both m2m) and which
-    are modified.
-    """
+    """General changelog, saves which fields are removede, inserted (both m2m) and which are modified."""
 
     modification = models.OneToOneField(ModelModification, null=True, on_delete=models.CASCADE)
     inserted = models.ManyToManyField(ModelObject, related_name='changelog_inserted')
