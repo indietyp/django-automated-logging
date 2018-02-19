@@ -10,6 +10,10 @@ ignore-paths:
   - logtest
   - automated_logging/apps.py
 
+pep257:
+  disable:
+    - D203
+
 frosted:
   disable:
     - D203
