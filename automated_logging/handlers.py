@@ -102,6 +102,7 @@ class DatabaseHandler(Handler):
                 entry.application = record.data['application']
                 entry.uri = record.data['uri']
                 entry.user = record.data['user']
+                entry.status = record.data['status']
                 entry.method = record.data['method']
                 entry.save()
 

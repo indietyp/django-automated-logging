@@ -59,6 +59,9 @@ class ModeltestCase(TestCase):
     m2m.test.add(self.baseset[-1])
     m2m.save()
 
+    m2m.test.remove(self.baseset[-1])
+    m2m.save()
+
   def test_model_based_database_foreign(self):
     foreign = ForeignTest()
     foreign.save()
@@ -79,6 +82,8 @@ class ModeltestCase(TestCase):
 
     ordinary.test = string.ascii_lowercase
     ordinary.save()
+
+    ordinary.delete()
 
 
 class HandlerTestCase(TestCase):
