@@ -1,5 +1,7 @@
 from django.contrib import admin
 from . import models
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 
 
 class ReadOnlyAdminMixin(admin.ModelAdmin):
@@ -30,6 +32,76 @@ class ReadOnlyAdminMixin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         pass
+
+
+class UserActionListFilter(admin.SimpleListFilter):
+    title = 'invoked user'
+    parameter_name = 'user'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+
+        User = get_user_model()
+        output = []
+        for i in models.Model.objects.values('user__pk').distinct():
+            pk = i['user__pk']
+
+            if pk is not None:
+                output.append([pk, User.objects.get(pk=pk).__str__])
+
+        return output
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        if self.value() is not None:
+            return queryset.filter(user__pk=self.value())
+        else:
+            return queryset
+
+
+class ContentTypeListFilter(admin.SimpleListFilter):
+    title = 'model'
+    parameter_name = 'contenttype'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+
+        output = []
+        for i in models.Model.objects.values('information__type').distinct():
+            ct = i['information__type']
+
+            if ct is not None:
+                ct = ContentType.objects.get(pk=ct)
+                output.append([ct.pk, ct.app_label + '.' + ct.model])
+
+        return output
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        if self.value() is not None:
+            return queryset.filter(information__type__pk=self.value())
+        else:
+            return queryset
 
 
 class ModelAdmin(ReadOnlyAdminMixin):
@@ -89,7 +161,9 @@ class ModelAdmin(ReadOnlyAdminMixin):
 
     list_filter = (
         'updated_at',
-        'user',
+        'action',
+        UserActionListFilter,
+        ContentTypeListFilter
     )
 
     date_hierarchy = 'updated_at'
