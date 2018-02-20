@@ -4,9 +4,7 @@ from django.utils.deprecation import MiddlewareMixin
 
 
 class AutomatedLoggingMiddleware(MiddlewareMixin):
-  """
-  Get's access to the current things.
-  """
+  """Get's access to the current things."""
 
   thread_local = threading.local()
 

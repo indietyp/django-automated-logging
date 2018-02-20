@@ -1,8 +1,8 @@
 """
+This is where the magic happens.
+
 This file contains the custom database based django ORM handler. This is just a bit hacky.
 Some might even say this is just sorcery and magic.
-
-Hopefully it is not.
 """
 from logging import Handler
 
@@ -15,11 +15,12 @@ class DatabaseHandler(Handler):
 
     def emit(self, record):
         """
-        add to database
-        try - except -> preventing circular import
+        Handler instance that records to the database. Heart of the project.
+
+        try and except is preventing a circular import.
+        Reference:
         http://stackoverflow.com/questions/4379042/django-circular-model-import-issue
         """
-
         try:
             from .models import Model, Application, ModelObject
             from django.contrib.contenttypes.models import ContentType

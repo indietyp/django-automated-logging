@@ -12,8 +12,11 @@ from . import validate_instance, get_current_user
 @receiver(m2m_changed, weak=False)
 def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwargs):
     """
-    Detect Many2Many relationship changes and
-    append these to existing model or create if needed
+    Many 2 Many relationship signall receivver.
+
+    Detect Many 2 Many relationship changes and append these to existing model or create if needed.
+    These get not recorded from the pre_save or post_save method and must therefor be received from
+    another method. This method the be precise.
     """
     if validate_instance(instance) and settings.AUTOMATED_LOGGING['to_database']:
         if action in ["post_add", 'post_remove']:

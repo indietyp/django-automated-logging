@@ -20,6 +20,7 @@ class BaseModel(models.Model):
 class Application(BaseModel):
     """
     Table for every application that might be used
+
     - this is not created get_or_create,
     so it is not yet a full representation of every application installed,
     this might follow
@@ -34,7 +35,9 @@ class Application(BaseModel):
 
 class Field(BaseModel):
     """
-    Table definition for a regular field. Is tied to a ContentType
+    Table definition for a regular field.
+
+    Is tied to a ContentTypes.
     If the model will be deleted all the related fields will be therefor too.
     """
 
@@ -47,12 +50,12 @@ class Field(BaseModel):
 
 class ModelObject(BaseModel):
     """
+    BaseObject of the system.
+
     BaseObject for everything logging related.
     consists of a value: gathered through repr()
     field - which is a definition of the field
     and if it refers to a relationship the model.
-
-    BaseObject of system.
     """
 
     value = models.CharField(max_length=255, null=True)
@@ -181,8 +184,9 @@ class Unspecified(BaseModel):
 
 class LDAP(BaseModel):
     """
-    LDAP model definition, not used by DAL
     IS USED IN OTHER SYSTEMS.
+
+    LDAP model definition, not used by DAL
     """
 
     action = models.TextField()

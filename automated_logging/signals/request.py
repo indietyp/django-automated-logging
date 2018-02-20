@@ -1,4 +1,6 @@
 """
+Handles the request portion of the handlers.
+
 This files handles processig all the request related signals.
 These signals are all django interal ones.
 """
@@ -36,7 +38,8 @@ def request_finished_callback(sender, **kwargs):
 @receiver(got_request_exception, weak=False)
 def request_exception(sender, request, **kwargs):
     """
-    Automated request exception logging
+    Automated request exception logging.
+
     The function can also return an WSGIRequest exception,
     which does not supply either status_code or reason_phrase.
     """
