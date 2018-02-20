@@ -12,11 +12,8 @@ install:
   - pip install Django~=$DJANGO_VERSION
 
 script:
-  - ls -lah
   - coverage run --source=automated_logging logtest/manage.py test automated_logging
-  - cat .coverage
-  - ls -lah
 
 after_success:
   - coveralls
-  - python-codacy-coverage -r coverage.xml
+  - python-codacy-coverage -r .coverage
