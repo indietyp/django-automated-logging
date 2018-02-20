@@ -13,7 +13,7 @@ install:
 
 script:
   - coverage run --source=automated_logging logtest/manage.py test automated_logging
-  - coverage xml --source=automated_logging logtest/manage.py test automated_logging
+  - ls -lah
 
 after_success:
   - coveralls
