@@ -31,23 +31,45 @@ It is simple just ``pip3 install django-automated-logging``.
 
 Introduction
 ------------
-
 Django Automated Logging - **finally** solved and done in a proper way.
 
-*This package automaticially tracks, requests, model changes, requests - to a database or to another logger.*
+What is the purpose?
+--------------------
+The goal of the django application is it to provide an easy and accesible way to log. So that you do not need to reinvent the whell over and over.
+The application is written to only use minimal requirements - which is just Django currently.
+
+How does it work?
+-----------------
+This application uses a custom logging handler - called DatabaseHandler which instead of outputting it into a file just outputs everything through the Django ORM.
+It knows how to do so by using signals - that are provided by Django itself and annotating the actual model object with the changelog.
+
+This enables us to actually also monitor Many-Two-Many changes, which are kinda tricky to do so.
+
+Wait!
+-----
+What if I just want to log the changes but to a file and not to a database?
+
+This is very understandable and also something that is possible without a problem, because we exclude the actual database portion to a handler you can just use a file logger instead, because this module uses native logging statesments and extra paramenters - you can actually - quite easily build you own logger and access them in a formatting statement in the logger. Pretty neat, huh?
+
+
+So in a nutshell this package **automaticially** tracks *requests, model changes and every other message* - to a database or to another logger.
 **It is your choice what to do.**
 
 
-What are the features?
-----------------------
-1. comes with an built-in database logger
-2. easy to setup
-3. extensible
-4. feature-rich
-5. many options to choose from - including the exclusion of certain packages, aswell as the disabling of database based logger
-6. does what it needs to do - **nothing more**.
-7. completely automated - nothing needs to be included from you, besides in the ``settings.py`` of your project.
-8. This python package also catches logging messages unrelated to the package itself, if this is wanted - unrelated logging statements from e.g. your code, or djangos code can be catched. You just need to include the database handler to your handlers in ``LOGGING`` and enable the module ``unspecified``.
+====================
+Detailed Information
+====================
+
+Features
+--------
+1. easy to setup
+2. extensible
+3. feature-rich
+4. completely automated
+5. comes with an built-in database logger
+6. no custom code needs to be inserted into your codebase
+7. catches logging messages unrelated to the package itself if desired
+8. does what it needs to do - **nothing more**.
 
 
 Setup
@@ -87,7 +109,7 @@ Configuration
 -------------
 
 You can configure the plugin by adding the variable ``AUTOMATED_LOGGING``
-The defaults are, these can be partially overwritten
+The defaults are present in the example.
 
 .. code:: python
 
@@ -101,6 +123,6 @@ The defaults are, these can be partially overwritten
     }
 
 In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries.
-Two modules are available: ``request`` and ``model``, these can be disabled, if needed.
-The database integration can be - not recommended - be disabled. **The logger also needs to be disabled**.
-The loglevel does indicate on which level things should be reported to other loggers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
+Three modules are available: ``request``, ``unspecified`` and ``model``, these can be disabled, if needed.
+The database integration can be disabled. *Note: the handler than also needs to be removed*.
+The loglevel does indicate on which level things should be reported to other handlers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
