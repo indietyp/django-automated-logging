@@ -52,6 +52,8 @@ What if I just want to log the changes but to a file and not to a database?
 This is very understandable and also something that is possible without a problem, because we exclude the actual database portion to a handler you can just use a file logger instead, because this module uses native logging statesments and extra paramenters - you can actually - quite easily build you own logger and access them in a formatting statement in the logger. Pretty neat, huh?
 
 
+Nutshell
+--------
 So in a nutshell this package **automaticially** tracks *requests, model changes and every other message* - to a database or to another logger.
 **It is your choice what to do.**
 
