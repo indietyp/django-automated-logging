@@ -27,11 +27,9 @@ Django Database Based Automated Logging
   :target: https://pypi.python.org/pypi?name=django-automated-logging
 Introduction
 ------------
-It is simple just ``pip3 install django-automated-logging``.
-
-Introduction
-------------
 Django Automated Logging - **finally** solved and done in a proper way.
+
+How to install? It is simple just ``pip3 install django-automated-logging``.
 
 What is the purpose?
 --------------------
