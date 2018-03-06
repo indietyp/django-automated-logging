@@ -126,3 +126,13 @@ In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommend
 Three modules are available: ``request``, ``unspecified`` and ``model``, these can be disabled, if needed.
 The database integration can be disabled. *Note: the handler than also needs to be removed*.
 The loglevel does indicate on which level things should be reported to other handlers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
+
+=======
+Roadmap
+=======
+
+Version 6.0.0
+-------------
+- remove the LDAP model
+- exclusion for also unspecified and request
+- implement requested features
