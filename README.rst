@@ -25,6 +25,11 @@ Django Database Based Automated Logging
 
 .. image:: https://img.shields.io/pypi/status/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
+Introduction
+------------
+It is simple:
+.. code:: python
+  pip3 install django-automated-logging
 
 Introduction
 ------------
