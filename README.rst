@@ -28,8 +28,8 @@ Django Database Based Automated Logging
 Introduction
 ------------
 It is simple:
-.. code:: python
-  pip3 install django-automated-logging
+  .. code:: python
+    pip3 install django-automated-logging
 
 Introduction
 ------------
