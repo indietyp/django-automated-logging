@@ -23,6 +23,13 @@ def request_finished_callback(sender, **kwargs):
     user = get_current_user()
     uri, application, method, status = get_current_environ()
 
+    excludes = settings.AUTOMATED_LOGGING['exclude']['request']
+    if status is excludes:
+        return
+
+    if method.lower() in excludes:
+        return
+
     logger.log(level, ('%s performed request at %s (%s %s)' % (user, uri, method, status)).replace("  ", " "), extra={
         'action': 'request',
         'data': {

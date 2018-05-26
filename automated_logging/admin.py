@@ -11,6 +11,9 @@ class ReadOnlyAdminMixin(admin.ModelAdmin):
 
     def __init__(self, *args, **kwargs):
         super(ReadOnlyAdminMixin, self).__init__(*args, **kwargs)
+
+        print(kwargs)
+        print(args)
         self.readonly_fields = [f.name for f in self.model._meta.get_fields()]
 
     def get_actions(self, request):
@@ -198,24 +201,6 @@ class UnspecifiedAdmin(ReadOnlyAdminMixin):
     ordering = ('-updated_at',)
 
 
-# class LDAPAdmin(ReadOnlyAdminMixin):
-
-#     list_display = (
-#         'action',
-#         'succeeded',
-#         'errorMessage',
-#         'basedn',
-#         'entry',
-#         'objectClass',
-#         'cn',
-#         'existing_members',
-#         'data_members',
-#         'diff_members',
-#     )
-#     list_filter = ('created_at', 'updated_at')
-#     date_hierarchy = 'created_at'
-
-
 def _register(model, admin_class):
     admin.site.register(model, admin_class)
 
@@ -223,4 +208,3 @@ def _register(model, admin_class):
 _register(models.Model, ModelAdmin)
 _register(models.Request, RequestAdmin)
 _register(models.Unspecified, UnspecifiedAdmin)
-# _register(models.LDAP, LDAPAdmin)

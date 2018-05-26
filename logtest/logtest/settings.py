@@ -174,8 +174,10 @@ LOGGING = {
 
 
 AUTOMATED_LOGGING = {
-    'exclude': ['Session', 'automated_logging', 'basehttp', 'admin', 'lastlistpage'],
+    'exclude': {'model': ['Session', 'automated_logging', 'basehttp', 'admin', 'lastlistpage'],
+                'request': ['GET', 200],
+                'unspecified': []},
     'modules': ['request', 'model', 'unspecified'],
     'to_database': True,
-    'save_na': False
+    'save_na': False,
 }

@@ -21,10 +21,10 @@ from ..models import Application
 
 def validate_instance(instance):
     """Validating if the instance should be logged, or is excluded"""
-    excludes = settings.AUTOMATED_LOGGING['exclude']
+    excludes = settings.AUTOMATED_LOGGING['exclude']['model']
 
     for excluded in excludes:
-        if excluded in [instance._meta.app_label, instance.__class__.__name__] or instance.__module__.startswith(excluded):
+        if excluded in [instance._meta.app_label.lower(), instance.__class__.__name__.lower()] or instance.__module__.lower().startswith(excluded):
             return False
 
     return True

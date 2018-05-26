@@ -2,7 +2,9 @@ from django.conf import settings as st
 from logging import INFO
 
 DEFAULT_AUTOMATED_LOGGING = {
-    'exclude': ['Session', 'automated_logging', 'basehttp'],
+    'exclude': {'model': ['Session', 'automated_logging', 'basehttp'],
+                'request': ['GET', 200],
+                'unspecified': []},
     'modules': ['request', 'model', 'unspecified'],
     'to_database': True,
     'loglevel': {'model': INFO,
@@ -17,6 +19,8 @@ def auto_complete(setting, default):
       setting[k] = v
     elif isinstance(setting[k], dict):
       setting[k] = auto_complete(setting[k], default[k])
+    elif isinstance(setting[k], str):
+      setting[k] = setting[k].lower()
 
   return setting
 

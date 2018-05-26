@@ -178,31 +178,5 @@ class Unspecified(BaseModel):
         return '{} - {} - {} ({} - {})'.format(self.created_at, level, self.message, self.file, self.line)
 
     class Meta:
-        verbose_name = "Non DJL Message"
-        verbose_name_plural = "Non DJL Messages"
-
-
-class LDAP(BaseModel):
-    """
-    IS USED IN OTHER SYSTEMS.
-
-    LDAP model definition, not used by DAL
-    """
-
-    action = models.TextField()
-    succeeded = models.NullBooleanField(blank=True, null=True)
-    errorMessage = models.TextField(blank=True, null=True)
-
-    basedn = models.TextField(blank=True, null=True)
-    entry = models.TextField(blank=True, null=True)
-
-    objectClass = models.TextField(blank=True, null=True)
-    cn = models.TextField(blank=True, null=True)
-
-    existing_members = models.TextField(blank=True, null=True)
-    data_members = models.TextField(blank=True, null=True)
-    diff_members = models.TextField(blank=True, null=True)
-
-    class Meta:
-        verbose_name = "LDAP event log entry"
-        verbose_name_plural = "LDAP event log entries"
+        verbose_name = "Non DAL Message"
+        verbose_name_plural = "Non DAL Messages"

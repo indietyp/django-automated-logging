@@ -25,9 +25,13 @@ Django Database Based Automated Logging
 
 .. image:: https://img.shields.io/pypi/status/django-automated-logging.svg
   :target: https://pypi.python.org/pypi?name=django-automated-logging
-Nutshell
---------
-So in a nutshell this package **automaticially** tracks *requests, model changes and every other message* - to a database or to another logger.
+
+.. image:: https://img.shields.io/badge/Support%20the%20Project-PayPal-green.svg
+  :target: https://paypal.me/indietyp/5
+
+What is DAL?
+============
+In a nutshell this package **automaticially** tracks *requests, model changes and every other message supplied* - to a database or to another logger.
 **It is your choice what to do.**
 
 Introduction
@@ -54,7 +58,6 @@ What if I just want to log the changes but to a file and not to a database?
 
 This is very understandable and also something that is possible without a problem, because we exclude the actual database portion to a handler you can just use a file logger instead, because this module uses native logging statesments and extra paramenters - you can actually - quite easily build you own logger and access them in a formatting statement in the logger. Pretty neat, huh?
 
-====================
 Detailed Information
 ====================
 
@@ -113,11 +116,14 @@ The defaults are present in the example.
 
     from logging import INFO
     AUTOMATED_LOGGING = {
-        'exclude': ['Session', 'automated_logging', 'basehttp'],
+        'exclude': {'model': ['Session', 'automated_logging', 'basehttp'],
+                    'request': ['GET', 200],
+                    'unspecified': []},
         'modules': ['request', 'model', 'unspecified'],
         'to_database': True,
         'loglevel': {'model': INFO,
-                     'request': INFO}
+                     'request': INFO},
+        'save_na': True,
     }
 
 In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries.
@@ -125,12 +131,30 @@ Three modules are available: ``request``, ``unspecified`` and ``model``, these c
 The database integration can be disabled. *Note: the handler than also needs to be removed*.
 The loglevel does indicate on which level things should be reported to other handlers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
 
-=======
+*New in version 4.x.x:* **all strings** in ``AUTOMATED_LOGGING`` are case-insensitive.
+
 Roadmap
 =======
 
+Version 4.0.0
+-------------
+[ ] remove the LDAP model
+[x] exclusion for request module
+[ ] exclusion for unspecified module
+[ ] implement requested features
+[ ] adding options to Meta field
+  [ ] ignored fields
+  [ ] ignored operations
+[ ] prevent migration logs
+
+Version 5.0.0
+-------------
+[ ] implementation of an git like versioning interface
+[ ] performance considerations
+
 Version 6.0.0
 -------------
-- remove the LDAP model
-- exclusion for also unspecified and request
-- implement requested features
+[ ] temporary world domination
+
+
+Support the Project
