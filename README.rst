@@ -143,8 +143,8 @@ Version 4.0.0
 [ ] exclusion for unspecified module
 [ ] implement requested features
 [ ] adding options to Meta field
-  [ ] ignored fields
-  [ ] ignored operations
+--> ignored fields
+--> ignored operations
 [ ] prevent migration logs
 
 Version 5.0.0
