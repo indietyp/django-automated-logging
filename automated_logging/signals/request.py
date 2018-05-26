@@ -24,7 +24,7 @@ def request_finished_callback(sender, **kwargs):
     uri, application, method, status = get_current_environ()
 
     excludes = settings.AUTOMATED_LOGGING['exclude']['request']
-    if status is excludes:
+    if status in excludes:
         return
 
     if method.lower() in excludes:
