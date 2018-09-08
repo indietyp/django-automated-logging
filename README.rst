@@ -31,7 +31,7 @@ Django Database Based Automated Logging
 
 What is DAL?
 ============
-In a nutshell this package **automaticially** tracks *requests, model changes and every other message supplied* - to a database or to another logger.
+In a nutshell, this package **automatically** tracks *requests, model changes, and every other message supplied* - to a database or to another logger.
 **It is your choice what to do.**
 
 Introduction
@@ -42,35 +42,35 @@ How to install? It is simple just ``pip3 install django-automated-logging``.
 
 What is the purpose?
 --------------------
-The goal of the django application is it to provide an easy and accesible way to log. So that you do not need to reinvent the whell over and over.
-The application is written to only use minimal requirements - which is just Django currently.
+The goal of the django application is it to provide an easy and accessible way to log. Therefore you do not need to reinvent the wheel over and over.
+The application is written to use minimal requirements - which is just Django currently.
 
 How does it work?
 -----------------
-This application uses a custom logging handler - called DatabaseHandler which instead of outputting it into a file just outputs everything through the Django ORM.
+This application uses a custom logging handler - called DatabaseHandler. Instead of outputting it into a file, it outputs everything through the Django ORM.
 It knows how to do so by using signals - that are provided by Django itself and annotating the actual model object with the changelog.
 
-This enables us to actually also monitor Many-Two-Many changes, which are kinda tricky to do so.
+This enables us to actually monitor Many-Two-Many changes, which are kind of tricky.
 
 Wait!
 -----
-What if I just want to log the changes but to a file and not to a database?
+What if I just want to log the changes to a file and not to a database?
 
-This is very understandable and also something that is possible without a problem, because we exclude the actual database portion to a handler you can just use a file logger instead, because this module uses native logging statesments and extra paramenters - you can actually - quite easily build you own logger and access them in a formatting statement in the logger. Pretty neat, huh?
+This is very understandable. It is possible without a problem because we exclude the actual database portion to a handler. You can just use a file logger instead. This module uses native logging statements and extra paramenters. You can easily build your own logger and access them in a formatting statement in the logger. Pretty neat, huh?
 
 Detailed Information
 ====================
 
 Features
 --------
-1. easy to setup
-2. extensible
-3. feature-rich
-4. completely automated
-5. comes with an built-in database logger
-6. no custom code needs to be inserted into your codebase
-7. catches logging messages unrelated to the package itself if desired
-8. does what it needs to do - **nothing more**.
+1. Easy to setup
+2. Extensible
+3. Feature-rich
+4. Completely automated
+5. Comes with an built-in database logger
+6. No custom code needs to be inserted into your codebase
+7. Catches logging messages unrelated to the package itself if desired
+8. Does what it needs to do - **nothing more**.
 
 
 Setup
