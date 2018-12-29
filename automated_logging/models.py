@@ -1,14 +1,15 @@
 """Database table definitions for the application, everything is logging related."""
-from django.conf import settings
 import uuid
-from django.db import models
+
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
 
 class BaseModel(models.Model):
     """BaseModel that is inherited from every model. Includes basic information."""
 
-    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

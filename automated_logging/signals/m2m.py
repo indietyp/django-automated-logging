@@ -22,7 +22,7 @@ def m2m_callback(sender, instance, action, reverse, model, pk_set, using, **kwar
         if action in ["post_add", 'post_remove']:
             modification = [model.objects.get(pk=x) for x in pk_set]
 
-            if 'al_chl' in instance.__dict__.keys():
+            if 'al_chl' in instance.__dict__.keys() and instance.al_chl:
                 changelog = instance.al_chl
             else:
                 changelog = ModelChangelog()

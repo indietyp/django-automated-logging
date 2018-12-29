@@ -1,4 +1,6 @@
 import threading
+
+from django.http import Http404
 from django.urls import resolve
 from django.utils.deprecation import MiddlewareMixin
 
@@ -14,10 +16,14 @@ class AutomatedLoggingMiddleware(MiddlewareMixin):
     AutomatedLoggingMiddleware.thread_local.request = request
     AutomatedLoggingMiddleware.thread_local.current_user = request.user
     AutomatedLoggingMiddleware.thread_local.request_uri = request_uri
-    AutomatedLoggingMiddleware.thread_local.application = resolve(request.path).func.__module__.split('.')[0]
+
+    try:
+      AutomatedLoggingMiddleware.thread_local.application = resolve(request.path).func.__module__.split('.')[0]
+    except Http404:
+      AutomatedLoggingMiddleware.thread_local.application = ''
 
   def process_exception(self, request, exception):
-    pass
+    self.process_request(request)
 
   def process_response(self, request, response):
     AutomatedLoggingMiddleware.thread_local.method = request.method

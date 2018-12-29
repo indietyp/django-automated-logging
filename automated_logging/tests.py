@@ -1,11 +1,11 @@
 import logging
-from django.test import TestCase
-from django.test import Client
-from django.db import transaction
-from django.contrib.auth.models import User
-from .models import *
-from testmodels.models import Base, M2MTest, ForeignTest, OneToOneTest, OrdinaryTest
 import string
+
+from .models import *
+from django.contrib.auth.models import User
+from django.test import Client
+from django.test import TestCase
+from testmodels.models import Base, ForeignTest, M2MTest, OneToOneTest, OrdinaryTest
 
 
 class RequestTestCase(TestCase):
@@ -25,18 +25,46 @@ class RequestTestCase(TestCase):
 
     entry = Request.objects.all()[0]
     assert entry.uri == '/'
+    assert entry.method == 'GET'
     assert entry.user == self.user
 
     self.c.logout()
 
   def test_request_based_database_logging_logged_out(self):
-    response = self.c.get('')
+    response = self.c.post('')
     assert response.status_code == 200
     assert Request.objects.all().count() == 1
 
     entry = Request.objects.all().order_by('-created_at')[0]
     assert entry.uri == '/'
+    assert entry.method == 'POST'
     assert entry.user is None
+
+  def test_request_based_database_logging_exception(self):
+    try:
+      # this is designed to fail!
+      self.c.get('/500')
+    except Exception:
+      pass
+
+    assert Request.objects.all().count() == 1
+
+    entry = Request.objects.all().order_by('-created_at')[0]
+    assert entry.uri == '/500'
+    assert entry.status == 500
+
+  def test_request_based_database_logging_not_found(self):
+    try:
+      # this is designed to fail!
+      self.c.get('/404')
+    except Exception:
+        pass
+
+    assert Request.objects.all().count() == 1
+
+    entry = Request.objects.all().order_by('-created_at')[0]
+    assert entry.uri == '/404'
+    assert entry.status == 404
 
 
 # add database test, thx

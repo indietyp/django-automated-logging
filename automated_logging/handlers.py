@@ -54,7 +54,7 @@ class DatabaseHandler(Handler):
                 return
 
             if record.action == 'model':
-                if 'al_evt' in record.data['instance'].__dict__.keys():
+                if 'al_evt' in record.data['instance'].__dict__.keys() and record.data['instance'].al_evt:
                     entry = record.data['instance'].al_evt
                 else:
                     entry = Model()
@@ -100,7 +100,7 @@ class DatabaseHandler(Handler):
 
                     record.data['instance'].al_evt = entry
 
-                if 'al_chl' in record.data['instance'].__dict__.keys():
+                if 'al_chl' in record.data['instance'].__dict__.keys() and record.data['instance'].al_chl and not entry.modification:
                     entry.modification = record.data['instance'].al_chl
 
                 entry.save()
