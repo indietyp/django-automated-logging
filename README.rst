@@ -124,6 +124,9 @@ The defaults are present in the example.
         'loglevel': {'model': INFO,
                      'request': INFO},
         'save_na': True,
+        'request': {
+          'query': False
+        }
     }
 
 In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries.
@@ -133,24 +136,34 @@ The loglevel does indicate on which level things should be reported to other han
 
 *New in version 4.x.x:* **all strings** in ``AUTOMATED_LOGGING`` are case-insensitive.
 
+*New in version 5.x.x:* You can now specify a maximum age for database entries created via `maxage` in the `LOGGING` variable. maxage needs to be an `ISO8601 duration string <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
+
+Changelog
+=========
+Version 5.0.0
+-------------
+- **Added:** `maxage` handler setting to automatically remove database entries after a certain amount of time.
+- **Added:** query string in requests can now be enabled/disabled (are now disabled by default)
+- **Fixed:** Value and URI could be longer than 255 characters. DAL would throw an exception. This is fixed.
+
 Roadmap
 =======
 
-Version 4.0.0
+Version 4.x.x
 -------------
-[ ] remove the LDAP model
+[x] remove the LDAP model
 [x] exclusion for request module
-[ ] exclusion for unspecified module
-[ ] implement requested features
+[x] exclusion for unspecified module
+[x] performance considerations
+[x] implement requested features
+[ ] prevent migration logs
+
+Version 5.x.x
+-------------
 [ ] adding options to Meta field
 --> ignored fields
 --> ignored operations
-[ ] prevent migration logs
-
-Version 5.0.0
--------------
 [ ] implementation of an git like versioning interface
-[ ] performance considerations
 
 Version 6.0.0
 -------------

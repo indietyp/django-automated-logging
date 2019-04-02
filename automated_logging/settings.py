@@ -10,6 +10,10 @@ DEFAULT_AUTOMATED_LOGGING = {
     'loglevel': {'model': INFO,
                  'request': INFO},
     'save_na': True,
+
+    'request': {
+        'query': False
+    }
 }
 
 

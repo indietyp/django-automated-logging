@@ -13,10 +13,11 @@ A small clarification for the order of event triggering:
 """
 
 import logging
-from django.contrib.auth.models import AnonymousUser
+
 from .. import settings
 from ..middleware import AutomatedLoggingMiddleware
 from ..models import Application
+from django.contrib.auth.models import AnonymousUser
 
 
 def validate_instance(instance):
@@ -24,7 +25,9 @@ def validate_instance(instance):
     excludes = settings.AUTOMATED_LOGGING['exclude']['model']
 
     for excluded in excludes:
-        if excluded in [instance._meta.app_label.lower(), instance.__class__.__name__.lower()] or instance.__module__.lower().startswith(excluded):
+        if (excluded in [instance._meta.app_label.lower(),
+                         instance.__class__.__name__.lower()] or
+                instance.__module__.lower().startswith(excluded)):
             return False
 
     return True
