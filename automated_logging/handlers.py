@@ -7,6 +7,7 @@ Some might even say this is just sorcery and magic.
 import datetime
 import re
 
+from django.utils import timezone
 from logging import Handler
 
 
@@ -20,19 +21,21 @@ class DatabaseHandler(Handler):
 
             if matched:
                 components = matched.groups()
-                components = components.pop(4)
+                components = list(components)
+                components.pop(4)
 
                 adjusted = {'days': 0, 'seconds': 0}
                 conversion = [['days', 365], ['days', 30], ['days', 7], ['days', 1],
-                              ['seconds', 3600], ['seconds', 60], ['seconds', 0]]
+                              ['seconds', 3600], ['seconds', 60], ['seconds', 1]]
 
                 for pointer in range(len(components)):
-                    rate = conversion[pointer]
-                    native = int(re.findall(r'(\d+)', components)[0])
+                    if components[pointer]:
+                        rate = conversion[pointer]
+                        native = int(re.findall(r'(\d+)', components[pointer])[0])
 
-                    adjusted[rate[0]] += native * rate[1]
+                        adjusted[rate[0]] += native * rate[1]
 
-                maxage = datetime.datetime.timedelta(**adjusted)
+                maxage = datetime.timedelta(**adjusted)
             else:
                 print('Could not parse ISO8601 Duration string')
 
@@ -41,12 +44,13 @@ class DatabaseHandler(Handler):
 
     def emit(self, record):
         """
-        Handler instance that records to the database. Heart of the project.
+        Handler instance that records to the database.
 
         try and except is preventing a circular import.
         Reference:
         http://stackoverflow.com/questions/4379042/django-circular-model-import-issue
         """
+
         try:
             from .models import Model, Application, ModelObject
             from django.contrib.contenttypes.models import ContentType
@@ -78,7 +82,7 @@ class DatabaseHandler(Handler):
                     entry.save()
 
                     if self.maxage:
-                        current = datetime.datetime.now()
+                        current = timezone.now()
                         Unspecified.objects.filter(created_at__lte=current - self.maxage)\
                                            .delete()
 
@@ -141,7 +145,7 @@ class DatabaseHandler(Handler):
                 entry.save()
 
                 if self.maxage:
-                    current = datetime.datetime.now()
+                    current = timezone.now()
                     Model.objects.filter(created_at__lte=current - self.maxage).delete()
 
             elif record.action == 'request':
@@ -157,7 +161,7 @@ class DatabaseHandler(Handler):
                     entry.save()
 
                 if self.maxage:
-                    current = datetime.datetime.now()
+                    current = timezone.now()
                     Request.objects.filter(created_at__lte=current - self.maxage).delete()
 
         except Exception as e:

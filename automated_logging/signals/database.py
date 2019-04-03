@@ -1,16 +1,16 @@
 """This file handles everything related to saving and deleting model objects."""
-import re
 import logging
+import re
 
 from .. import settings
 from django.db import transaction
-from django.dispatch import receiver
 from django.db.models.signals import post_delete
 from django.db.models.signals import post_save, pre_save
+from django.dispatch import receiver
 
-from ..models import ModelChangelog, ModelModification, ModelObject, Field
+from . import processor, validate_instance
+from ..models import Field, ModelChangelog, ModelModification, ModelObject
 from django.contrib.contenttypes.models import ContentType
-from . import validate_instance, processor
 
 
 @receiver(pre_save, weak=False)

@@ -116,7 +116,7 @@ The defaults are present in the example.
 
     from logging import INFO
     AUTOMATED_LOGGING = {
-        'exclude': {'model': ['Session', 'automated_logging', 'basehttp'],
+        'exclude': {'model': ['admin', 'session', 'automated_logging', 'basehttp', 'contenttypes', 'migrations'],
                     'request': ['GET', 200],
                     'unspecified': []},
         'modules': ['request', 'model', 'unspecified'],
@@ -129,14 +129,14 @@ The defaults are present in the example.
         }
     }
 
-In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries.
+In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries, furthermore it is recommended to include ``session``, ``contenttypes`` and ``migrations`` to disable recorded information of applied migrations and session operations.
 Three modules are available: ``request``, ``unspecified`` and ``model``, these can be disabled, if needed.
 The database integration can be disabled. *Note: the handler than also needs to be removed*.
 The loglevel does indicate on which level things should be reported to other handlers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
 
 *New in version 4.x.x:* **all strings** in ``AUTOMATED_LOGGING`` are case-insensitive.
 
-*New in version 5.x.x:* You can now specify a maximum age for database entries created via `maxage` in the `LOGGING` variable. maxage needs to be an `ISO8601 duration string <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
+*New in version 5.x.x:* You can now specify a maximum age for database entries created via ``maxage`` in the ``LOGGING`` variable. maxage needs to be an `ISO8601 duration string <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
 
 Changelog
 =========
@@ -156,16 +156,20 @@ Version 4.x.x
 [x] exclusion for unspecified module
 [x] performance considerations
 [x] implement requested features
-[ ] prevent migration logs
 
 Version 5.x.x
 -------------
+[x] prevent migration logs
+[ ] optional batch insertion of database entries
 [ ] adding options to Meta field
 --> ignored fields
 --> ignored operations
+
+Version 6.x.x
+-------------
 [ ] implementation of an git like versioning interface
 
-Version 6.0.0
+Version 7.x.x
 -------------
 [ ] temporary world domination
 

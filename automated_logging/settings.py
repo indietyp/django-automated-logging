@@ -2,7 +2,8 @@ from django.conf import settings as st
 from logging import INFO
 
 DEFAULT_AUTOMATED_LOGGING = {
-    'exclude': {'model': ['Session', 'automated_logging', 'basehttp'],
+    'exclude': {'model': ['session', 'automated_logging', 'admin',
+                          'basehttp', 'migrations', 'contenttypes'],
                 'request': [],
                 'unspecified': []},
     'modules': ['request', 'model', 'unspecified'],
