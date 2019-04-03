@@ -18,7 +18,16 @@ env:
   - DJANGO_VERSION=2.1
   - DJANGO_VERSION=2.2
 
+matrix:
+  exclude:
+    - python: "3.4"
+      env: "DJANGO_VERSION=2.1"
+
+    - python: "3.4"
+      env: "DJANGO_VERSION=2.2"
+
 install:
+  - sudo apt-get install -y sqlite3
   - pip install -r requirements.dev.txt
   - pip install Django~=$DJANGO_VERSION
 
