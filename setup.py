@@ -15,7 +15,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='django-automated-logging',
-    version='5.0.0',
+    version='5.0.1',
     description='Django Database Based Automated Logging - finally solved and done in a proper way.',
     long_description=long_description,
     url='https://github.com/indietyp/django-automated-logging',
@@ -32,8 +32,8 @@ setup(
         'Framework :: Django',
         'Framework :: Django :: 1.10',
         'Framework :: Django :: 1.11',
-        'Framework :: Django :: 2.0',
         'Framework :: Django :: 2.1',
+        'Framework :: Django :: 2.2',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
