@@ -9,8 +9,7 @@ env:
   - DJANGO_VERSION=2.1
   - DJANGO_VERSION=2.2
 install:
-  - apt install -y sqlite
-  - pip install -r requirements.dev.txt
+  - pip install -r -U requirements.dev.txt
   - pip install Django~=$DJANGO_VERSION
 
 script:
