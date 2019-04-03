@@ -3,11 +3,21 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7"
+
+addons:
+  apt:
+    sources:
+      - travis-ci/sqlite3
+    packages:
+      - sqlite3
+
 env:
   - DJANGO_VERSION=1.10
   - DJANGO_VERSION=1.11
   - DJANGO_VERSION=2.1
   - DJANGO_VERSION=2.2
+
 install:
   - pip install -r requirements.dev.txt
   - pip install Django~=$DJANGO_VERSION
