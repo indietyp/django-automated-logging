@@ -2,4 +2,3 @@ django_admin_generator
 python-coveralls
 flake8
 codecov
-sqlite3
