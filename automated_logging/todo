@@ -1,0 +1,14 @@
+- [ ] maxage using timedelta
+- [ ] add frontend
+    - [ ] add ability to view and filter
+    - [ ] add ability to restore
+- [ ] cov 100%
+- [ ] rewrite core
+- [ ] ignore and ignore_fields, ignore_operations for models as decorators and META fields
+- [ ] new and renamed settings
+- [ ] simplify model architecture
+- [ ] How to handle Foreign, One2One and Many2Many?
+        -> relationships fields?
+- [ ] rename models to proper names
+- [ ] snapshot object via settings (when adding maybe as settings?)
+- [ ] batch insertion

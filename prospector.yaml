@@ -10,26 +10,26 @@ ignore-paths:
   - logtest
   - automated_logging/apps.py
 
-pep257:
-  disable:
-    - D105
-    - D203
-
-frosted:
-  disable:
-    - D203
-
-pep8:
-  disable:
-    - D203
-
-  enable:
-    - W601
-    - W391
-    - W191
-
-  options:
-    max-line-length: 135
+#pep257:
+#  disable:
+#    - D105
+#    - D203
+#
+#frosted:
+#  disable:
+#    - D203
+#
+#pep8:
+#  disable:
+#    - D203
+#
+#  enable:
+#    - W601
+#    - W391
+#    - W191
+#
+#  options:
+#    max-line-length: 135
 
 uses:
   - django

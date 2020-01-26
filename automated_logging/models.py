@@ -181,3 +181,59 @@ class Unspecified(BaseModel):
     class Meta:
         verbose_name = "Non DAL Message"
         verbose_name_plural = "Non DAL Messages"
+
+
+# TODO: Names
+class ModelInformation(BaseModel):
+    name = None
+    application = None
+
+
+class ModelField(BaseModel):
+    name = None
+    model = None
+
+
+class ModelModification(BaseModel):
+    """ TODO: M2M is not tracked """
+
+    operation = [-1, 0, 1]  # remove, modify, add
+
+    field = None
+
+    previous = None
+    current = None
+
+
+class ModelChangelog(BaseModel):
+    operation = [-1, 0, 1]  # remove, modify, add TODO: maybe?
+
+    user = None
+
+    model = None
+
+    modifications = None
+    message = None
+
+    snapshot = None  # v experimental, that is opt-in (pickled object)
+
+
+class LoggedRequest(BaseModel):
+    user = None
+
+    uri = None
+    data = None
+    status = None
+    method = None
+
+    application = None
+
+
+class LoggedMessage(BaseModel):
+    message = None
+    level = None
+
+    line = None
+    file = None
+
+    application = None
