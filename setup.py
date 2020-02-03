@@ -5,6 +5,7 @@ https://github.com/pypa/sampleproject
 """
 from codecs import open
 from os import path
+
 from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
@@ -45,6 +46,6 @@ setup(
     include_package_data=True,
     keywords='django automation tools backend logging',
     packages=find_packages(exclude=(['logtest', 'test*'])),
-    install_requires=['Django>=1.11', 'marshmallow'],
+    install_requires=['Django>=1.11', 'marshmallow', 'django-picklefield'],
     zip_safe=False
 )

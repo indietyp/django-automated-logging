@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 *.DS_Store
 .idea/
+frontenddev/
 *~
 build
 .coverage
