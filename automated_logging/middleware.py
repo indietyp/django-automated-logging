@@ -1,31 +1,89 @@
 import threading
+from collections import namedtuple
+from typing import NamedTuple, Optional
 
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse
 from django.urls import resolve
 from django.utils.deprecation import MiddlewareMixin
 
+RequestInformation = NamedTuple(
+    'RequestInformation',
+    [
+        ('request', HttpRequest),
+        ('response', Optional[HttpResponse]),
+        ('exception', Optional[Exception]),
+    ],
+)
 
-class AutomatedLoggingMiddleware(MiddlewareMixin):
-  """Get's access to the current things."""
 
-  thread_local = threading.local()
+class AutomatedLoggingMiddleware:
+    thread = threading.local()
 
-  def process_request(self, request):
-    request_uri = request.get_full_path()
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.thread = threading.local()
 
-    AutomatedLoggingMiddleware.thread_local.request = request
-    AutomatedLoggingMiddleware.thread_local.current_user = request.user
-    AutomatedLoggingMiddleware.thread_local.request_uri = request_uri
+        AutomatedLoggingMiddleware.thread.__dal__ = None
 
-    try:
-      AutomatedLoggingMiddleware.thread_local.application = resolve(request.path).func.__module__.split('.')[0]
-    except Http404:
-      AutomatedLoggingMiddleware.thread_local.application = ''
+    def save(self, request, response=None, exception=None):
+        """
+        Helper middleware, that sadly needs to be present.
+        the request_finished and request_started signals only
+        expose the class, not the actual request and response.
 
-  def process_exception(self, request, exception):
-    self.process_request(request)
+        We save the request and response specific data in the thread.
 
-  def process_response(self, request, response):
-    AutomatedLoggingMiddleware.thread_local.method = request.method
-    AutomatedLoggingMiddleware.thread_local.status = response.status_code
-    return response
+        :param request: Django Request
+        :param response: Optional Django Response
+        :param exception: Optional Exception
+        :return:
+        """
+
+        AutomatedLoggingMiddleware.thread.__dal__ = RequestInformation(
+            request, response, exception
+        )
+
+        print('getting executed')
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        self.save(request, response)
+
+        return response
+
+    def process_exception(self, request, exception):
+        """
+        Exception proceeds the same as __call__ and therefore should
+        also save things in the local thread.
+
+        :param request: Django Request
+        :param exception: Thrown Exception
+        :return: -
+        """
+        self.save(request, exception=exception)
+
+    @staticmethod
+    def cleanup():
+        """
+        Cleanup function, that should be called last. Overwrites the
+        custom __dal__ object with None, to make sure the next request
+        does not use the same object.
+
+        :return: -
+        """
+        AutomatedLoggingMiddleware.thread.__dal__ = None
+
+    @staticmethod
+    def get_current_environ() -> Optional[RequestInformation]:
+        """
+        Helper staticmethod that looks if the __dal__ custom attribute
+        is present and returns either the attribute or None
+
+        :return: -
+        """
+
+        if hasattr(AutomatedLoggingMiddleware.thread, '__dal__'):
+            return RequestInformation(*AutomatedLoggingMiddleware.thread.__dal__)
+
+        return None

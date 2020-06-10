@@ -37,11 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'automated_logging',
     'testmodels',
-
-    'django_admin_generator'
+    'django_admin_generator',
 ]
 
 MIDDLEWARE = [
@@ -52,8 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    'automated_logging.middleware.AutomatedLoggingMiddleware'
+    'automated_logging.middleware.AutomatedLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'logtest.urls'
@@ -127,56 +124,46 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'root': {
-        'level': 'INFO',
-        'handlers': ['console', 'db'],
-    },
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s '
-                      '%(process)d %(thread)d %(message)s'
-        },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
-        'syslog': {
-            'format': '%(asctime)s %%LOCAL0-%(levelname)-8s-CBRS %(message)s'
-            # 'format': '%(levelname)s %(message)s'
-        }
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
-        'db': {
-            'level': 'INFO',
-            'class': 'automated_logging.handlers.DatabaseHandler',
-        }
-    },
-    'loggers': {
-        'automated_logging': {
-            'level': 'INFO',
-            'handlers': ['console', 'db'],
-            'propagate': False,
-        },
-        'django': {
-            'level': 'INFO',
-            'handlers': ['console', 'db'],
-            'propagate': False,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'root': {'level': 'INFO', 'handlers': ['console', 'db'],},
+#     'formatters': {
+#         'verbose': {
+#             'format': '%(levelname)s %(asctime)s %(module)s '
+#             '%(process)d %(thread)d %(message)s'
+#         },
+#         'simple': {'format': '%(levelname)s %(message)s'},
+#         'syslog': {
+#             'format': '%(asctime)s %%LOCAL0-%(levelname)-8s-CBRS %(message)s'
+#             # 'format': '%(levelname)s %(message)s'
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'verbose',
+#         },
+#         'db': {'level': 'INFO', 'class': 'automated_logging.handlers.DatabaseHandler',},
+#     },
+#     'loggers': {
+#         'automated_logging': {
+#             'level': 'INFO',
+#             'handlers': ['console', 'db'],
+#             'propagate': False,
+#         },
+#         'django': {'level': 'INFO', 'handlers': ['console', 'db'], 'propagate': False,},
+#     },
+# }
 
 
 AUTOMATED_LOGGING = {
-    'exclude': {'model': ['Session', 'automated_logging', 'basehttp', 'admin', 'lastlistpage'],
-                'request': [],
-                'unspecified': []},
+    'exclude': {
+        'model': ['Session', 'automated_logging', 'basehttp', 'admin', 'lastlistpage'],
+        'request': [],
+        'unspecified': [],
+    },
     'modules': ['request', 'model', 'unspecified'],
     'to_database': True,
     'save_na': False,

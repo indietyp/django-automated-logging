@@ -5,9 +5,15 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import (CharField, ForeignKey, CASCADE, TextField,
-                              SmallIntegerField,
-                              PositiveIntegerField, SET_NULL)
+from django.db.models import (
+    CharField,
+    ForeignKey,
+    CASCADE,
+    TextField,
+    SmallIntegerField,
+    PositiveIntegerField,
+    SET_NULL,
+)
 from picklefield.fields import PickledObjectField
 
 
@@ -32,10 +38,11 @@ class Application(BaseModel):
     name = CharField(max_length=255)
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Application"
         verbose_name_plural = "Applications"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class ModelMirror(BaseModel):
@@ -49,10 +56,11 @@ class ModelMirror(BaseModel):
     application = ForeignKey(Application, on_delete=CASCADE)
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Model Mirror"
         verbose_name_plural = "Model Mirrors"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class ModelField(BaseModel):
@@ -66,14 +74,16 @@ class ModelField(BaseModel):
 
     model = ForeignKey(ModelMirror, on_delete=CASCADE)
     type = CharField(max_length=255)  # string of type
-    content_type = ForeignKey(ContentType, on_delete=SET_NULL,
-                              related_name='al_field')  # TODO: consider remove
+    content_type = ForeignKey(
+        ContentType, on_delete=SET_NULL, related_name='al_field', null=True
+    )  # TODO: consider remove
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Model Field"
         verbose_name_plural = "Model Fields"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class ModelEntry(BaseModel):
@@ -85,13 +95,14 @@ class ModelEntry(BaseModel):
     model = ForeignKey(ModelMirror, on_delete=CASCADE)
 
     value = TextField()  # (repr)
-    pk = TextField()
+    primary_key = TextField()
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Model Entry"
         verbose_name_plural = "Model Entries"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class ModelEvent(BaseModel):
@@ -100,8 +111,10 @@ class ModelEvent(BaseModel):
     values or relationships.
     """
 
-    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)  # maybe don't cascade?
-    model = ForeignKey(ModelEntry, on_delete=CASCADE)  # Foreign 2 ModelEntry
+    user = ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=CASCADE
+    )  # maybe don't cascade?
+    model = ForeignKey(ModelEntry, on_delete=CASCADE)
 
     # modifications = None  # One2Many -> ModelModification
     # relationships = None  # One2Many -> ModelRelationship
@@ -110,12 +123,14 @@ class ModelEvent(BaseModel):
 
     # v experimental, that is opt-in (pickled object)
     snapshot = PickledObjectField(null=True)
+    execution_time = PositiveIntegerField(null=True)
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Model Entry Event"
         verbose_name_plural = "Model Entry Events"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class ModelValueModification(BaseModel):
@@ -129,7 +144,8 @@ class ModelValueModification(BaseModel):
     """
 
     operation = SmallIntegerField(
-        validators=[MinValueValidator(-1), MaxValueValidator(1)], null=True)
+        validators=[MinValueValidator(-1), MaxValueValidator(1)], null=True
+    )
 
     field = ForeignKey(ModelField, on_delete=CASCADE)
 
@@ -139,10 +155,11 @@ class ModelValueModification(BaseModel):
     event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name='modifications')
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Model Entry Event Value Modification"
         verbose_name_plural = "Model Entry Event Value Modifications"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class ModelRelationshipModification(BaseModel):
@@ -156,8 +173,10 @@ class ModelRelationshipModification(BaseModel):
     field is the field where the relationship changed (entry got added or removed)
     and model is the entry that got removed/added from the relationship.
     """
+
     operation = SmallIntegerField(
-        validators=[MinValueValidator(-1), MaxValueValidator(1)], null=True)
+        validators=[MinValueValidator(-1), MaxValueValidator(1)], null=True
+    )
 
     field = ForeignKey(ModelField, on_delete=CASCADE)
     model = ForeignKey(ModelEntry, on_delete=CASCADE)
@@ -165,10 +184,11 @@ class ModelRelationshipModification(BaseModel):
     event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name='relationships')
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Model Entry Event Relationship Modification"
         verbose_name_plural = "Model Entry Event Relationship Modifications"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class RequestEvent(BaseModel):
@@ -184,17 +204,20 @@ class RequestEvent(BaseModel):
     user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)
 
     uri = TextField()
-    data = PickledObjectField(null=True)
+    content = PickledObjectField(null=True)
+    content_type = CharField(max_length=255)
+
     status = PositiveIntegerField()
     method = CharField(max_length=255)
 
     application = ForeignKey(Application, on_delete=CASCADE)
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Request Event"
         verbose_name_plural = "Request Events"
+
+    class AutomatedLogging:
+        ignore = True
 
 
 class UnspecifiedEvent(BaseModel):
@@ -202,6 +225,7 @@ class UnspecifiedEvent(BaseModel):
     Used to record unspecified internal events that are dispatched via
     the python logging library. saves the message, level, line, file and application.
     """
+
     message = TextField()
     level = PositiveIntegerField()
 
@@ -211,7 +235,8 @@ class UnspecifiedEvent(BaseModel):
     application = ForeignKey(Application, on_delete=CASCADE)
 
     class Meta:
-        al_ignore = True
-
         verbose_name = "Unspecified Event"
         verbose_name_plural = "Unspecified Events5"
+
+    class AutomatedLogging:
+        ignore = True

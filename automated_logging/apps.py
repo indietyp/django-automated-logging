@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from .settings import AUTOMATED_LOGGING
+from .settings import settings
 
 
 class AutomatedloggingConfig(AppConfig):
@@ -7,9 +7,9 @@ class AutomatedloggingConfig(AppConfig):
     verbose_name = 'Django Automated Logging (DAL)'
 
     def ready(self):
-      if 'request' in AUTOMATED_LOGGING['modules']:
-        from .signals import request
-      if 'model' in AUTOMATED_LOGGING['modules']:
-        from .signals import database, m2m
-
-      from .handlers import DatabaseHandler
+        if 'request' in settings.modules:
+            from .signals import request
+        # if 'model' in settings.modules:
+        #     from .signals import database, m2m
+        #
+        # from .handlers import DatabaseHandler

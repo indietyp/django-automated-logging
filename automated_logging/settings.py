@@ -8,6 +8,18 @@ from marshmallow.fields import Boolean, String, List, Nested, Integer
 from marshmallow.validate import OneOf, Range
 
 
+class LowerCaseString(String):
+    """
+    String that is always going to be serialized to a lowercase string,
+    using `str.lower()`
+    """
+
+    def _serialize(self, value, attr, obj, **kwargs) -> Optional[str]:
+        output = super()._serialize(value, attr, obj, **kwargs)
+
+        return output.lower()
+
+
 # ModelString
 # FieldString
 class ApplicationString(String):
@@ -86,10 +98,11 @@ class RequestExcludeSchema(BaseSchema):
     Configuration schema for request exclusion, that is only used in RequestSchema,
     is used to exclude unknown sources, applications, methods and status codes.
     """
-    unknown = Boolean(missing=False)
-    applications = List(String(), missing=[])
 
-    methods = List(String(), missing=['GET'])
+    unknown = Boolean(missing=False)
+    applications = List(ApplicationString(), missing=[])
+
+    methods = List(LowerCaseString(), missing=['GET'])
     status = List(Integer(validate=Range(min=0)), missing=[200])
 
 
@@ -99,9 +112,19 @@ class RequestDataSchema(BaseSchema):
     and is used to enable data collection, ignore keys that are going to be omitted
     mask keys (their value is going to be replaced with <REDACTED>)
     """
+
     enabled = Boolean(missing=False)
-    ignore = List(String(), missing=[])
-    mask = List(String(), missing=['password'])
+    query = Boolean(missing=False)
+
+    ignore = List(LowerCaseString(), missing=[])
+    mask = List(LowerCaseString(), missing=['password'])
+
+    # TODO: add more, change name?
+    content_types = List(
+        LowerCaseString(),
+        missing=['application/json'],
+        validate=OneOf(['application/json']),
+    )
 
 
 class RequestSchema(BaseSchema):
@@ -122,10 +145,19 @@ class ModelExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    fields = List(String(), missing=[])
-    models = List(String(), missing=[])
-    applications = List(String(), missing=['session', 'automated_logging', 'admin',
-                                           'basehttp', 'migrations', 'contenttypes'])
+    fields = List(LowerCaseString(), missing=[])
+    models = List(LowerCaseString(), missing=[])
+    applications = List(
+        ApplicationString(),
+        missing=[
+            'session',
+            'automated_logging',
+            'admin',
+            'basehttp',
+            'migrations',
+            'contenttypes',
+        ],
+    )
 
 
 class ModelSchema(BaseSchema):
@@ -138,8 +170,11 @@ class ModelSchema(BaseSchema):
     loglevel = Integer(missing=INFO, validate=Range(min=NOTSET, max=CRITICAL))
     exclude = MissingNested(ModelExcludeSchema)
 
-    mask = List(String(), missing=[])
+    mask = List(LowerCaseString(), missing=[])
     user_mirror = Boolean(default=False)  # maybe, name not good
+
+    # if execution_time should be measured of ModelEvent
+    performance = Boolean(default=False)
 
 
 class UnspecifiedExcludeSchema(BaseSchema):
@@ -150,8 +185,8 @@ class UnspecifiedExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    files = List(String(), missing=[])
-    applications = List(String(), missing=[])
+    files = List(LowerCaseString(), missing=[])
+    applications = List(ApplicationString(), missing=[])
 
 
 class UnspecifiedSchema(BaseSchema):
@@ -169,8 +204,10 @@ class ConfigSchema(BaseSchema):
     and includes the nested module configurations.
     """
 
-    modules = List(String(validate=OneOf(['request', 'model', 'unspecified'])),
-                   missing=['request', 'model', 'unspecified'])
+    modules = List(
+        LowerCaseString(validate=OneOf(['request', 'model', 'unspecified'])),
+        missing=['request', 'model', 'unspecified'],
+    )
 
     request = MissingNested(RequestSchema)
     model = MissingNested(ModelSchema)

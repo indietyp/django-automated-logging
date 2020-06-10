@@ -13,3 +13,5 @@ logtest/db.sqlite3
 htmlcov
 .tox
 node_modules
+.venv/
+todo
