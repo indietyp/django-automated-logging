@@ -159,12 +159,42 @@ STATIC_URL = '/static/'
 
 
 AUTOMATED_LOGGING = {
-    'exclude': {
-        'model': ['Session', 'automated_logging', 'basehttp', 'admin', 'lastlistpage'],
-        'request': [],
-        'unspecified': [],
+    'model': {
+        'exclude': {
+            'unknown': False,
+            'fields': [],
+            'applications': [
+                'session',
+                'automated_logging',
+                'admin',
+                'basehttp',
+                'migrations',
+                'contenttypes',
+            ],
+            'models': [],
+        },
+        'loglevel': 20,
+        'mask': [],
+    },
+    'unspecified': {
+        'exclude': {'unknown': False, 'applications': [], 'files': []},
+        'loglevel': 20,
     },
     'modules': ['request', 'model', 'unspecified'],
-    'to_database': True,
-    'save_na': False,
+    'request': {
+        'data': {
+            'ignore': [],
+            'mask': ['password'],
+            'query': False,
+            'content_types': ['application/json'],
+            'enabled': False,
+        },
+        'exclude': {
+            'unknown': False,
+            'status': [],
+            'methods': [],
+            'applications': ['automated*'],
+        },
+        'loglevel': 20,
+    },
 }

@@ -43,8 +43,6 @@ class AutomatedLoggingMiddleware:
             request, response, exception
         )
 
-        print('getting executed')
-
     def __call__(self, request):
         response = self.get_response(request)
 

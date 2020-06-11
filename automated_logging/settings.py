@@ -1,11 +1,15 @@
+import re
 from collections import namedtuple
 from logging import INFO, NOTSET, CRITICAL
-from typing import Optional
+from typing import NamedTuple
 
 from django.conf import settings as st
 from marshmallow import Schema, post_load, EXCLUDE
 from marshmallow.fields import Boolean, String, List, Nested, Integer
 from marshmallow.validate import OneOf, Range
+
+
+Search = NamedTuple('Search', (('type', str), ('value', str)))
 
 
 class LowerCaseString(String):
@@ -14,43 +18,50 @@ class LowerCaseString(String):
     using `str.lower()`
     """
 
-    def _serialize(self, value, attr, obj, **kwargs) -> Optional[str]:
-        output = super()._serialize(value, attr, obj, **kwargs)
+    def _deserialize(self, value, attr, data, **kwargs) -> str:
+        output = super()._deserialize(value, attr, data, **kwargs)
 
         return output.lower()
 
 
 # ModelString
 # FieldString
-class ApplicationString(String):
+# ApplicationString
+class SearchString(String):
     """
-    TODO: parsing in application, convert strings into regex strings
+    SearchStrings are used for models, fields and applications.
+    They can be either a glob (prefixed with either glob or gl),
+    regex (prefixed with either regex or re)
+    or plain (prefixed with plain or pl).
 
-    used to convert an input string into an appropriately formatted string,
-    "*" is going to be evaluated to 0+ unspecified characters, r'' strings are
-    going to be evaluated via the python regex module.
-
-    allowed values:
-        - application
-        - app*
-        - application.module
-        - app*.module
-        - app*.mod*
-        - application.mod*
-        - *cation
-        - app*cation
-
-    examples values:
-        - django.*
-        - *_logging
-        - automated*
-        - dj*.ht*
+    format: <prefix>:<value>
+    examples:
+        - gl:app*       (glob matching)
+        - glob:app*     (glob matching)
+        - pl:app        (exact matching)
+        - plain:app     (exact matching)
+        - re:^app.*$    (regex matching)
+        - regex:^app.*$ (regex matching)
+        - :app*         (glob matching)
+        - app           (glob matching)
     """
 
-    def _serialize(self, value, attr, obj, **kwargs) -> Optional[str]:
-        output = super()._serialize(value, attr, obj, **kwargs)
+    def _deserialize(self, value, attr, data, **kwargs) -> Search:
+        output = super()._deserialize(value, attr, data, **kwargs)
 
-        return output
+        match = re.match(r'^(\w*):(.*)$', output)
+        if match:
+            module = match.groups()[0]
+            match = match.groups()[1]
+
+            if module.startswith('gl'):
+                return Search('glob', match)
+            elif module.startswith('pl'):
+                return Search('plain', match)
+            elif module.startswith('re'):
+                return Search('regex', match)
+
+        return Search('glob', output)
 
 
 class MissingNested(Nested):
@@ -100,7 +111,7 @@ class RequestExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    applications = List(ApplicationString(), missing=[])
+    applications = List(SearchString(), missing=[])
 
     methods = List(LowerCaseString(), missing=['GET'])
     status = List(Integer(validate=Range(min=0)), missing=[200])
@@ -121,9 +132,8 @@ class RequestDataSchema(BaseSchema):
 
     # TODO: add more, change name?
     content_types = List(
-        LowerCaseString(),
+        LowerCaseString(validate=OneOf(['application/json'])),
         missing=['application/json'],
-        validate=OneOf(['application/json']),
     )
 
 
@@ -148,7 +158,7 @@ class ModelExcludeSchema(BaseSchema):
     fields = List(LowerCaseString(), missing=[])
     models = List(LowerCaseString(), missing=[])
     applications = List(
-        ApplicationString(),
+        SearchString(),
         missing=[
             'session',
             'automated_logging',
@@ -186,7 +196,7 @@ class UnspecifiedExcludeSchema(BaseSchema):
 
     unknown = Boolean(missing=False)
     files = List(LowerCaseString(), missing=[])
-    applications = List(ApplicationString(), missing=[])
+    applications = List(SearchString(), missing=[])
 
 
 class UnspecifiedSchema(BaseSchema):

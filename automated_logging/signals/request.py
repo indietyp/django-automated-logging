@@ -1,6 +1,7 @@
 import logging
 import urllib.parse
 
+from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.wsgi import WSGIRequest
 from django.dispatch import receiver
 from django.core.signals import got_request_exception, request_started, request_finished
@@ -8,8 +9,9 @@ from django.http import Http404
 from django.urls import resolve
 
 from automated_logging.middleware import AutomatedLoggingMiddleware
-from automated_logging.models import RequestEvent
+from automated_logging.models import RequestEvent, Application
 from automated_logging.settings import settings
+from automated_logging.helpers import namedtuple2dict
 from automated_logging.signals import request_exclusion
 
 logger = logging.getLogger(__name__)
@@ -37,7 +39,8 @@ def request_finished_signal(sender, **kwargs) -> None:
         return
 
     request = RequestEvent()
-    request.user = environ.request.user
+    if not isinstance(environ.request.user, AnonymousUser):
+        request.user = environ.request.user
 
     request.uri = environ.request.get_full_path()
 
@@ -52,19 +55,19 @@ def request_finished_signal(sender, **kwargs) -> None:
     request.status = environ.response.status_code if environ.response else None
     request.method = environ.request.method
 
-    if request_exclusion(request):
-        return
-
     try:
-        request.application = (
-            resolve(environ.request.path).func.__module__.split('.')
-        )[0]
+        # TODO: handler should get_or_create
+        application = resolve(environ.request.path).func.__module__.split('.')[0]
+        request.application = Application(name=application)
     except Http404:
         pass
 
+    if request_exclusion(request):
+        return
+
     logger.log(
         level,
-        f'[{environ.method}] [{environ.status}] {environ.user} at {environ.uri}',
+        f'[{request.method}] [{request.status}] {request.user or "Anonymous"} at {request.uri}',
         extra={'action': 'request', 'event': request},
     )
 
