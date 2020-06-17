@@ -9,7 +9,7 @@ class AutomatedloggingConfig(AppConfig):
     def ready(self):
         if 'request' in settings.modules:
             from .signals import request
-        # if 'model' in settings.modules:
-        #     from .signals import database, m2m
+        if 'model' in settings.modules:
+            from .signals import save
         #
         # from .handlers import DatabaseHandler

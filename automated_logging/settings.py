@@ -155,25 +155,26 @@ class ModelExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    fields = List(LowerCaseString(), missing=[])
-    models = List(LowerCaseString(), missing=[])
+    fields = List(SearchString(), missing=[])
+    models = List(SearchString(), missing=[])
     applications = List(
         SearchString(),
         missing=[
-            'session',
-            'automated_logging',
-            'admin',
-            'basehttp',
-            'migrations',
-            'contenttypes',
+            Search('plain', 'session'),
+            Search('plain', 'automated_logging'),
+            Search('plain', 'admin'),
+            Search('plain', 'basehttp'),
+            Search('plain', 'migrations'),
+            Search('plain', 'contenttypes'),
         ],
     )
 
 
 class ModelSchema(BaseSchema):
     """
-    Configuration schema for the model module. mask is used to replace specific
-    fields when changed with <REDACTED>, this should be used for fields that are
+    Configuration schema for the model module. mask property indicates
+    which fields to specifically replace with <REDACTED>,
+    this should be used for fields that are
     sensitive, but shouldn't be completely excluded.
     """
 
@@ -182,6 +183,9 @@ class ModelSchema(BaseSchema):
 
     mask = List(LowerCaseString(), missing=[])
     user_mirror = Boolean(default=False)  # maybe, name not good
+
+    # should the log message include all modifications done?
+    detailed_message = Boolean(default=True)
 
     # if execution_time should be measured of ModelEvent
     performance = Boolean(default=False)

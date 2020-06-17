@@ -138,7 +138,7 @@ class ModelValueModification(BaseModel):
     Used to record the model entry event modifications of simple values.
 
     The operation attribute can have 4 valid values:
-    -1 (remove), 0 (modify), 1 (add), None (n/a)
+    -1 (delete), 0 (modify), 1 (create), None (n/a)
 
     previous and current record the value change that happened.
     """
@@ -149,8 +149,8 @@ class ModelValueModification(BaseModel):
 
     field = ForeignKey(ModelField, on_delete=CASCADE)
 
-    previous = TextField()
-    current = TextField()
+    previous = TextField(null=True)
+    current = TextField(null=True)
 
     event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name='modifications')
 
@@ -168,7 +168,7 @@ class ModelRelationshipModification(BaseModel):
 
 
     The operation attribute can have 4 valid values:
-    -1 (remove), 0 (modify), 1 (add), None (n/a)
+    -1 (delete), 0 (modify), 1 (create), None (n/a)
 
     field is the field where the relationship changed (entry got added or removed)
     and model is the entry that got removed/added from the relationship.

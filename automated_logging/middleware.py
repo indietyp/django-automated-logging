@@ -1,10 +1,8 @@
 import threading
-from collections import namedtuple
 from typing import NamedTuple, Optional
 
-from django.http import Http404, HttpRequest, HttpResponse
-from django.urls import resolve
-from django.utils.deprecation import MiddlewareMixin
+from django.contrib.auth.models import AbstractUser, AnonymousUser
+from django.http import HttpRequest, HttpResponse
 
 RequestInformation = NamedTuple(
     'RequestInformation',
@@ -78,10 +76,29 @@ class AutomatedLoggingMiddleware:
         Helper staticmethod that looks if the __dal__ custom attribute
         is present and returns either the attribute or None
 
-        :return: -
+        :return: Optional[RequestInformation]
         """
 
         if hasattr(AutomatedLoggingMiddleware.thread, '__dal__'):
             return RequestInformation(*AutomatedLoggingMiddleware.thread.__dal__)
 
         return None
+
+    @staticmethod
+    def get_current_user(environ: RequestInformation = None) -> Optional[AbstractUser]:
+        """
+        Helper staticmethod that returns the current user, taken from
+        the current environment.
+
+        :return: Optional[User]
+        """
+        if not environ:
+            environ = AutomatedLoggingMiddleware.get_current_environ()
+
+        if not environ:
+            return None
+
+        if isinstance(environ.request.user, AnonymousUser):
+            return None
+
+        return environ.request.user
