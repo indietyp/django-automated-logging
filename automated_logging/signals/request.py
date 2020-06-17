@@ -14,7 +14,7 @@ from django.http import Http404
 from django.urls import resolve
 
 from automated_logging.middleware import AutomatedLoggingMiddleware
-from automated_logging.models import RequestEvent, Application
+from automated_logging.models import RequestEvent, Application, RequestContext
 from automated_logging.settings import settings
 from automated_logging.signals import request_exclusion
 
@@ -52,10 +52,19 @@ def request_finished_signal(sender, **kwargs) -> None:
     if not settings.request.data.query:
         request.uri = urllib.parse.urlparse(request.uri).path
 
-    if settings.request.data.enabled:
-        request.content = environ.response.content
+    if 'request' in settings.request.data.enabled:
+        request_context = RequestContext()
+        request_context.content = environ.request.body
+        request_context.type = environ.request.content_type
 
-    request.content_type = environ.response['Content-Type']
+        request.request = request_context
+
+    if 'response' in settings.request.data.enabled:
+        response_context = RequestContext()
+        response_context.content = environ.response.content
+        response_context.type = environ.response['Content-Type']
+
+        request.response = response_context
 
     request.status = environ.response.status_code if environ.response else None
     request.method = environ.request.method

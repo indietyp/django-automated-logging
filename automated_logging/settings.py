@@ -124,7 +124,9 @@ class RequestDataSchema(BaseSchema):
     mask keys (their value is going to be replaced with <REDACTED>)
     """
 
-    enabled = Boolean(missing=False)
+    enabled = List(
+        LowerCaseString(validate=OneOf(['request', 'response'])), missing=[],
+    )
     query = Boolean(missing=False)
 
     ignore = List(LowerCaseString(), missing=[])

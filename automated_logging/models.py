@@ -191,6 +191,15 @@ class ModelRelationshipModification(BaseModel):
         ignore = True
 
 
+class RequestContext(BaseModel):
+    """
+    Used to record contents of request and responses and their type.
+    """
+
+    content = PickledObjectField(null=True)
+    type = CharField(max_length=255)
+
+
 class RequestEvent(BaseModel):
     """
     Used to record events of requests that happened.
@@ -204,8 +213,9 @@ class RequestEvent(BaseModel):
     user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)
 
     uri = TextField()
-    content = PickledObjectField(null=True)
-    content_type = CharField(max_length=255)
+
+    request = ForeignKey(RequestContext, on_delete=CASCADE, null=True)
+    response = ForeignKey(RequestContext, on_delete=CASCADE, null=True)
 
     status = PositiveIntegerField()
     method = CharField(max_length=255)
