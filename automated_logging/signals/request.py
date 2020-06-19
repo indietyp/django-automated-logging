@@ -6,7 +6,6 @@ signals
 import logging
 import urllib.parse
 
-from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.wsgi import WSGIRequest
 from django.dispatch import receiver
 from django.core.signals import got_request_exception, request_finished
@@ -30,10 +29,9 @@ def request_finished_signal(sender, **kwargs) -> None:
 
     This is a simple redirection.
 
-    TODO: request content and response content
-
     :return: -
     """
+
     level = settings.request.loglevel
     environ = AutomatedLoggingMiddleware.get_current_environ()
 
@@ -82,7 +80,7 @@ def request_finished_signal(sender, **kwargs) -> None:
     logger.log(
         level,
         f'[{request.method}] [{request.status}] '
-        f'{request.user or "Anonymous"} '
+        f'{getattr(request, "user", "Anonymous")} '
         f'at {request.uri}',
         extra={'action': 'request', 'event': request},
     )

@@ -11,5 +11,6 @@ class AutomatedloggingConfig(AppConfig):
             from .signals import request
         if 'model' in settings.modules:
             from .signals import save
-        #
-        # from .handlers import DatabaseHandler
+            from .signals import m2m
+
+        from .handlers import DatabaseHandler

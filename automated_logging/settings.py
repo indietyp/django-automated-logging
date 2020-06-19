@@ -184,13 +184,13 @@ class ModelSchema(BaseSchema):
     exclude = MissingNested(ModelExcludeSchema)
 
     mask = List(LowerCaseString(), missing=[])
-    user_mirror = Boolean(default=False)  # maybe, name not good
+    user_mirror = Boolean(missing=False)  # maybe, name not good
 
     # should the log message include all modifications done?
-    detailed_message = Boolean(default=True)
+    detailed_message = Boolean(missing=True)
 
     # if execution_time should be measured of ModelEvent
-    performance = Boolean(default=False)
+    performance = Boolean(missing=False)
 
 
 class UnspecifiedExcludeSchema(BaseSchema):

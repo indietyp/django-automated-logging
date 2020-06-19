@@ -15,10 +15,10 @@ from automated_logging.models import (
     ModelValueModification,
     ModelField,
     ModelMirror,
+    Application,
 )
 from automated_logging.settings import settings
-from automated_logging.signals import model_exclusion
-
+from automated_logging.signals import model_exclusion, lazy_model_exclusion
 
 ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
 logger = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     model = ModelMirror()
     model.name = sender.__name__
-    model.application = instance._meta.app_label
+    model.application = Application(name=instance._meta.app_label)
 
     for entry in summary:
         field = ModelField()
@@ -121,6 +121,7 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         modifications.append(modification)
 
     instance._dal_modifications = modifications
+
     if settings.model.performance:
         instance._dal_performance = datetime.now()
 
@@ -141,12 +142,14 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     past = {'modify': 'modified', 'create': 'created', 'delete': 'deleted'}
 
     user = AutomatedLoggingMiddleware.get_current_user()
-    application = instance._meta.app_label
+    application = Application(name=instance._meta.app_label)
     model = sender.__name__
 
     logger.log(
         settings.model.loglevel,
-        f'{user} {past[status]} [{application}][{model}]{instance}{suffix}',
+        f'{user or "Anonymous"} {past[status]} '
+        f'[{application}] [{model}] '
+        f'{instance!r}{suffix}',
         extra={
             'action': 'model',
             'data': {
@@ -170,6 +173,8 @@ def post_save_signal(sender, instance, created, update_fields, **kwargs) -> None
     is the case we can be sure the save was successful and then only
     propagate the changes to the handler.
 
+    TODO: respect update_fields
+
     :param sender: model class
     :param instance: model instance
     :param created: bool, was the model created?
@@ -177,10 +182,7 @@ def post_save_signal(sender, instance, created, update_fields, **kwargs) -> None
     :param kwargs: django needs kwargs to be there
     :return: -
     """
-    lazy = hasattr(instance, '_dal_excluded')
-    if lazy and instance._dal_excluded:
-        return
-    elif not lazy and model_exclusion(instance):
+    if lazy_model_exclusion(instance):
         return
 
     status = 'create' if created else 'modify'
@@ -207,4 +209,7 @@ def post_delete_signal(sender, instance, **kwargs) -> None:
     :param kwargs: required bt django
     :return: -
     """
+    if lazy_model_exclusion(instance):
+        return
+
     post_processor('delete', sender, instance)

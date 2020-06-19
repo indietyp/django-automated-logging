@@ -124,38 +124,38 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'root': {'level': 'INFO', 'handlers': ['console', 'db'],},
-#     'formatters': {
-#         'verbose': {
-#             'format': '%(levelname)s %(asctime)s %(module)s '
-#             '%(process)d %(thread)d %(message)s'
-#         },
-#         'simple': {'format': '%(levelname)s %(message)s'},
-#         'syslog': {
-#             'format': '%(asctime)s %%LOCAL0-%(levelname)-8s-CBRS %(message)s'
-#             # 'format': '%(levelname)s %(message)s'
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'level': 'INFO',
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'verbose',
-#         },
-#         'db': {'level': 'INFO', 'class': 'automated_logging.handlers.DatabaseHandler',},
-#     },
-#     'loggers': {
-#         'automated_logging': {
-#             'level': 'INFO',
-#             'handlers': ['console', 'db'],
-#             'propagate': False,
-#         },
-#         'django': {'level': 'INFO', 'handlers': ['console', 'db'], 'propagate': False,},
-#     },
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'root': {'level': 'INFO', 'handlers': ['console', 'db'],},
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s '
+            '%(process)d %(thread)d %(message)s'
+        },
+        'simple': {'format': '%(levelname)s %(message)s'},
+        'syslog': {
+            'format': '%(asctime)s %%LOCAL0-%(levelname)-8s-CBRS %(message)s'
+            # 'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'db': {'level': 'INFO', 'class': 'automated_logging.handlers.DatabaseHandler',},
+    },
+    'loggers': {
+        'automated_logging': {
+            'level': 'INFO',
+            'handlers': ['console', 'db'],
+            'propagate': False,
+        },
+        'django': {'level': 'INFO', 'handlers': ['console', 'db'], 'propagate': False,},
+    },
+}
 
 
 AUTOMATED_LOGGING = {
@@ -187,7 +187,7 @@ AUTOMATED_LOGGING = {
             'mask': ['password'],
             'query': False,
             'content_types': ['application/json'],
-            'enabled': False,
+            'enabled': [],
         },
         'exclude': {
             'unknown': False,

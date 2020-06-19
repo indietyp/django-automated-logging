@@ -44,6 +44,9 @@ class Application(BaseModel):
     class AutomatedLogging:
         ignore = True
 
+    def __str__(self):
+        return self.name
+
 
 class ModelMirror(BaseModel):
     """
@@ -112,7 +115,7 @@ class ModelEvent(BaseModel):
     """
 
     user = ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=CASCADE
+        settings.AUTH_USER_MODEL, on_delete=CASCADE, null=True
     )  # maybe don't cascade?
     model = ForeignKey(ModelEntry, on_delete=CASCADE)
 
@@ -214,8 +217,12 @@ class RequestEvent(BaseModel):
 
     uri = TextField()
 
-    request = ForeignKey(RequestContext, on_delete=CASCADE, null=True)
-    response = ForeignKey(RequestContext, on_delete=CASCADE, null=True)
+    request = ForeignKey(
+        RequestContext, on_delete=CASCADE, null=True, related_name='request_context'
+    )
+    response = ForeignKey(
+        RequestContext, on_delete=CASCADE, null=True, related_name='response_context'
+    )
 
     status = PositiveIntegerField()
     method = CharField(max_length=255)

@@ -6,6 +6,14 @@ from automated_logging.models import RequestEvent
 from automated_logging.settings import settings, Search
 
 
+def lazy_model_exclusion(instance) -> bool:
+    lazy = hasattr(instance, '_dal_excluded')
+    if not lazy:
+        instance._dal_excluded = model_exclusion(instance)
+
+    return instance._dal_excluded
+
+
 def candidate_in_scope(candidate: str, scope: List[Search]) -> bool:
     """
     Check if the candidate string is valid with the scope supplied,
@@ -67,6 +75,11 @@ def model_exclusion(instance) -> bool:
     :param instance:
     :return: should be excluded?
     """
+
+    if hasattr(instance.__class__, 'AutomatedLogging') and getattr(
+        instance.__class__.AutomatedLogging, 'ignore', False
+    ):
+        return True
 
     exclusions = settings.model.exclude
     module = instance.__module__
