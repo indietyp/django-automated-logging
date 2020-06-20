@@ -191,6 +191,7 @@ class ModelSchema(BaseSchema):
 
     # if execution_time should be measured of ModelEvent
     performance = Boolean(missing=False)
+    snapshot = Boolean(missing=False)
 
 
 class UnspecifiedExcludeSchema(BaseSchema):

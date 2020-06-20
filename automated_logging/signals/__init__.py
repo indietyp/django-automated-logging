@@ -6,12 +6,46 @@ from automated_logging.models import RequestEvent
 from automated_logging.settings import settings, Search
 
 
-def lazy_model_exclusion(instance) -> bool:
-    lazy = hasattr(instance, '_dal_excluded')
-    if not lazy:
-        instance._dal_excluded = model_exclusion(instance)
+class MetaDataContainer(dict):
+    """
+    simple class we use, to store values.
 
-    return instance._dal_excluded
+    Values can be retrieved via attribute or item.
+    """
+
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError:
+            raise AttributeError
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
+def create_meta(instance) -> None:
+    """
+    Simple helper function that created the dal object
+    in the meta container.
+
+    :param instance:
+    :return:
+    """
+    if not hasattr(instance._meta, 'dal'):
+        instance._meta.dal = MetaDataContainer()
+
+
+def lazy_model_exclusion(instance) -> bool:
+    """
+    First look if the model has been excluded already
+    -> only then look if excluded.
+    """
+    create_meta(instance)
+    lazy = hasattr(instance._meta.dal, 'excluded')
+    if not lazy:
+        instance._meta.dal.excluded = model_exclusion(instance)
+
+    return instance._meta.dal.excluded
 
 
 def candidate_in_scope(candidate: str, scope: List[Search]) -> bool:

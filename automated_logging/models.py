@@ -13,6 +13,7 @@ from django.db.models import (
     SmallIntegerField,
     PositiveIntegerField,
     SET_NULL,
+    DurationField,
 )
 from picklefield.fields import PickledObjectField
 
@@ -77,9 +78,9 @@ class ModelField(BaseModel):
 
     model = ForeignKey(ModelMirror, on_delete=CASCADE)
     type = CharField(max_length=255)  # string of type
-    content_type = ForeignKey(
-        ContentType, on_delete=SET_NULL, related_name='al_field', null=True
-    )  # TODO: consider remove
+    # content_type = ForeignKey(
+    #     ContentType, on_delete=SET_NULL, related_name='al_field', null=True
+    # )
 
     class Meta:
         verbose_name = "Model Field"
@@ -122,11 +123,12 @@ class ModelEvent(BaseModel):
     # modifications = None  # One2Many -> ModelModification
     # relationships = None  # One2Many -> ModelRelationship
 
-    message = TextField()
+    # TODO: consider adding
+    # message = TextField()
 
     # v experimental, that is opt-in (pickled object)
     snapshot = PickledObjectField(null=True)
-    execution_time = PositiveIntegerField(null=True)
+    performance = DurationField(null=True)
 
     class Meta:
         verbose_name = "Model Entry Event"
@@ -213,7 +215,7 @@ class RequestEvent(BaseModel):
     status and method are their respective HTTP equivalents.
     """
 
-    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE)
+    user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE, null=True)
 
     uri = TextField()
 

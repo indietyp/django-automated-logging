@@ -16,9 +16,11 @@ from automated_logging.models import (
     ModelField,
     ModelMirror,
     Application,
+    ModelEvent,
+    ModelEntry,
 )
 from automated_logging.settings import settings
-from automated_logging.signals import model_exclusion, lazy_model_exclusion
+from automated_logging.signals import model_exclusion, lazy_model_exclusion, create_meta
 
 ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
 logger = logging.getLogger(__name__)
@@ -38,11 +40,12 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     :param kwargs:
     :return: None
     """
+    create_meta(instance)
     # clear the _dal_event to be sure
-    instance._dal_event = None
+    instance._meta.dal.event = None
 
     excluded = model_exclusion(instance)
-    instance._dal_excluded = excluded
+    instance._meta.dal.excluded = excluded
     if excluded:
         return
 
@@ -96,9 +99,18 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     modifications = []
 
     summary = [
-        *({'operation': 1, 'previous': None, 'current': new[k]} for k in added),
-        *({'operation': -1, 'previous': old[k], 'current': None} for k in deleted),
-        *({'operation': 0, 'previous': old[k], 'current': new[k]} for k in changed),
+        *(
+            {'operation': 1, 'previous': None, 'current': new[k], 'key': k}
+            for k in added
+        ),
+        *(
+            {'operation': -1, 'previous': old[k], 'current': None, 'key': k}
+            for k in deleted
+        ),
+        *(
+            {'operation': 0, 'previous': old[k], 'current': new[k], 'key': k}
+            for k in changed
+        ),
     ]
 
     model = ModelMirror()
@@ -107,10 +119,9 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     for entry in summary:
         field = ModelField()
-        field.name = entry
+        field.name = entry['key']
         field.model = model
-        field.type = repr(getattr(sender, entry))
-        # field.content_type =
+        field.type = repr(getattr(sender, entry['key']))
 
         modification = ModelValueModification()
         modification.operation = entry['operation']
@@ -120,10 +131,10 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
         modifications.append(modification)
 
-    instance._dal_modifications = modifications
+    instance._meta.dal.modifications = modifications
 
     if settings.model.performance:
-        instance._dal_performance = datetime.now()
+        instance._meta.dal.performance = datetime.now()
 
 
 def post_processor(status, sender, instance, updated=None, suffix='') -> None:
@@ -131,6 +142,9 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     Due to the fact that both post_delete and post_save have
     the same logic for propagating changes, we have this helper class
     to do so, just simply wraps and logs the data the handler needs.
+
+    The event gets created here instead of the handler to keep
+    everything consistent and have the handler as simple as possible.
 
     :param status: create, modify, delete
     :param sender: model class
@@ -145,6 +159,29 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     application = Application(name=instance._meta.app_label)
     model = sender.__name__
 
+    create_meta(instance)
+    if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
+        instance._meta.dal.performance = datetime.now() - instance._meta.dal.performance
+
+    event = ModelEvent()
+    event.user = user
+
+    if settings.model.snapshot:
+        event.snapshot = instance
+
+    if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
+        event.performance = datetime.now() - instance._meta.dal.performance
+
+    event.model = ModelEntry()
+    event.model.model = ModelMirror()
+    event.model.model.name = instance.__class__.__name__
+    event.model.model.application = Application()
+    event.model.model.application.name = instance._meta.app_label
+    event.model.value = repr(instance) or str(instance)
+    event.model.primary_key = instance.pk
+
+    instance._meta.dal.event = event
+
     logger.log(
         settings.model.loglevel,
         f'{user or "Anonymous"} {past[status]} '
@@ -152,28 +189,22 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
         f'{instance!r}{suffix}',
         extra={
             'action': 'model',
-            'data': {
-                'status': status,
-                'user': user,
-                'instance': instance,
-                'sender': sender,
-                'modifications': hasattr(instance, '_dal_modifications')
-                and instance._dal_modifications,
-                'updated': updated,
-            },
+            'data': {'status': status, 'instance': instance,},
+            'event': event,
+            'modifications': getattr(instance._meta.dal, 'modifications', None),
         },
     )
 
 
 @receiver(post_save, weak=False)
 @transaction.atomic
-def post_save_signal(sender, instance, created, update_fields, **kwargs) -> None:
+def post_save_signal(
+    sender, instance, created, update_fields: frozenset, **kwargs
+) -> None:
     """
     Signal is getting called after a save has been concluded. When this
     is the case we can be sure the save was successful and then only
     propagate the changes to the handler.
-
-    TODO: respect update_fields
 
     :param sender: model class
     :param instance: model instance
@@ -184,15 +215,21 @@ def post_save_signal(sender, instance, created, update_fields, **kwargs) -> None
     """
     if lazy_model_exclusion(instance):
         return
+    create_meta(instance)
 
     status = 'create' if created else 'modify'
     suffix = f''
     if (
         status == 'modify'
-        and hasattr(instance, '_dal_modifications')
+        and hasattr(instance._meta.dal, 'modifications')
         and settings.model.detailed_message
     ):
-        suffix = f' Changelog: {instance._dal_modifications}'
+        suffix = f' Changelog: {instance._meta.dal.modifications}'
+
+    if update_fields is not None and hasattr(instance._meta.dal, 'modifications'):
+        instance._meta.dal.modifications = [
+            m for m in instance._meta.dal.modifications if m.field.name in update_fields
+        ]
 
     post_processor(status, sender, instance, update_fields, suffix)
 

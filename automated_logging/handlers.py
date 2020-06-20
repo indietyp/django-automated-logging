@@ -1,13 +1,17 @@
 from datetime import datetime
 from logging import Handler, LogRecord
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, Any, TYPE_CHECKING, List
 
 from django.db.models import ForeignObject, Model
 from django.db.models.fields.reverse_related import ForeignObjectRel
 
 if TYPE_CHECKING:
     # we need to do this, to avoid circular imports
-    from automated_logging.models import RequestEvent
+    from automated_logging.models import (
+        RequestEvent,
+        ModelEvent,
+        ModelValueModification,
+    )
 
 
 class DatabaseHandler(Handler):
@@ -28,7 +32,12 @@ class DatabaseHandler(Handler):
         :param instance: model
         :return: instance that is suitable for saving
         """
-        from automated_logging.models import Application, ModelMirror, ModelField
+        from automated_logging.models import (
+            Application,
+            ModelMirror,
+            ModelField,
+            ModelEntry,
+        )
 
         if isinstance(instance, Application):
             return Application.objects.get_or_create(name=instance.name)[0]
@@ -37,32 +46,67 @@ class DatabaseHandler(Handler):
                 name=instance.name, application=self.prepare_save(instance.application)
             )[0]
         elif isinstance(instance, ModelField):
-            return ModelField.objects.get_or_create(
-                name=instance.name,
-                model=self.prepare_save(instance.model),
-                type=instance.type,
+            entry = ModelField.objects.get_or_create(
+                name=instance.name, model=self.prepare_save(instance.model)
             )[0]
+            entry.type = instance.type
+            return entry
+        elif isinstance(instance, ModelEntry):
+            entry = ModelEntry.objects.get_or_create(
+                model=self.prepare_save(instance.model),
+                primary_key=instance.primary_key,
+            )[0]
+            entry.value = instance.value
+            return entry
 
         for field in [
             f
             for f in instance._meta.get_fields()
-            if isinstance(f, (ForeignObjectRel, ForeignObject))
+            if isinstance(f, ForeignObject)
             and getattr(instance, f.name, None) is not None
         ]:
             setattr(
                 instance, field.name, self.prepare_save(getattr(instance, field.name))
             )
 
+        # ForeignObjectRel is untouched rn
+
         return instance
 
     def unspecified(self, record: LogRecord) -> None:
         pass
 
-    def model(self, record: LogRecord, data: Dict[str, Any]) -> None:
-        pass
+    def model(
+        self,
+        record: LogRecord,
+        event: 'ModelEvent',
+        modifications: List['ModelValueModification'],
+        data: Dict[str, Any],
+    ) -> None:
+        """
+        This is for model specific logging events.
+        Compiles the information into an event and saves that event
+        and all modifications done.
+
+        :param event:
+        :param modifications:
+        :param record:
+        :param data:
+        :return:
+        """
+        self.prepare_save(event).save()
+
+        for modification in modifications:
+            modification.event = event
+            self.prepare_save(modification).save()
 
     def m2m(self, record: LogRecord, data: Dict[str, Any]) -> None:
-        pass
+        from automated_logging.signals import create_meta
+
+        instance = data['instance']
+        create_meta(instance)
+
+        has_event = hasattr(instance._meta.dal, 'event')
 
     def request(self, record: LogRecord, event: 'RequestEvent') -> None:
         """
@@ -81,7 +125,7 @@ class DatabaseHandler(Handler):
             return self.unspecified(record)
 
         if record.action == 'model':
-            return self.model(record, record.data)
+            return self.model(record, record.event, record.modifications, record.data)
         elif record.action == 'model[m2m]':
             return self.m2m(record, record.data)
         elif record.action == 'request':
