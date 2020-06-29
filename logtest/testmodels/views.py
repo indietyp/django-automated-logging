@@ -1,10 +1,12 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from automated_logging.decorators import ignore_view
 from testmodels.models import OrdinaryTest, M2MTest, Base
 import random
 
 
+@ignore_view(methods=['GET'])
 def save_test(request):
     """just for testing the save capabilities internally"""
 

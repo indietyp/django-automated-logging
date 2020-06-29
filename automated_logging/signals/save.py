@@ -20,7 +20,12 @@ from automated_logging.models import (
     ModelEntry,
 )
 from automated_logging.settings import settings
-from automated_logging.signals import model_exclusion, lazy_model_exclusion, create_meta
+from automated_logging.signals import (
+    model_exclusion,
+    lazy_model_exclusion,
+    field_exclusion,
+)
+from automated_logging.helpers import get_or_create_meta
 
 ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
 logger = logging.getLogger(__name__)
@@ -33,15 +38,13 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     Compares the current instance and old instance (fetched via the pk)
     and generates a dictionary of changes
 
-    TODO: consider moving this code somewhere different
-
     :param sender:
     :param instance:
     :param kwargs:
     :return: None
     """
-    create_meta(instance)
-    # clear the _dal_event to be sure
+    get_or_create_meta(instance)
+    # clear the event to be sure
     instance._meta.dal.event = None
 
     excluded = model_exclusion(instance)
@@ -96,8 +99,6 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         .difference(added).difference(deleted)
     )
 
-    modifications = []
-
     summary = [
         *(
             {'operation': 1, 'previous': None, 'current': new[k], 'key': k}
@@ -113,10 +114,14 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         ),
     ]
 
+    # field exclusion
+    summary = [s for s in summary if not field_exclusion(s['key'], instance)]
+
     model = ModelMirror()
     model.name = sender.__name__
     model.application = Application(name=instance._meta.app_label)
 
+    modifications = []
     for entry in summary:
         field = ModelField()
         field.name = entry['key']
@@ -159,7 +164,7 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     application = Application(name=instance._meta.app_label)
     model = sender.__name__
 
-    create_meta(instance)
+    get_or_create_meta(instance)
     if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
         instance._meta.dal.performance = datetime.now() - instance._meta.dal.performance
 
@@ -215,7 +220,7 @@ def post_save_signal(
     """
     if lazy_model_exclusion(instance):
         return
-    create_meta(instance)
+    get_or_create_meta(instance)
 
     status = 'create' if created else 'modify'
     suffix = f''

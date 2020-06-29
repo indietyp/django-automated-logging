@@ -30,3 +30,10 @@ class OneToOneTest(BaseModel):
 
 class OrdinaryTest(BaseModel):
     test = models.CharField(max_length=255, null=True)
+
+
+class ExclusionText(BaseModel):
+    class AutomatedLogging:
+        ignore = False
+        ignore_fields = []
+        ignore_operations = []

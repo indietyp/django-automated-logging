@@ -1,8 +1,9 @@
-"""Database table definitions for the application, everything is logging related."""
+"""
+Model definitions for django-automated-logging.
+"""
 import uuid
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import (
@@ -12,7 +13,6 @@ from django.db.models import (
     TextField,
     SmallIntegerField,
     PositiveIntegerField,
-    SET_NULL,
     DurationField,
 )
 from picklefield.fields import PickledObjectField

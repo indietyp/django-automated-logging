@@ -8,7 +8,6 @@ from marshmallow import Schema, post_load, EXCLUDE
 from marshmallow.fields import Boolean, String, List, Nested, Integer
 from marshmallow.validate import OneOf, Range
 
-
 Search = NamedTuple('Search', (('type', str), ('value', str)))
 
 
@@ -34,6 +33,8 @@ class SearchString(String):
     regex (prefixed with either regex or re)
     or plain (prefixed with plain or pl).
 
+    All SearchStrings ignore the case of the raw string.
+
     format: <prefix>:<value>
     examples:
         - gl:app*       (glob matching)
@@ -49,16 +50,17 @@ class SearchString(String):
     def _deserialize(self, value, attr, data, **kwargs) -> Search:
         output = super()._deserialize(value, attr, data, **kwargs)
 
-        match = re.match(r'^(\w*):(.*)$', output)
+        match = re.match(r'^(\w*):(.*)$', output, re.IGNORECASE)
         if match:
-            module = match.groups()[0]
+            module = match.groups()[0].lower()
             match = match.groups()[1]
 
             if module.startswith('gl'):
-                return Search('glob', match)
+                return Search('glob', match.lower())
             elif module.startswith('pl'):
-                return Search('plain', match)
+                return Search('plain', match.lower())
             elif module.startswith('re'):
+                # regex shouldn't be lowercase
                 return Search('regex', match)
 
         return Search('glob', output)
@@ -154,6 +156,12 @@ class ModelExcludeSchema(BaseSchema):
     """
     Configuration schema, that is only used in ModelSchema and is used to
     exclude unknown sources, fields, models and applications.
+
+    fields should be either <field> (every field that matches this name will be excluded),
+    or <model>.<field>, or <application>.<model>.<field>
+
+    models should be either <model> (every model regardless of module or application).
+    <module> (python module location) or <module>.<model> (python module location)
     """
 
     unknown = Boolean(missing=False)
@@ -231,13 +239,7 @@ class ConfigSchema(BaseSchema):
     unspecified = MissingNested(UnspecifiedSchema)
 
 
-# TODO: validate applications, models and fields, mask appropriately
 default: namedtuple = ConfigSchema().load({})
 settings: namedtuple = default
 if hasattr(st, 'AUTOMATED_LOGGING'):
     settings = ConfigSchema().load(st.AUTOMATED_LOGGING)
-
-# model should be BaseModel, *.BaseModel, application.BaseModel
-
-# field should be field = *.*.field, application.Model.field,
-# application.*.field, application.Model.*, Model.field = *.Model.field

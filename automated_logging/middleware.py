@@ -19,7 +19,6 @@ class AutomatedLoggingMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.thread = threading.local()
 
         AutomatedLoggingMiddleware.thread.__dal__ = None
 

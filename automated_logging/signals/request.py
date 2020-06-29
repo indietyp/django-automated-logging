@@ -31,7 +31,6 @@ def request_finished_signal(sender, **kwargs) -> None:
 
     :return: -
     """
-
     level = settings.request.loglevel
     environ = AutomatedLoggingMiddleware.get_current_environ()
 
@@ -65,16 +64,18 @@ def request_finished_signal(sender, **kwargs) -> None:
         request.response = response_context
 
     request.status = environ.response.status_code if environ.response else None
-    request.method = environ.request.method
+    request.method = environ.request.method.upper()
 
     try:
-        # TODO: handler should get_or_create
-        application = resolve(environ.request.path).func.__module__.split('.')[0]
-        request.application = Application(name=application)
+        function = resolve(environ.request.path).func
     except Http404:
-        pass
+        function = None
 
-    if request_exclusion(request):
+    if function:
+        application = function.__module__.split('.')[0]
+        request.application = Application(name=application)
+
+    if request_exclusion(request, function):
         return
 
     logger.log(

@@ -103,7 +103,7 @@ Everything changed needs to be changed in the ``settings.py``
     },
 5. `python3 manage.py migrate automated_logging`
 
-``LOGGING`` attributes are just for recommondations and can be of course modified to your liking.
+``LOGGING`` attributes are just for recommendations and can be of course modified to your liking.
 
 
 Configuration
@@ -116,62 +116,111 @@ The defaults are present in the example.
 
     from logging import INFO
     AUTOMATED_LOGGING = {
-        'exclude': {'model': ['admin', 'session', 'automated_logging', 'basehttp', 'contenttypes', 'migrations'],
-                    'request': ['GET', 200],
-                    'unspecified': []},
+        'model': {
+            'detailed_message': True,
+            'exclude': {
+                'applications': [
+                    'session',
+                    'automated_logging',
+                    'admin',
+                    'basehttp',
+                    'migrations',
+                    'contenttypes',
+                ],
+                'fields': [],
+                'models': [],
+                'unknown': False,
+            },
+            'loglevel': INFO,
+            'mask': [],
+            'performance': False,
+            'snapshot': False,
+            'user_mirror': False,
+        },
         'modules': ['request', 'model', 'unspecified'],
-        'to_database': True,
-        'loglevel': {'model': INFO,
-                     'request': INFO},
-        'save_na': True,
         'request': {
-          'query': False
-        }
+            'data': {
+                'content_types': ['application/json'],
+                'enabled': [],
+                'ignore': [],
+                'mask': ['password'],
+                'query': False,
+            },
+            'exclude': {
+                'applications': [],
+                'methods': ['GET'],
+                'status': [200],
+                'unknown': False,
+            },
+            'loglevel': INFO,
+        },
+        'unspecified': {
+            'exclude': {'applications': [], 'files': [], 'unknown': False},
+            'loglevel': INFO,
+        },
     }
 
-In ``exclude`` ``automated_logging``, ``basehttp`` and ``admin`` are **recommended to be included** - due to potentially having multiple redundant logging entries, furthermore it is recommended to include ``session``, ``contenttypes`` and ``migrations`` to disable recorded information of applied migrations and session operations.
-Three modules are available: ``request``, ``unspecified`` and ``model``, these can be disabled, if needed.
-The database integration can be disabled. *Note: the handler than also needs to be removed*.
-The loglevel does indicate on which level things should be reported to other handlers, INFO or DEBUG is recommendend. Having ERROR or CRITICAL set is possible, but not recommended.
 
-*New in version 4.x.x:* **all strings** in ``AUTOMATED_LOGGING`` are case-insensitive.
+You can always inspect the current default configuration by importing ``from automated_logging.settings import default``.
+
+**It is recommended** to include the application defaults for ``model.exclude`` due to potentially having multiple redundant logging entries and to disable applied migrations and session operations.
+
+There are three independent modules available: ``request``, ``unspecified`` and ``model``, these
+can be enabled and disabled if needed via the ``modules`` setting.
+
+The ``loglevel`` setting indicated the severity for the sent messages.
+INFO or DEBUG are usually the right call.
 
 *New in version 5.x.x:* You can now specify a maximum age for database entries created via ``maxage`` in the ``LOGGING`` variable. maxage needs to be an `ISO8601 duration string <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
 
+*New in version 6.x.x* To disable the database integrations just remove the handler.
+
+*New in version 6.x.x* You can now specify the maximum age as ``maxage`` *and* ``max_age`` and also as ``timedelta()``
+
+*New in version 6.x.x* You can batch saving objects via ``batching`` in the ``LOGGING`` variable. ``batching`` should be an ``int`` and indicates the threshold number of objects that are to be saved batched. Specifying ``batching`` can lead to data loss!
+
+*New in version 6.x.x* ``applications``, ``models`` can now be specified as regex or glob and are as default interpreted as glob. You can "select" which method to use by prefixing the item with ``gl:`` for glob or ``re:`` for regex. You can disable glob or regex by prefixing it with ``pl:``.
+
+Decorators
+----------
+*New in version 6.x.x*
+
+Class-Based Configuration
+-------------------------
+*New in version 6.x.x*
+
+TODO: operations
+
 Changelog
 =========
+Version 6.0.0
+-------------
+- **Added:** ``max_age``, ``batching`` settings to the handler
+- **Added:** decorators
+- **Added:** class-based configuration
+- **Added:** request and response bodies can now be saved
+- **Added:** regex, glob matching for settings
+- **Updated:** settings
+- **Updated:** models
+- **Updated:** to current django version (2.2 and 3.0)
+- **Updated:** DAL no longer stores internal information directly, but now has a custom _meta object injected.
+- **Updated:** project now uses black for formatting
+- **Updated:** internals were completely rewritten for greater maintainability and speed.
+- **Fixed:** https://github.com/indietyp/django-automated-logging/issues/1
+- **Fixed:** https://github.com/indietyp/django-automated-logging/issues/2
+
 Version 5.0.0
 -------------
-- **Added:** `maxage` handler setting to automatically remove database entries after a certain amount of time.
+- **Added:** ``maxage`` handler setting to automatically remove database entries after a certain amount of time.
 - **Added:** query string in requests can now be enabled/disabled (are now disabled by default)
 - **Fixed:** Value and URI could be longer than 255 characters. DAL would throw an exception. This is fixed.
 
 Roadmap
 =======
-
-Version 4.x.x
--------------
-[x] remove the LDAP model
-[x] exclusion for request module
-[x] exclusion for unspecified module
-[x] performance considerations
-[x] implement requested features
-
-Version 5.x.x
--------------
-[x] prevent migration logs
-[ ] optional batch insertion of database entries
-[ ] adding options to Meta field
---> ignored fields
---> ignored operations
-
-Version 6.x.x
--------------
-[ ] implementation of an git like versioning interface
-
 Version 7.x.x
 -------------
-[ ] temporary world domination
+- ☐ implementation of an git like versioning interface
 
-
-Support the Project
+Version 8.x.x
+-------------
+- ☐ temporary world domination

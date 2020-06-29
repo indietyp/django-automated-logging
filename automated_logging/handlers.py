@@ -101,17 +101,20 @@ class DatabaseHandler(Handler):
             self.prepare_save(modification).save()
 
     def m2m(self, record: LogRecord, data: Dict[str, Any]) -> None:
-        from automated_logging.signals import create_meta
+        from automated_logging.helpers import get_or_create_meta
 
         instance = data['instance']
-        create_meta(instance)
+        get_or_create_meta(instance)
 
         has_event = hasattr(instance._meta.dal, 'event')
+        # TODO: get_or_create_event helper
 
     def request(self, record: LogRecord, event: 'RequestEvent') -> None:
         """
         The request event already has a model prepared that we just
         need to prepare and save.
+
+        TODO: request and response context parsing, masking and removal
 
         :param record: LogRecord
         :param event: Event supplied via the LogRecord
