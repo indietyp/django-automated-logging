@@ -1,9 +1,10 @@
+import random
 import threading
 from collections import namedtuple
 from functools import wraps, partial
 from typing import List, NamedTuple, Any, Optional
 
-from automated_logging.helpers import get_or_create_local
+from automated_logging.helpers import get_or_create_local, Operation
 from automated_logging.middleware import AutomatedLoggingMiddleware
 
 
@@ -33,6 +34,9 @@ def ignore_view(func=None, *, methods: List[str] = ()):
 
     :return: function
     """
+    if methods is not None:
+        methods = set(methods)
+
     if func is None:
         return partial(ignore_view, methods=methods)
 
@@ -47,13 +51,26 @@ def ignore_view(func=None, *, methods: List[str] = ()):
 
         # this should work in theory as it points to the function from the module
         # I am not completely sure if it does tho.
-        thread.dal['ignore.views'][f'{func.__module__}.{func.__name__}'] = (
-            [m.upper() for m in methods] if methods is not None else None
+        path = f'{func.__module__}.{func.__name__}'
+        if (
+            path in thread.dal['ignore.views']
+            and isinstance(thread.dal['ignore.views'][path], set)
+            and methods is not None
+        ):
+            methods.update(thread.dal['ignore.views'][path])
+
+        thread.dal['ignore.views'][path] = (
+            None if methods is None else {m.upper() for m in methods}
         )
 
         return func(*args, **kwargs)
 
     return wrapper
+
+
+IgnoreModel = NamedTuple(
+    "IgnoreModel", (('operations', List[Operation]), ('fields', List[str]))
+)
 
 
 def ignore_model(func=None, *, operations: List[str] = (), fields: List[str] = None):
@@ -81,6 +98,13 @@ def ignore_model(func=None, *, operations: List[str] = (), fields: List[str] = N
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        pass
+        """ simple wrapper """
+        thread = AutomatedLoggingMiddleware.thread
+        get_or_create_local(thread)
+
+        if 'ignore.models' not in thread.dal:
+            thread.dal['ignore.models'] = {}
+
+        thread.dal['ignore.models'][f'{func.__module__}.{func.__name__}'] = {}
 
     return wrapper

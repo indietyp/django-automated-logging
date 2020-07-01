@@ -2,7 +2,7 @@ import re
 from fnmatch import fnmatch
 from typing import List, Optional, Callable
 
-from automated_logging.helpers import get_or_create_meta, get_or_create_local
+from automated_logging.helpers import get_or_create_meta, get_or_create_local, Operation
 from automated_logging.middleware import AutomatedLoggingMiddleware
 from automated_logging.models import RequestEvent
 from automated_logging.settings import settings, Search

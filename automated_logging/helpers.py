@@ -3,7 +3,17 @@ Helpers that are used throughout django-automated-logging
 """
 
 from collections import namedtuple
+from enum import Enum
 from typing import Any
+
+
+class Operation(Enum):
+    CREATE = 1
+    MODIFY = 0
+    DELETE = -1
+
+
+DjangoOperations = [(e.value, o.lower()) for o, e in Operation.__members__.items()]
 
 
 def namedtuple2dict(root: namedtuple) -> dict:

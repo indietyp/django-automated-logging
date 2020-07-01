@@ -17,6 +17,7 @@ from django.db.models import ManyToManyField, ManyToManyRel
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
+from automated_logging.helpers import Operation
 from automated_logging.models import (
     ModelRelationshipModification,
     ModelEntry,
@@ -93,9 +94,9 @@ def m2m_changed_signal(
         return
 
     if action in ['post_add']:
-        operation = 1
+        operation = Operation.CREATE
     else:
-        operation = -1
+        operation = Operation.DELETE
 
     # if reverse targets should log the removal of the specific instance
     # if not reverse do it on the current one

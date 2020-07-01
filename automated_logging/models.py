@@ -17,6 +17,8 @@ from django.db.models import (
 )
 from picklefield.fields import PickledObjectField
 
+from automated_logging.helpers import Operation, DjangoOperations
+
 
 class BaseModel(models.Model):
     """BaseModel that is inherited from every model. Includes basic information."""
@@ -149,7 +151,9 @@ class ModelValueModification(BaseModel):
     """
 
     operation = SmallIntegerField(
-        validators=[MinValueValidator(-1), MaxValueValidator(1)], null=True
+        validators=[MinValueValidator(-1), MaxValueValidator(1)],
+        null=True,
+        choices=DjangoOperations,
     )
 
     field = ForeignKey(ModelField, on_delete=CASCADE)
@@ -180,7 +184,9 @@ class ModelRelationshipModification(BaseModel):
     """
 
     operation = SmallIntegerField(
-        validators=[MinValueValidator(-1), MaxValueValidator(1)], null=True
+        validators=[MinValueValidator(-1), MaxValueValidator(1)],
+        null=True,
+        choices=DjangoOperations,
     )
 
     field = ForeignKey(ModelField, on_delete=CASCADE)

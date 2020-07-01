@@ -25,7 +25,7 @@ from automated_logging.signals import (
     lazy_model_exclusion,
     field_exclusion,
 )
-from automated_logging.helpers import get_or_create_meta
+from automated_logging.helpers import get_or_create_meta, Operation
 
 ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
 logger = logging.getLogger(__name__)
@@ -101,15 +101,30 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     summary = [
         *(
-            {'operation': 1, 'previous': None, 'current': new[k], 'key': k}
+            {
+                'operation': Operation.CREATE,
+                'previous': None,
+                'current': new[k],
+                'key': k,
+            }
             for k in added
         ),
         *(
-            {'operation': -1, 'previous': old[k], 'current': None, 'key': k}
+            {
+                'operation': Operation.DELETE,
+                'previous': old[k],
+                'current': None,
+                'key': k,
+            }
             for k in deleted
         ),
         *(
-            {'operation': 0, 'previous': old[k], 'current': new[k], 'key': k}
+            {
+                'operation': Operation.MODIFY,
+                'previous': old[k],
+                'current': new[k],
+                'key': k,
+            }
             for k in changed
         ),
     ]

@@ -7,6 +7,7 @@ import random
 
 
 @ignore_view(methods=['GET'])
+@ignore_view(methods=['POST'])
 def save_test(request):
     """just for testing the save capabilities internally"""
 
@@ -22,4 +23,9 @@ def save_test(request):
     ordinary.test = str(random.randint(0, 10000000))
     ordinary.save(update_fields=['test'])
 
+    return JsonResponse({})
+
+
+@ignore_view(methods=['POST'])
+def decorator_test(request):
     return JsonResponse({})
