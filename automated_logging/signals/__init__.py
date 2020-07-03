@@ -136,8 +136,17 @@ def model_exclusion(instance, operation: Operation, function=None) -> bool:
     if decorators is not None:
         return decorators
 
-    if hasattr(instance.__class__, 'AutomatedLogging') and getattr(
-        instance.__class__.AutomatedLogging, 'ignore', False
+    if hasattr(instance.__class__, 'LoggingIgnore') and (
+        getattr(instance.__class__.LoggingIgnore, 'complete', False)
+        or {
+            Operation.CREATE: 'create',
+            Operation.MODIFY: 'modify',
+            Operation.DELETE: 'delete',
+        }[operation]
+        in [
+            o.lower()
+            for o in getattr(instance.__class__.LoggingIgnore, 'operations', [])
+        ]
     ):
         return True
 
@@ -174,8 +183,9 @@ def field_exclusion(field: str, instance, function=None) -> bool:
     if decorators is not None:
         return decorators
 
-    if hasattr(instance.__class__, 'AutomatedLogging') and field in getattr(
-        instance.__class__.AutomatedLogging, 'ignore_fields', []
+    if hasattr(instance.__class__, 'LoggingIgnore') and (
+        getattr(instance.__class__.LoggingIgnore, 'complete', False)
+        or field in getattr(instance.__class__.LoggingIgnore, 'fields', [])
     ):
         return True
 

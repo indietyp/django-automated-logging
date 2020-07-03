@@ -44,8 +44,8 @@ class Application(BaseModel):
         verbose_name = "Application"
         verbose_name_plural = "Applications"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
     def __str__(self):
         return self.name
@@ -65,8 +65,8 @@ class ModelMirror(BaseModel):
         verbose_name = "Model Mirror"
         verbose_name_plural = "Model Mirrors"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
 
 class ModelField(BaseModel):
@@ -88,8 +88,8 @@ class ModelField(BaseModel):
         verbose_name = "Model Field"
         verbose_name_plural = "Model Fields"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
 
 class ModelEntry(BaseModel):
@@ -107,8 +107,8 @@ class ModelEntry(BaseModel):
         verbose_name = "Model Entry"
         verbose_name_plural = "Model Entries"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
 
 class ModelEvent(BaseModel):
@@ -136,8 +136,8 @@ class ModelEvent(BaseModel):
         verbose_name = "Model Entry Event"
         verbose_name_plural = "Model Entry Events"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
 
 class ModelValueModification(BaseModel):
@@ -167,8 +167,8 @@ class ModelValueModification(BaseModel):
         verbose_name = "Model Entry Event Value Modification"
         verbose_name_plural = "Model Entry Event Value Modifications"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
 
 class ModelRelationshipModification(BaseModel):
@@ -198,8 +198,8 @@ class ModelRelationshipModification(BaseModel):
         verbose_name = "Model Entry Event Relationship Modification"
         verbose_name_plural = "Model Entry Event Relationship Modifications"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
 
 class RequestContext(BaseModel):
@@ -241,8 +241,8 @@ class RequestEvent(BaseModel):
         verbose_name = "Request Event"
         verbose_name_plural = "Request Events"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
 
 
 class UnspecifiedEvent(BaseModel):
@@ -263,5 +263,5 @@ class UnspecifiedEvent(BaseModel):
         verbose_name = "Unspecified Event"
         verbose_name_plural = "Unspecified Events5"
 
-    class AutomatedLogging:
-        ignore = True
+    class LoggingIgnore:
+        complete = True
