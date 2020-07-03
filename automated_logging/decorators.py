@@ -1,22 +1,18 @@
-import random
-import threading
-from collections import namedtuple
 from functools import wraps, partial
-from typing import List, NamedTuple, Any, Optional
+from typing import List, NamedTuple, Set
 
-from automated_logging.helpers import get_or_create_local, Operation
-from automated_logging.middleware import AutomatedLoggingMiddleware
+from automated_logging.helpers import (
+    Operation,
+    get_or_create_thread,
+    function2path,
+)
 
 
-# def ignore(func=None, *, model: bool = False, view: bool = False):
-#     if func is None:
-#         return partial(ignore, model)
-#
-#     @wraps(func)
-#     def wrapper(*args, **kwargs):
-#         pass
-#
-#     return wrapper
+def _normalize_view_args(methods: List[str]) -> Set[str]:
+    if methods is not None:
+        methods = {m.upper() for m in methods}
+
+    return methods
 
 
 def ignore_view(func=None, *, methods: List[str] = ()):
@@ -34,8 +30,7 @@ def ignore_view(func=None, *, methods: List[str] = ()):
 
     :return: function
     """
-    if methods is not None:
-        methods = set(methods)
+    methods = _normalize_view_args(methods)
 
     if func is None:
         return partial(ignore_view, methods=methods)
@@ -43,33 +38,81 @@ def ignore_view(func=None, *, methods: List[str] = ()):
     @wraps(func)
     def wrapper(*args, **kwargs):
         """ simple wrapper """
-        thread = AutomatedLoggingMiddleware.thread
-        get_or_create_local(thread)
+        thread, _ = get_or_create_thread()
 
-        if 'ignore.views' not in thread.dal:
-            thread.dal['ignore.views'] = {}
-
-        # this should work in theory as it points to the function from the module
-        # I am not completely sure if it does tho.
-        path = f'{func.__module__}.{func.__name__}'
+        path = function2path(func)
         if (
             path in thread.dal['ignore.views']
-            and isinstance(thread.dal['ignore.views'][path], set)
+            and thread.dal['ignore.views'][path] is not None
             and methods is not None
         ):
             methods.update(thread.dal['ignore.views'][path])
 
-        thread.dal['ignore.views'][path] = (
-            None if methods is None else {m.upper() for m in methods}
-        )
+        thread.dal['ignore.views'][path] = methods
 
         return func(*args, **kwargs)
 
     return wrapper
 
 
+def include_view(func=None, *, methods: List[str] = None):
+    """
+    Decorator used for including specific views **regardless** if they
+    are included in one of the exclusion patterns, this can be selectively done
+    via methods. Non matching methods will still go through the exclusion pattern
+    matching.
+
+    :param func: function to be decorated
+    :param methods: methods to be included (case-insensitive)
+                    None => All methods will be explicitly included
+                    [] => No method will be explicitly included
+    :return: function
+    """
+    methods = _normalize_view_args(methods)
+
+    if func is None:
+        return partial(include_view, methods=methods)
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        """ simple wrapper """
+        thread, _ = get_or_create_thread()
+
+        path = function2path(func)
+        if (
+            path in thread.dal['include.views']
+            and thread.dal['include.views'][path] is not None
+            and methods is not None
+        ):
+            methods.update(thread.dal['include.views'][path])
+
+        thread.dal['include.views'][path] = methods
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def _normalize_model_args(operations, fields) -> [Set[Operation], Set[str]]:
+    if operations is not None:
+        translation = {
+            'create': Operation.CREATE,
+            'modify': Operation.MODIFY,
+            'delete': Operation.DELETE,
+        }
+        operations = {
+            translation[o.lower()]
+            for o in operations
+            if o.lower() in translation.keys()
+        }
+
+    if fields is not None:
+        fields = set(fields)
+
+    return operations, fields
+
+
 IgnoreModel = NamedTuple(
-    "IgnoreModel", (('operations', List[Operation]), ('fields', List[str]))
+    "IgnoreModel", (('operations', Set[Operation]), ('fields', Set[str]))
 )
 
 
@@ -93,18 +136,86 @@ def ignore_model(func=None, *, operations: List[str] = (), fields: List[str] = N
                    None => No field will be ignored
     :return: function
     """
+    operations, fields = _normalize_model_args(operations, fields)
+
     if func is None:
         return partial(ignore_model, operations=operations, fields=fields)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
         """ simple wrapper """
-        thread = AutomatedLoggingMiddleware.thread
-        get_or_create_local(thread)
+        thread, _ = get_or_create_thread()
+        path = function2path(func)
 
-        if 'ignore.models' not in thread.dal:
-            thread.dal['ignore.models'] = {}
+        if (
+            path in thread['ignore.models']
+            and thread['ignore.models'][path].operations is not None
+            and operations is not None
+        ):
+            operations.update(thread['ignore.models'][path].operations)
 
-        thread.dal['ignore.models'][f'{func.__module__}.{func.__name__}'] = {}
+        if (
+            path in thread['ignore.models']
+            and thread['ignore.models'][path].fields is not None
+            and fields is not None
+        ):
+            fields.update(thread['ignore.models'][path].fields)
+
+        thread.dal['ignore.models'][path] = IgnoreModel(operations, fields)
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+IncludeModel = NamedTuple(
+    "IncludeModel", (('operations', Set[Operation]), ('fields', Set[str]))
+)
+
+
+def include_model(func=None, *, operations: List[str] = (), fields: List[str] = None):
+    """
+    Decorator used for including specific models, despite potentially being ignored
+    by the exclusion preferences set in the configuration.
+
+    :param func: function to be decorated
+    :param operations: operations to be ignored can be a list of:
+                       modify, create, delete (case-insensitive)
+                       [] => No operation will be explicitly included
+                       None => All operations will be explicitly included
+    :param fields: fields to be explicitly included
+                   [] => No fields will be explicitly included
+                   None => All fields will be explicitly included.
+
+    :return: function
+    """
+    operations, fields = _normalize_model_args(operations, fields)
+
+    if func is None:
+        return partial(ignore_model, operations=operations, fields=fields)
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        """ simple wrapper """
+        thread, _ = get_or_create_thread()
+        path = function2path(func)
+
+        if (
+            path in thread['include.models']
+            and thread['include.models'][path].operations is not None
+            and operations is not None
+        ):
+            operations.update(thread['include.models'][path].operations)
+
+        if (
+            path in thread['include.models']
+            and thread['include.models'][path].fields is not None
+            and fields is not None
+        ):
+            fields.update(thread['include.models'][path].fields)
+
+        thread.dal['include.models'][path] = IncludeModel(operations, fields)
+
+        return func(*args, **kwargs)
 
     return wrapper

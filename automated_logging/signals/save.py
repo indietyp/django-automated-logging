@@ -47,14 +47,19 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     # clear the event to be sure
     instance._meta.dal.event = None
 
-    excluded = model_exclusion(instance)
+    operation = Operation.MODIFY
+    try:
+        pre = sender.objects.get(pk=instance.pk)
+    except ObjectDoesNotExist:
+        # we need to postpone the return to evaluate model exclusion
+        operation = Operation.CREATE
+
+    excluded = model_exclusion(instance, operation, instance.__class__)
     instance._meta.dal.excluded = excluded
     if excluded:
         return
 
-    try:
-        pre = sender.objects.get(pk=instance.pk)
-    except ObjectDoesNotExist:
+    if operation == Operation.CREATE:
         return
 
     old, new = pre.__dict__, instance.__dict__
@@ -233,11 +238,15 @@ def post_save_signal(
     :param kwargs: django needs kwargs to be there
     :return: -
     """
-    if lazy_model_exclusion(instance):
+    status = 'create' if created else 'modify'
+    if lazy_model_exclusion(
+        instance,
+        Operation.CREATE if status == 'create' else Operation.MODIFY,
+        instance.__class__,
+    ):
         return
     get_or_create_meta(instance)
 
-    status = 'create' if created else 'modify'
     suffix = f''
     if (
         status == 'modify'
@@ -266,7 +275,7 @@ def post_delete_signal(sender, instance, **kwargs) -> None:
     :param kwargs: required bt django
     :return: -
     """
-    if lazy_model_exclusion(instance):
+    if lazy_model_exclusion(instance, Operation.DELETE, instance.__class__):
         return
 
     post_processor('delete', sender, instance)

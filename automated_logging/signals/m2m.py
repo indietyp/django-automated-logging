@@ -103,10 +103,12 @@ def m2m_changed_signal(
 
     targets = model.objects.filter(pk__in=list(pk_set))
     if reverse:
-        for target in [t for t in targets if not lazy_model_exclusion(t)]:
+        for target in [
+            t for t in targets if not lazy_model_exclusion(t, operation, t.__class__)
+        ]:
             post_processor(sender, target, target.__class__, operation, [instance])
     else:
-        if lazy_model_exclusion(instance):
+        if lazy_model_exclusion(instance, operation, instance.__class__):
             return
 
         post_processor(sender, instance, model, operation, targets)
