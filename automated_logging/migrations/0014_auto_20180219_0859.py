@@ -16,12 +16,16 @@ class Migration(migrations.Migration):
             name='status',
             field=models.PositiveSmallIntegerField(null=True),
         ),
-        migrations.AlterField(
+        migrations.RemoveField(model_name='field', name='model'),
+        migrations.AddField(
             model_name='field',
             name='model',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='dal_field', to='contenttypes.ContentType'),
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='dal_field',
+                to='contenttypes.ContentType',
+            ),
         ),
-        migrations.DeleteModel(
-            name='ModelStorage',
-        ),
+        migrations.DeleteModel(name='ModelStorage',),
     ]

@@ -17,32 +17,39 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Application',
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
+                (
+                    'id',
+                    models.UUIDField(
+                        default=uuid.uuid4, primary_key=True, serialize=False
+                    ),
+                ),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('name', models.CharField(max_length=255)),
             ],
-            options={
-                'abstract': False,
-            },
+            options={'abstract': False,},
         ),
         migrations.RenameField(
-            model_name='modelobject',
-            old_name='application',
-            new_name='type',
+            model_name='modelobject', old_name='application', new_name='type',
         ),
-        migrations.RemoveField(
-            model_name='modelobject',
-            name='model',
-        ),
-        migrations.AlterField(
+        migrations.RemoveField(model_name='modelobject', name='model',),
+        migrations.RemoveField(model_name='model', name='application'),
+        migrations.AddField(
             model_name='model',
             name='application',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='atl_model_application', to='automated_logging.Application'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='atl_model_application',
+                to='automated_logging.Application',
+            ),
         ),
-        migrations.AlterField(
+        migrations.RemoveField(model_name='request', name='application'),
+        migrations.AddField(
             model_name='request',
             name='application',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='automated_logging.Application'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='automated_logging.Application',
+            ),
         ),
     ]
