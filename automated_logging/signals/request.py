@@ -71,6 +71,7 @@ def request_finished_signal(sender, **kwargs) -> None:
     except Http404:
         function = None
 
+    request.application = Application(name=None)
     if function:
         application = function.__module__.split('.')[0]
         request.application = Application(name=application)

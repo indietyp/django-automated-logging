@@ -200,8 +200,7 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     event.model = ModelEntry()
     event.model.model = ModelMirror()
     event.model.model.name = instance.__class__.__name__
-    event.model.model.application = Application()
-    event.model.model.application.name = instance._meta.app_label
+    event.model.model.application = Application(name=instance._meta.app_label)
     event.model.value = repr(instance) or str(instance)
     event.model.primary_key = instance.pk
 
@@ -210,11 +209,11 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     logger.log(
         settings.model.loglevel,
         f'{user or "Anonymous"} {past[status]} '
-        f'[{application}] [{model}] '
-        f'{instance!r}{suffix}',
+        f'{application}.{model} | '
+        f'Instance: {instance!r}{suffix}',
         extra={
             'action': 'model',
-            'data': {'status': status, 'instance': instance,},
+            'data': {'status': status, 'instance': instance},
             'event': event,
             'modifications': getattr(instance._meta.dal, 'modifications', None),
         },
@@ -253,7 +252,10 @@ def post_save_signal(
         and hasattr(instance._meta.dal, 'modifications')
         and settings.model.detailed_message
     ):
-        suffix = f' Changelog: {instance._meta.dal.modifications}'
+        suffix = (
+            f' | Modifications: '
+            f'{", ".join([m.short() for m in instance._meta.dal.modifications])}'
+        )
 
     if update_fields is not None and hasattr(instance._meta.dal, 'modifications'):
         instance._meta.dal.modifications = [

@@ -43,6 +43,16 @@ def find_m2m_rel(sender, model) -> Optional[ManyToManyRel]:
 
 
 def post_processor(sender, instance, model, operation, targets):
+    """
+    if the change is in reverse or not, the processing of the changes is still
+    the same, so we have this method to take care of constructing the changes
+    :param sender:
+    :param instance:
+    :param model:
+    :param operation:
+    :param targets:
+    :return:
+    """
     # TODO: append to instance, should be done in handler
     relationships = []
 
@@ -56,7 +66,6 @@ def post_processor(sender, instance, model, operation, targets):
     field.model = ModelMirror(
         name=model.__name__, application=Application(name=instance._meta.app_label)
     )
-    # field.content_type
 
     for target in targets:
         relationship = ModelRelationshipModification()
@@ -70,9 +79,19 @@ def post_processor(sender, instance, model, operation, targets):
         )
         relationships.append(relationship)
 
+    if len(relationships) == 0:
+        # there was no actual change, so we're not propagating the event
+        return
+
+    # TODO: construct event
+
+    user = None
     logger.log(
         settings.model.loglevel,
-        f'',
+        f'{user or "Anonymous"} modified field '
+        f'{field.name} | Model: '
+        f'{field.model.application}.{field.model} '
+        f'| Modifications: {", ".join([r.short() for r in relationships])}',
         extra={
             'action': 'model[m2m]',
             'data': {
@@ -89,7 +108,6 @@ def m2m_changed_signal(
     sender, instance, action, reverse, model, pk_set, using, **kwargs
 ) -> None:
     # TODO: pre_clear and post_clear
-    # TODO: what if post_add changed nothing?!
     if action not in ['post_add', 'post_remove', 'pre_clear']:
         return
 

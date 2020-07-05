@@ -17,7 +17,12 @@ from django.db.models import (
 )
 from picklefield.fields import PickledObjectField
 
-from automated_logging.helpers import Operation, DjangoOperations
+from automated_logging.helpers import (
+    Operation,
+    DjangoOperations,
+    ShortOperationMap,
+    PastM2MOperationMap,
+)
 
 
 class BaseModel(models.Model):
@@ -36,9 +41,12 @@ class Application(BaseModel):
     """
     Used to save from which application an event or model originates.
     This is used to group by application.
+
+    The application name can be null,
+    if the name is None, then the application is unknown.
     """
 
-    name = CharField(max_length=255)
+    name = CharField(max_length=255, null=True)
 
     class Meta:
         verbose_name = "Application"
@@ -67,6 +75,9 @@ class ModelMirror(BaseModel):
 
     class LoggingIgnore:
         complete = True
+
+    def __str__(self):
+        return self.name
 
 
 class ModelField(BaseModel):
@@ -109,6 +120,18 @@ class ModelEntry(BaseModel):
 
     class LoggingIgnore:
         complete = True
+
+    def __str__(self) -> str:
+        return (
+            f'{self.model.application.name}.{self.model.name}'
+            f'(pk={self.primary_key}, value="{self.value}")'
+        )
+
+    def short(self) -> str:
+        """
+        short representation
+        """
+        return f'{self.model.name}({self.primary_key})'
 
 
 class ModelEvent(BaseModel):
@@ -170,6 +193,23 @@ class ModelValueModification(BaseModel):
     class LoggingIgnore:
         complete = True
 
+    def __str__(self) -> str:
+        return (
+            f'[{self.field.model.application.name}:'
+            f'{self.field.model.name}:'
+            f'{self.field.name}] '
+            f'{self.previous} -> {self.current}'
+        )
+
+    def short(self) -> str:
+        """
+        short representation analogue of __str__
+        """
+        operation = Operation(self.operation)
+        shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
+
+        return f'{shorthand}{self.field.name}'
+
 
 class ModelRelationshipModification(BaseModel):
     """
@@ -200,6 +240,25 @@ class ModelRelationshipModification(BaseModel):
 
     class LoggingIgnore:
         complete = True
+
+    def __str__(self) -> str:
+        operation = Operation(self.operation)
+        past = {v: k for k, v in PastM2MOperationMap.items()}[operation]
+
+        return (
+            f'[{self.field.model.application}:'
+            f'{self.field.model.name}:'
+            f'{self.field.name}] '
+            f'{past} {self.model}'
+        )
+
+    def short(self) -> str:
+        """
+        short representation
+        """
+        operation = Operation(self.operation)
+        shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
+        return f'{shorthand}{self.model.short()}'
 
 
 class RequestContext(BaseModel):

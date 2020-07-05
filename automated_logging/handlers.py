@@ -1,6 +1,7 @@
 from datetime import datetime
 from logging import Handler, LogRecord
-from typing import Dict, Any, TYPE_CHECKING, List
+from pathlib import Path
+from typing import Dict, Any, TYPE_CHECKING, List, Optional
 
 from django.db.models import ForeignObject, Model
 from django.db.models.fields.reverse_related import ForeignObjectRel
@@ -15,9 +16,11 @@ if TYPE_CHECKING:
 
 
 class DatabaseHandler(Handler):
-    def __init__(self, max_age=None, *args, **kwargs):
+    def __init__(self, max_age=None, *args, batching: Optional[int] = None, **kwargs):
         # TODO: maxage and max_age
         # TODO: batch
+        # TODO: write batch handler
+        self.batching = batching
         super(DatabaseHandler, self).__init__(*args, **kwargs)
 
     def prepare_save(self, instance: Model):
@@ -74,7 +77,36 @@ class DatabaseHandler(Handler):
         return instance
 
     def unspecified(self, record: LogRecord) -> None:
-        pass
+        """
+        This is for messages that are not sent from django-automated-logging.
+        The option to still save these log messages is there. We create
+        the event in the handler and then save them.
+
+        :param record:
+        :return:
+        """
+        from automated_logging.models import UnspecifiedEvent, Application
+        from django.apps import apps
+
+        event = UnspecifiedEvent()
+        if hasattr(record, 'message'):
+            event.message = record.message
+        event.level = record.levelno
+        event.line = record.lineno
+        event.file = Path(record.pathname) / Path(record.filename)
+
+        # this is semi-reliable, but I am unsure of a better way to do this.
+        applications = apps.app_configs.keys()
+        path = Path(record.pathname) / Path(record.filename).stem
+        candidates = [p for p in path.parts if p in applications]
+        if candidates:
+            # use the last candidate (closest to file)
+            event.application = Application(name=candidates[-1])
+        else:
+            # if we cannot find the application, we use the module as application
+            event.application = Application(name=record.module)
+
+        self.prepare_save(event)
 
     def model(
         self,
