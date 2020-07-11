@@ -64,7 +64,9 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         return
 
     if operation == Operation.CREATE:
-        return
+        # __dict__ is used on pre, therefore we need to create a function
+        # that uses __dict__ too, but returns nothing.
+        pre = lambda _: None
 
     old, new = pre.__dict__, instance.__dict__
 
@@ -199,7 +201,7 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
             'action': 'model',
             'data': {'status': status, 'instance': instance},
             'event': event,
-            'modifications': getattr(instance._meta.dal, 'modifications', None),
+            'modifications': getattr(instance._meta.dal, 'modifications', []),
         },
     )
 

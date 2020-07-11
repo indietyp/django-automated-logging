@@ -5,16 +5,14 @@ on a per field basis.
 
 This finds the changes and redirects them to the handler,
 without doing any changes to the database.
-
-TODO: it should really print a message
 """
 
 
 import logging
 from typing import Optional
 
-from django.db.models import ManyToManyField, ManyToManyRel
 from django.db.models import Manager
+from django.db.models.fields.related import ManyToManyField
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
@@ -31,17 +29,17 @@ from automated_logging.models import (
     ModelField,
 )
 from automated_logging.settings import settings
-from automated_logging.signals import model_exclusion, lazy_model_exclusion
+from automated_logging.signals import lazy_model_exclusion
 
 logger = logging.getLogger(__name__)
 
 
-def find_m2m_rel(sender, model) -> Optional[ManyToManyRel]:
+def find_m2m_rel(sender, model) -> Optional[ManyToManyField]:
     """
     This finds the "many to many" relationship that is used by the sender.
     """
     for field in model._meta.get_fields():
-        if isinstance(field, ManyToManyRel) and field.through == sender:
+        if isinstance(field, ManyToManyField) and field.remote_field.through == sender:
             return field
 
     return None
@@ -67,7 +65,7 @@ def post_processor(sender, instance, model, operation, targets):
         return
 
     field = ModelField()
-    field.name = m2m_rel.field.name
+    field.name = m2m_rel.name
     field.model = ModelMirror(
         name=model.__name__, application=Application(name=instance._meta.app_label)
     )
@@ -127,29 +125,23 @@ def pre_clear_processor(sender, instance, pks, model, reverse, operation) -> Non
     if reverse = False then every element gets removed from the relationship field,
     but if reverse = True then instance should be removed from every target.
 
+    Note: it seems that pre_clear is not getting fired for reverse.
+
     :return: None
     """
     if reverse:
-        targets = [] if not pks else model.objects.filter(pk__in=pks)
-        for target in [
-            t for t in targets if not lazy_model_exclusion(t, operation, t.__class__)
-        ]:
-            get_or_create_meta(target)
-            rel = find_m2m_rel(sender, target.__class__)
-            if 'm2m_pre_clear' not in target._meta.dal:
-                target._meta.dal.m2m_pre_clear = {}
-            target._meta.dal.m2m_pre_clear = {rel.field.name: [instance]}
-    else:
-        get_or_create_meta(instance)
+        return
 
-        rel = find_m2m_rel(sender, model)
-        if 'm2m_pre_clear' not in instance._meta.dal:
-            instance._meta.dal.m2m_pre_clear = {}
+    get_or_create_meta(instance)
 
-        cleared = getattr(instance, rel.field.name, [])
-        if isinstance(cleared, Manager):
-            cleared = list(cleared.all())
-        instance._meta.dal.m2m_pre_clear = {rel.field.name: cleared}
+    rel = find_m2m_rel(sender, model)
+    if 'm2m_pre_clear' not in instance._meta.dal:
+        instance._meta.dal.m2m_pre_clear = {}
+
+    cleared = getattr(instance, rel.name, [])
+    if isinstance(cleared, Manager):
+        cleared = list(cleared.all())
+    instance._meta.dal.m2m_pre_clear = {rel.name: cleared}
 
 
 @receiver(m2m_changed, weak=False)
@@ -166,15 +158,12 @@ def m2m_changed_signal(
 
     The changes will always get applied in the model where the field in defined.
 
-
-    # TODO: pre_clear and post_clear
     # TODO: post_remove also gets triggered when there is nothing actually getting removed
     :return: None
     """
     if action not in ['post_add', 'post_remove', 'pre_clear', 'post_clear']:
         return
 
-    print(action)
     if action == 'pre_clear':
         operation = Operation.DELETE
 
@@ -203,4 +192,4 @@ def m2m_changed_signal(
         if lazy_model_exclusion(instance, operation, instance.__class__):
             return
 
-        post_processor(sender, instance, model, operation, targets)
+        post_processor(sender, instance, instance.__class__, operation, targets)
