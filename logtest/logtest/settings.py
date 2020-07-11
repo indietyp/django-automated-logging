@@ -145,7 +145,11 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'db': {'level': 'INFO', 'class': 'automated_logging.handlers.DatabaseHandler',},
+        'db': {
+            'level': 'INFO',
+            'class': 'automated_logging.handlers.DatabaseHandler',
+            'max_age': 'P7DT5H',
+        },
     },
     'loggers': {
         'automated_logging': {

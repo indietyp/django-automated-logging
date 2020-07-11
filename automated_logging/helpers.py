@@ -3,10 +3,12 @@ Helpers that are used throughout django-automated-logging
 """
 
 from collections import namedtuple
+from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Tuple
 
 from automated_logging.middleware import AutomatedLoggingMiddleware
+from automated_logging.settings import settings
 
 
 class Operation(int, Enum):
@@ -77,8 +79,8 @@ def namedtuple2dict(root: namedtuple) -> dict:
 
 def get_or_create_meta(instance) -> [Any, bool]:
     """
-    Simple helper function that created the dal object
-    in the meta container.
+    Simple helper function that creates the dal object
+    in _meta.
 
     :param instance:
     :return:
@@ -112,18 +114,68 @@ def get_or_create_thread() -> [Any, bool]:
     )
 
 
-def get_or_create_local(target: Any, defaults={}) -> bool:
+def get_or_create_local(target: Any, defaults={}, key='dal') -> bool:
     """
-    Get or create local storage DAL metadata container where dal specific data is.
+    Get or create local storage DAL metadata container,
+    where dal specific data is.
 
     :return: created?
     """
 
-    if not hasattr(target, 'dal'):
-        target.dal = MetaDataContainer(defaults)
+    if not hasattr(target, key):
+        setattr(target, key, MetaDataContainer(defaults))
         return True
 
     return False
+
+
+def get_or_create_model_event(instance, force=False, extra=False) -> [Any, bool]:
+    """
+    Get or create the ModelEvent of an instance.
+    This function will also populate the event with the current information.
+
+    :param instance: instance to derive an event from
+    :param force: force creation of new event?
+    :param extra: extra information inserted?
+    :return: [event, created?]
+    """
+    from automated_logging.models import (
+        ModelEvent,
+        ModelEntry,
+        ModelMirror,
+        Application,
+    )
+
+    get_or_create_meta(instance)
+
+    if hasattr(instance._meta.dal, 'event') and not force:
+        return instance._meta.dal.event, False
+
+    instance._meta.dal.event = None
+
+    event = ModelEvent()
+    event.user = AutomatedLoggingMiddleware.get_current_user()
+
+    if settings.model.snapshot and extra:
+        event.snapshot = instance
+
+    if (
+        settings.model.performance
+        and hasattr(instance._meta.dal, 'performance')
+        and extra
+    ):
+        event.performance = datetime.now() - instance._meta.dal.performance
+
+    event.model = ModelEntry()
+    event.model.model = ModelMirror()
+    event.model.model.name = instance.__class__.__name__
+    event.model.model.application = Application(name=instance._meta.app_label)
+    event.model.value = repr(instance) or str(instance)
+    event.model.primary_key = instance.pk
+
+    instance._meta.dal.event = event
+
+    return instance._meta.dal.event, True
 
 
 def function2path(func):
@@ -133,9 +185,15 @@ def function2path(func):
 
 class MetaDataContainer(dict):
     """
-    simple class we use, to store values.
+    MetaDataContainer is used to store DAL specific metadata
+    in various places.
 
-    Values can be retrieved via attribute or item.
+    Values can be retrieved via attribute or key retrieval.
+
+    A dictionary with key attributes can be provided when __init__.
+    The key should be the name of the item, the value should be a function
+    that gets called when an item with that key does
+    not exist gets accessed, to auto-initialize that key.
     """
 
     def __init__(self, defaults={}):

@@ -25,7 +25,11 @@ from automated_logging.signals import (
     lazy_model_exclusion,
     field_exclusion,
 )
-from automated_logging.helpers import get_or_create_meta, Operation
+from automated_logging.helpers import (
+    get_or_create_meta,
+    Operation,
+    get_or_create_model_event,
+)
 
 ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
 logger = logging.getLogger(__name__)
@@ -180,36 +184,16 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     """
     past = {'modify': 'modified', 'create': 'created', 'delete': 'deleted'}
 
-    user = AutomatedLoggingMiddleware.get_current_user()
-    application = Application(name=instance._meta.app_label)
-    model = sender.__name__
-
     get_or_create_meta(instance)
     if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
         instance._meta.dal.performance = datetime.now() - instance._meta.dal.performance
 
-    event = ModelEvent()
-    event.user = user
-
-    if settings.model.snapshot:
-        event.snapshot = instance
-
-    if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
-        event.performance = datetime.now() - instance._meta.dal.performance
-
-    event.model = ModelEntry()
-    event.model.model = ModelMirror()
-    event.model.model.name = instance.__class__.__name__
-    event.model.model.application = Application(name=instance._meta.app_label)
-    event.model.value = repr(instance) or str(instance)
-    event.model.primary_key = instance.pk
-
-    instance._meta.dal.event = event
+    event, _ = get_or_create_model_event(instance, force=True, extra=True)
 
     logger.log(
         settings.model.loglevel,
-        f'{user or "Anonymous"} {past[status]} '
-        f'{application}.{model} | '
+        f'{event.user or "Anonymous"} {past[status]} '
+        f'{event.model.model.application}.{sender.__name__} | '
         f'Instance: {instance!r}{suffix}',
         extra={
             'action': 'model',

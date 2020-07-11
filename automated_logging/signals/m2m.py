@@ -14,10 +14,15 @@ import logging
 from typing import Optional
 
 from django.db.models import ManyToManyField, ManyToManyRel
+from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
-from automated_logging.helpers import Operation
+from automated_logging.helpers import (
+    Operation,
+    get_or_create_model_event,
+    get_or_create_meta,
+)
 from automated_logging.models import (
     ModelRelationshipModification,
     ModelEntry,
@@ -67,6 +72,19 @@ def post_processor(sender, instance, model, operation, targets):
         name=model.__name__, application=Application(name=instance._meta.app_label)
     )
 
+    # there is the possibility that a pre_clear occurred, if that is the case
+    # extend the targets and pop the list of affected instances from the attached
+    # field
+    get_or_create_meta(instance)
+    if (
+        hasattr(instance._meta.dal, 'm2m_pre_clear')
+        and field.name in instance._meta.dal.m2m_pre_clear
+        and operation == Operation.DELETE
+    ):
+        cleared = instance._meta.dal.m2m_pre_clear[field.name]
+        targets.extend(cleared)
+        instance._meta.dal.m2m_pre_clear.pop(field.name)
+
     for target in targets:
         relationship = ModelRelationshipModification()
         relationship.operation = operation
@@ -83,7 +101,7 @@ def post_processor(sender, instance, model, operation, targets):
         # there was no actual change, so we're not propagating the event
         return
 
-    # TODO: construct event
+    event, _ = get_or_create_model_event(instance)
 
     user = None
     logger.log(
@@ -94,32 +112,88 @@ def post_processor(sender, instance, model, operation, targets):
         f'| Modifications: {", ".join([r.short() for r in relationships])}',
         extra={
             'action': 'model[m2m]',
-            'data': {
-                'relationships': relationships,
-                'instance': instance,
-                'sender': model,
-            },
+            'data': {'instance': instance, 'sender': sender},
+            'relationships': relationships,
+            'event': event,
         },
     )
+
+
+def pre_clear_processor(sender, instance, pks, model, reverse, operation) -> None:
+    """
+    pre_clear needs a specific processor as we attach the changes that are about
+    to happen to the instance first, and then use them in post_delete/post_clear
+
+    if reverse = False then every element gets removed from the relationship field,
+    but if reverse = True then instance should be removed from every target.
+
+    :return: None
+    """
+    if reverse:
+        targets = [] if not pks else model.objects.filter(pk__in=pks)
+        for target in [
+            t for t in targets if not lazy_model_exclusion(t, operation, t.__class__)
+        ]:
+            get_or_create_meta(target)
+            rel = find_m2m_rel(sender, target.__class__)
+            if 'm2m_pre_clear' not in target._meta.dal:
+                target._meta.dal.m2m_pre_clear = {}
+            target._meta.dal.m2m_pre_clear = {rel.field.name: [instance]}
+    else:
+        get_or_create_meta(instance)
+
+        rel = find_m2m_rel(sender, model)
+        if 'm2m_pre_clear' not in instance._meta.dal:
+            instance._meta.dal.m2m_pre_clear = {}
+
+        cleared = getattr(instance, rel.field.name, [])
+        if isinstance(cleared, Manager):
+            cleared = list(cleared.all())
+        instance._meta.dal.m2m_pre_clear = {rel.field.name: cleared}
 
 
 @receiver(m2m_changed, weak=False)
 def m2m_changed_signal(
     sender, instance, action, reverse, model, pk_set, using, **kwargs
 ) -> None:
+    """
+    Django sends this signal when many-to-many relationships change.
+
+    One of the more complex signals, due to the fact that change can be reversed
+    we need to either process
+    instance field changes of pk_set (reverse=False) or
+    pk_set field changes of instance. (reverse=True)
+
+    The changes will always get applied in the model where the field in defined.
+
+
     # TODO: pre_clear and post_clear
-    if action not in ['post_add', 'post_remove', 'pre_clear']:
+    # TODO: post_remove also gets triggered when there is nothing actually getting removed
+    :return: None
+    """
+    if action not in ['post_add', 'post_remove', 'pre_clear', 'post_clear']:
         return
 
-    if action in ['post_add']:
+    print(action)
+    if action == 'pre_clear':
+        operation = Operation.DELETE
+
+        return pre_clear_processor(
+            sender,
+            instance,
+            list(pk_set) if pk_set else None,
+            model,
+            reverse,
+            operation,
+        )
+    elif action == 'post_add':
         operation = Operation.CREATE
+    elif action == 'post_clear':
+        operation = Operation.DELETE
     else:
         operation = Operation.DELETE
 
-    # if reverse targets should log the removal of the specific instance
-    # if not reverse do it on the current one
-
-    targets = model.objects.filter(pk__in=list(pk_set))
+    targets = model.objects.filter(pk__in=list(pk_set)) if pk_set else []
     if reverse:
         for target in [
             t for t in targets if not lazy_model_exclusion(t, operation, t.__class__)

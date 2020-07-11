@@ -18,8 +18,11 @@ def save_test(request):
 
     m2m = M2MTest.objects.get(pk='16b18608-11dd-47f7-a7d6-c1bb427110ac')
     # m2m.test.remove(base)
-    m2m.test.add(base)
-    m2m.save()
+    # m2m.test.clear()
+    # m2m.test.add(base)
+    # m2m.save()
+    base.m2mtest_set.set([])
+    base.save()
     ordinary = OrdinaryTest.objects.filter()[0]
     ordinary.test = str(random.randint(0, 10000000))
     ordinary.save(update_fields=['test'])
