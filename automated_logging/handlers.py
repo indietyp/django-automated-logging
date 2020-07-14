@@ -129,14 +129,19 @@ class DatabaseHandler(Handler):
             entry = ModelField.objects.get_or_create(
                 name=instance.name, model=self.prepare_save(instance.model)
             )[0]
-            entry.type = instance.type
+            if entry.type != instance.type:
+                entry.type = instance.type
+                # append to instances so that it gets saved with the next .save() call
+                self.instances.append(entry)
             return entry
         elif isinstance(instance, ModelEntry):
             entry = ModelEntry.objects.get_or_create(
                 model=self.prepare_save(instance.model),
                 primary_key=instance.primary_key,
             )[0]
-            entry.value = instance.value
+            if entry.value != instance.value:
+                entry.value = instance.value
+                self.instances.append(entry)
             return entry
 
         for field in [

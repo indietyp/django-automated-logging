@@ -15,6 +15,12 @@ RequestInformation = NamedTuple(
 
 
 class AutomatedLoggingMiddleware:
+    """
+    Middleware used by django-automated-logging
+    to provide request specific data to the request signals via
+    the local thread.
+    """
+
     thread = threading.local()
 
     def __init__(self, get_response):
@@ -22,7 +28,8 @@ class AutomatedLoggingMiddleware:
 
         AutomatedLoggingMiddleware.thread.__dal__ = None
 
-    def save(self, request, response=None, exception=None):
+    @staticmethod
+    def save(request, response=None, exception=None):
         """
         Helper middleware, that sadly needs to be present.
         the request_finished and request_started signals only
@@ -41,6 +48,19 @@ class AutomatedLoggingMiddleware:
         )
 
     def __call__(self, request):
+        """
+        TODO: fix staticfiles has no environment?!
+        it seems like middleware isn't getting called for serving the static files,
+        this seems very odd.
+
+        There are 2 different states, request object will be stored when available
+        and response will only be available post get_response.
+
+        :param request:
+        :return:
+        """
+        self.save(request)
+
         response = self.get_response(request)
 
         self.save(request, response)
@@ -78,7 +98,7 @@ class AutomatedLoggingMiddleware:
         :return: Optional[RequestInformation]
         """
 
-        if hasattr(AutomatedLoggingMiddleware.thread, '__dal__'):
+        if getattr(AutomatedLoggingMiddleware.thread, '__dal__', None):
             return RequestInformation(*AutomatedLoggingMiddleware.thread.__dal__)
 
         return None

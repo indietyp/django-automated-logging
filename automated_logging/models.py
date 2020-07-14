@@ -91,9 +91,6 @@ class ModelField(BaseModel):
 
     model = ForeignKey(ModelMirror, on_delete=CASCADE)
     type = CharField(max_length=255)  # string of type
-    # content_type = ForeignKey(
-    #     ContentType, on_delete=SET_NULL, related_name='al_field', null=True
-    # )
 
     class Meta:
         verbose_name = "Model Field"
@@ -122,10 +119,14 @@ class ModelEntry(BaseModel):
         complete = True
 
     def __str__(self) -> str:
-        return (
-            f'{self.model.application.name}.{self.model.name}'
-            f'(pk={self.primary_key}, value="{self.value}")'
-        )
+        return f'{self.model.name}' f'(pk="{self.primary_key}", value="{self.value}")'
+
+    def long(self) -> str:
+        """
+        long representation
+        """
+
+        return f'{self.model.application.name}.{self})'
 
     def short(self) -> str:
         """
@@ -148,16 +149,13 @@ class ModelEvent(BaseModel):
     # modifications = None  # One2Many -> ModelModification
     # relationships = None  # One2Many -> ModelRelationship
 
-    # TODO: consider adding
-    # message = TextField()
-
-    # v experimental, that is opt-in (pickled object)
+    # v experimental, opt-in (pickled object)
     snapshot = PickledObjectField(null=True)
     performance = DurationField(null=True)
 
     class Meta:
-        verbose_name = "Model Entry Event"
-        verbose_name_plural = "Model Entry Events"
+        verbose_name = "Model Event"
+        verbose_name_plural = "Model Events"
 
     class LoggingIgnore:
         complete = True
@@ -260,6 +258,16 @@ class ModelRelationshipModification(BaseModel):
         shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
         return f'{shorthand}{self.model.short()}'
 
+    def medium(self) -> [str, str]:
+        """
+        short representation analogue of __str__ with additional field context
+        :return:
+        """
+        operation = Operation(self.operation)
+        shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
+
+        return f'{shorthand}{self.field.name}', f'{self.model.short()}'
+
 
 class RequestContext(BaseModel):
     """
@@ -320,7 +328,7 @@ class UnspecifiedEvent(BaseModel):
 
     class Meta:
         verbose_name = "Unspecified Event"
-        verbose_name_plural = "Unspecified Events5"
+        verbose_name_plural = "Unspecified Events"
 
     class LoggingIgnore:
         complete = True

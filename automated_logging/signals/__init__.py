@@ -86,7 +86,7 @@ def request_exclusion(event: RequestEvent, function: Optional[Callable] = None) 
     if event.method.lower() in exclusions.methods:
         return True
 
-    if event.application and candidate_in_scope(
+    if event.application.name and candidate_in_scope(
         event.application.name, exclusions.applications
     ):
         return True
@@ -94,7 +94,7 @@ def request_exclusion(event: RequestEvent, function: Optional[Callable] = None) 
     if event.status in exclusions.status:
         return True
 
-    if not event.application and not exclusions.unknown:
+    if not event.application.name and not exclusions.unknown:
         return True
 
     return False

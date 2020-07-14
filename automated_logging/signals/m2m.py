@@ -56,7 +56,6 @@ def post_processor(sender, instance, model, operation, targets):
     :param targets:
     :return:
     """
-    # TODO: append to instance, should be done in handler
     relationships = []
 
     m2m_rel = find_m2m_rel(sender, model)

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'automated_logging.middleware.AutomatedLoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -50,7 +51,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'automated_logging.middleware.AutomatedLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'logtest.urls'
@@ -162,6 +162,7 @@ LOGGING = {
 }
 
 
+# TODO: seems like application matching DOES NOT WORK
 AUTOMATED_LOGGING = {
     'model': {
         'exclude': {

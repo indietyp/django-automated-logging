@@ -10,14 +10,11 @@ from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 
-from automated_logging.middleware import AutomatedLoggingMiddleware
 from automated_logging.models import (
     ModelValueModification,
     ModelField,
     ModelMirror,
     Application,
-    ModelEvent,
-    ModelEntry,
 )
 from automated_logging.settings import settings
 from automated_logging.signals import (
@@ -29,6 +26,7 @@ from automated_logging.helpers import (
     get_or_create_meta,
     Operation,
     get_or_create_model_event,
+    PastOperationMap,
 )
 
 ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
@@ -55,18 +53,16 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     try:
         pre = sender.objects.get(pk=instance.pk)
     except ObjectDoesNotExist:
-        # we need to postpone the return to evaluate model exclusion
+        # __dict__ is used on pre, therefore we need to create a function
+        # that uses __dict__ too, but returns nothing.
+
+        pre = lambda _: None
         operation = Operation.CREATE
 
     excluded = model_exclusion(instance, operation, instance.__class__)
     instance._meta.dal.excluded = excluded
     if excluded:
         return
-
-    if operation == Operation.CREATE:
-        # __dict__ is used on pre, therefore we need to create a function
-        # that uses __dict__ too, but returns nothing.
-        pre = lambda _: None
 
     old, new = pre.__dict__, instance.__dict__
 
@@ -140,6 +136,11 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         ),
     ]
 
+    # exclude fields not present in _meta.get_fields
+    # TODO: should this stay?
+    summary = [
+        s for s in summary if s['key'] in [f.name for f in sender._meta.get_fields()]
+    ]
     # field exclusion
     summary = [s for s in summary if not field_exclusion(s['key'], instance)]
 
@@ -152,7 +153,7 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         field = ModelField()
         field.name = entry['key']
         field.model = model
-        field.type = repr(getattr(sender, entry['key']))
+        field.type = repr(getattr(sender, entry['key'], None))
 
         modification = ModelValueModification()
         modification.operation = entry['operation']
@@ -177,20 +178,26 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     The event gets created here instead of the handler to keep
     everything consistent and have the handler as simple as possible.
 
-    :param status: create, modify, delete
+    :param status: Operation
     :param sender: model class
     :param instance: model instance
     :param updated: updated fields
     :param suffix: suffix to be added to the message
     :return: None
     """
-    past = {'modify': 'modified', 'create': 'created', 'delete': 'deleted'}
+    past = {v: k for k, v in PastOperationMap.items()}
 
     get_or_create_meta(instance)
     if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
         instance._meta.dal.performance = datetime.now() - instance._meta.dal.performance
 
     event, _ = get_or_create_model_event(instance, force=True, extra=True)
+    modifications = getattr(instance._meta.dal, 'modifications', [])
+
+    if len(modifications) == 0 and status == Operation.MODIFY:
+        # if the event is modify, but nothing changed, don't actually propagate
+        # TODO: consider removing this, I am not sure if it helps
+        return
 
     logger.log(
         settings.model.loglevel,
@@ -201,7 +208,7 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
             'action': 'model',
             'data': {'status': status, 'instance': instance},
             'event': event,
-            'modifications': getattr(instance._meta.dal, 'modifications', []),
+            'modifications': modifications,
         },
     )
 
@@ -223,18 +230,14 @@ def post_save_signal(
     :param kwargs: django needs kwargs to be there
     :return: -
     """
-    status = 'create' if created else 'modify'
-    if lazy_model_exclusion(
-        instance,
-        Operation.CREATE if status == 'create' else Operation.MODIFY,
-        instance.__class__,
-    ):
+    status = Operation.CREATE if created else Operation.MODIFY
+    if lazy_model_exclusion(instance, status, instance.__class__,):
         return
     get_or_create_meta(instance)
 
     suffix = f''
     if (
-        status == 'modify'
+        status == Operation.MODIFY
         and hasattr(instance._meta.dal, 'modifications')
         and settings.model.detailed_message
     ):
@@ -266,4 +269,4 @@ def post_delete_signal(sender, instance, **kwargs) -> None:
     if lazy_model_exclusion(instance, Operation.DELETE, instance.__class__):
         return
 
-    post_processor('delete', sender, instance)
+    post_processor(Operation.DELETE, sender, instance)
