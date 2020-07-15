@@ -3,6 +3,7 @@ Everything related to the admin interface of ModelEntry is located in here
 """
 
 from django.contrib.admin import register
+from django.shortcuts import redirect
 
 from automated_logging.admin.model_event import ModelEventAdmin
 from automated_logging.admin.base import ReadOnlyAdminMixin, ReadOnlyTabularInlineMixin
@@ -47,6 +48,10 @@ class ModelEntryAdmin(ReadOnlyAdminMixin):
         super().__init__(*args, **kwargs)
 
         self.readonly_fields = [*self.readonly_fields, 'get_model', 'get_application']
+
+    def changelist_view(self, request, **kwargs):
+        """ instead of showing the changelist view redirect to the parent app_list"""
+        return redirect('admin:app_list', self.model._meta.app_label)
 
     def has_module_permission(self, request):
         """ remove model entries from the index.html list """

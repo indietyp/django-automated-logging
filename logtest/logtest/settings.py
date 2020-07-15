@@ -162,7 +162,6 @@ LOGGING = {
 }
 
 
-# TODO: seems like application matching DOES NOT WORK
 AUTOMATED_LOGGING = {
     'model': {
         'exclude': {

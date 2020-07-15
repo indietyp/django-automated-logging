@@ -138,9 +138,9 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     # exclude fields not present in _meta.get_fields
     # TODO: should this stay?
-    summary = [
-        s for s in summary if s['key'] in [f.name for f in sender._meta.get_fields()]
-    ]
+    fields = {f.name: f for f in instance._meta.get_fields()}
+    summary = [s for s in summary if s['key'] in fields.keys()]
+
     # field exclusion
     summary = [s for s in summary if not field_exclusion(s['key'], instance)]
 
@@ -153,7 +153,8 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         field = ModelField()
         field.name = entry['key']
         field.model = model
-        field.type = repr(getattr(sender, entry['key'], None))
+
+        field.type = repr(fields[entry['key']])
 
         modification = ModelValueModification()
         modification.operation = entry['operation']
