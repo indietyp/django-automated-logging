@@ -15,6 +15,7 @@ from django.db.models import (
     PositiveIntegerField,
     DurationField,
     GenericIPAddressField,
+    PositiveSmallIntegerField,
 )
 from picklefield.fields import PickledObjectField
 
@@ -292,6 +293,7 @@ class RequestEvent(BaseModel):
 
     user = ForeignKey(settings.AUTH_USER_MODEL, on_delete=CASCADE, null=True)
 
+    # to mitigate "max_length"
     uri = TextField()
 
     request = ForeignKey(
@@ -301,8 +303,8 @@ class RequestEvent(BaseModel):
         RequestContext, on_delete=CASCADE, null=True, related_name='response_context'
     )
 
-    status = PositiveIntegerField()
-    method = CharField(max_length=255)
+    status = PositiveSmallIntegerField()
+    method = CharField(max_length=32)
 
     application = ForeignKey(Application, on_delete=CASCADE)
 
@@ -322,11 +324,11 @@ class UnspecifiedEvent(BaseModel):
     the python logging library. saves the message, level, line, file and application.
     """
 
-    message = TextField()
-    level = PositiveIntegerField()
+    message = TextField(null=True)
+    level = PositiveIntegerField(default=20)
 
-    line = PositiveIntegerField()
-    file = TextField()
+    line = PositiveIntegerField(null=True)
+    file = TextField(null=True)
 
     application = ForeignKey(Application, on_delete=CASCADE)
 
