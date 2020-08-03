@@ -1,3 +1,7 @@
+"""
+Helper functions that are specifically used in the signals only.
+"""
+
 import re
 from fnmatch import fnmatch
 from typing import List, Optional, Callable, Any
@@ -8,7 +12,7 @@ from automated_logging.helpers import (
     function2path,
     Operation,
 )
-from automated_logging.models import RequestEvent
+from automated_logging.models import RequestEvent, UnspecifiedEvent
 from automated_logging.settings import settings, Search
 
 
@@ -94,7 +98,9 @@ def request_exclusion(event: RequestEvent, function: Optional[Callable] = None) 
     if event.status in exclusions.status:
         return True
 
-    if not event.application.name and not exclusions.unknown:
+    # if the application.name = None, then the application is unknown.
+    # exclusions.unknown specifies if unknown should be excluded!
+    if not event.application.name and exclusions.unknown:
         return True
 
     return False
@@ -167,8 +173,8 @@ def model_exclusion(instance, operation: Operation, function=None) -> bool:
         return True
 
     # if there is no application string then we assume the model
-    # location is unknown, if the flag unknown = False, then we just exclude
-    if not application and not exclusions.unknown:
+    # location is unknown, if the flag exclude.unknown = True, then we just exclude
+    if not application and exclusions.unknown:
         return True
 
     return False
@@ -203,4 +209,22 @@ def field_exclusion(field: str, instance, function=None) -> bool:
     return False
 
 
-# TODO: unspecified_exclusion with good defaults!
+def unspecified_exclusion(event: UnspecifiedEvent) -> bool:
+    """
+    Determine if an unspecified event needs to be excluded.
+    """
+    exclusions = settings.unspecified.exclude
+
+    if event.application.name and candidate_in_scope(
+        event.application.name, exclusions.applications
+    ):
+        return True
+
+    if candidate_in_scope(str(event.file), exclusions.files):
+        return True
+
+    # application.name = None and exclusion.unknown = True
+    if not event.application.name and exclusions.unknown:
+        return True
+
+    return False

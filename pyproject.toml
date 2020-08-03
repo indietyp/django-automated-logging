@@ -10,6 +10,7 @@ python = ">=3.6"
 django = "^3.0 || ^2.2"
 marshmallow = "^3.6.1"
 django-picklefield = "^3.0.1"
+django-ipware = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

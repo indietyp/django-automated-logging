@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from automated_logging.decorators import ignore_view, include_view
+from automated_logging.decorators import exclude_view, include_view
 from testmodels.models import OrdinaryTest, M2MTest, Base, OneToOneTest
 import random
 import logging
@@ -36,6 +36,6 @@ def save_test(request):
     return JsonResponse({})
 
 
-@ignore_view(methods=['POST'])
+@exclude_view(methods=['POST'])
 def decorator_test(request):
     return JsonResponse({})

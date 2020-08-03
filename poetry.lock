@@ -102,6 +102,14 @@ tests = ["pytest", "pytest-cache", "pytest-cov", "pytest-django", "pytest-flakes
 
 [[package]]
 category = "main"
+description = "A Django utility application that returns client's real IP address"
+name = "django-ipware"
+optional = false
+python-versions = "*"
+version = "3.0.0"
+
+[[package]]
+category = "main"
 description = "Pickled object field for Django"
 name = "django-picklefield"
 optional = false
@@ -220,7 +228,7 @@ python-versions = "*"
 version = "1.4.1"
 
 [metadata]
-content-hash = "1d70e9692ceb9d415c191b52237653826c357cb45360e41af04c0c293e0610e1"
+content-hash = "349ccf91d3a93dc2ce56b1598c4e871d3b75bb98b6899d51d0b1f227c4329fcb"
 python-versions = ">=3.6"
 
 [metadata.files]
@@ -254,6 +262,9 @@ django = [
 django-admin-generator = [
     {file = "django-admin-generator-2.2.0.tar.gz", hash = "sha256:c601287d556205364702a47ed1d16d590d895d20c26e415fe8e1838ce2a74a95"},
     {file = "django_admin_generator-2.2.0-py2.py3-none-any.whl", hash = "sha256:af9e14650b2d3ca209829d28f1547b129970999847548def3b7ebb3061591886"},
+]
+django-ipware = [
+    {file = "django-ipware-3.0.0.tar.gz", hash = "sha256:161605eb011439550dd3ee496d0e999720b13f01952be25ea9e88982fbe48e83"},
 ]
 django-picklefield = [
     {file = "django-picklefield-3.0.1.tar.gz", hash = "sha256:15ccba592ca953b9edf9532e64640329cd47b136b7f8f10f2939caa5f9ce4287"},

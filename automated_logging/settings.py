@@ -26,6 +26,7 @@ class LowerCaseString(String):
 # ModelString
 # FieldString
 # ApplicationString
+# FileString
 class SearchString(String):
     """
     SearchStrings are used for models, fields and applications.
@@ -96,6 +97,8 @@ class BaseSchema(Schema):
         """
         converts the loaded data dict into a namedtuple
 
+        TODO: post_load globals propagation
+
         :param data: loaded data
         :param kwargs: marshmallow kwargs
         :return: namedtuple
@@ -150,6 +153,9 @@ class RequestSchema(BaseSchema):
     exclude = MissingNested(RequestExcludeSchema)
 
     data = MissingNested(RequestDataSchema)
+
+    ip = Boolean(missing=True)
+    # TODO: performance setting?
 
 
 class ModelExcludeSchema(BaseSchema):
@@ -210,7 +216,7 @@ class UnspecifiedExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    files = List(LowerCaseString(), missing=[])
+    files = List(SearchString(), missing=[])
     applications = List(SearchString(), missing=[])
 
 
@@ -221,6 +227,26 @@ class UnspecifiedSchema(BaseSchema):
 
     loglevel = Integer(missing=INFO, validate=Range(min=NOTSET, max=CRITICAL))
     exclude = MissingNested(UnspecifiedExcludeSchema)
+
+
+class GlobalsExcludeSchema(BaseSchema):
+    """
+    Configuration schema, that is used for every single module.
+    There are some packages where it is sensible to have the same
+    exclusions.
+
+    Things specified in globals will get appended to the other configurations.
+    """
+
+    applications = List(SearchString(), missing=[])
+
+
+class GlobalsSchema(BaseSchema):
+    """
+    Configuration schema for global, module unspecific configuration details.
+    """
+
+    exclude = MissingNested(GlobalsExcludeSchema)
 
 
 class ConfigSchema(BaseSchema):
@@ -238,11 +264,10 @@ class ConfigSchema(BaseSchema):
     model = MissingNested(ModelSchema)
     unspecified = MissingNested(UnspecifiedSchema)
 
+    globals = MissingNested(GlobalsSchema)
+
 
 default: namedtuple = ConfigSchema().load({})
 settings: namedtuple = default
 if hasattr(st, 'AUTOMATED_LOGGING'):
     settings = ConfigSchema().load(st.AUTOMATED_LOGGING)
-
-
-# TODO: global settings?

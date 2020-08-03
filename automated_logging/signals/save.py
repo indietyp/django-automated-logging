@@ -1,6 +1,7 @@
 """
 File handles every signal related to the saving/deletion of django models.
 """
+
 import logging
 from collections import namedtuple
 from datetime import datetime
@@ -137,7 +138,6 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     ]
 
     # exclude fields not present in _meta.get_fields
-    # TODO: should this stay?
     fields = {f.name: f for f in instance._meta.get_fields()}
     summary = [s for s in summary if s['key'] in fields.keys()]
 
@@ -197,7 +197,6 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
 
     if len(modifications) == 0 and status == Operation.MODIFY:
         # if the event is modify, but nothing changed, don't actually propagate
-        # TODO: consider removing this, I am not sure if it helps
         return
 
     logger.log(

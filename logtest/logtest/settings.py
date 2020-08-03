@@ -148,7 +148,7 @@ LOGGING = {
         'db': {
             'level': 'INFO',
             'class': 'automated_logging.handlers.DatabaseHandler',
-            'max_age': 'P7DT5H',
+            # 'max_age': 'P7DT5H',
         },
     },
     'loggers': {
@@ -191,7 +191,7 @@ AUTOMATED_LOGGING = {
             'mask': ['password'],
             'query': False,
             'content_types': ['application/json'],
-            'enabled': [],
+            'enabled': ['response'],
         },
         'exclude': {
             'unknown': False,

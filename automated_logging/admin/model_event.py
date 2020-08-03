@@ -165,7 +165,12 @@ class ModelEventAdmin(ReadOnlyAdminMixin):
         'get_modifications',
     )
 
-    list_filter = ('updated_at', ('user', RelatedOnlyFieldListFilter))
+    list_filter = (
+        'updated_at',
+        ('user', RelatedOnlyFieldListFilter),
+        ('model__model__application', RelatedOnlyFieldListFilter),
+        ('model__model', RelatedOnlyFieldListFilter),
+    )
 
     date_hierarchy = 'updated_at'
     ordering = ('-updated_at',)

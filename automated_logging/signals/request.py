@@ -9,13 +9,20 @@ import urllib.parse
 from django.core.handlers.wsgi import WSGIRequest
 from django.dispatch import receiver
 from django.core.signals import got_request_exception, request_finished
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.urls import resolve
 
 from automated_logging.middleware import AutomatedLoggingMiddleware
 from automated_logging.models import RequestEvent, Application, RequestContext
 from automated_logging.settings import settings
 from automated_logging.signals import request_exclusion
+
+# TODO: should django-ipware be optional?
+try:
+    from ipware import get_client_ip
+except ImportError:
+    get_client_ip = None
+
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +70,13 @@ def request_finished_signal(sender, **kwargs) -> None:
 
         request.response = response_context
 
+    # TODO: context parsing, masking and removal
+    if get_client_ip and settings.request.ip:
+        request.ip, _ = get_client_ip(environ.request)
+
     request.status = environ.response.status_code if environ.response else None
     request.method = environ.request.method.upper()
+    request.context_type = environ.request.content_type
 
     try:
         function = resolve(environ.request.path).func

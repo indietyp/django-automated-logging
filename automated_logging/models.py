@@ -14,6 +14,7 @@ from django.db.models import (
     SmallIntegerField,
     PositiveIntegerField,
     DurationField,
+    GenericIPAddressField,
 )
 from picklefield.fields import PickledObjectField
 
@@ -303,6 +304,8 @@ class RequestEvent(BaseModel):
     method = CharField(max_length=255)
 
     application = ForeignKey(Application, on_delete=CASCADE)
+
+    ip = GenericIPAddressField(null=True)
 
     class Meta:
         verbose_name = "Request Event"

@@ -99,7 +99,6 @@ def get_or_create_thread() -> [Any, bool]:
     """
     thread = AutomatedLoggingMiddleware.thread
 
-    # TODO: consider renaming
     return (
         thread,
         get_or_create_local(

@@ -15,7 +15,7 @@ def _normalize_view_args(methods: List[str]) -> Set[str]:
     return methods
 
 
-def ignore_view(func=None, *, methods: List[str] = ()):
+def exclude_view(func=None, *, methods: List[str] = ()):
     """
     Decorator used for ignoring specific views, without adding them
     to the AUTOMATED_LOGGING configuration.
@@ -33,7 +33,7 @@ def ignore_view(func=None, *, methods: List[str] = ()):
     methods = _normalize_view_args(methods)
 
     if func is None:
-        return partial(ignore_view, methods=methods)
+        return partial(exclude_view, methods=methods)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -116,15 +116,13 @@ IgnoreModel = NamedTuple(
 )
 
 
-def ignore_model(func=None, *, operations: List[str] = (), fields: List[str] = None):
+def exclude_model(func=None, *, operations: List[str] = (), fields: List[str] = None):
     """
     Decorator used for ignoring specific models, without using the
     class or AUTOMATED_LOGGING configuration
 
     This is done via the local threading object. __module__ and __name__ are used
     to determine the right model.
-
-    TODO: consider (+, -, ~)
 
     :param func: function to be decorated
     :param operations: operations to be ignored can be a list of:
@@ -139,7 +137,7 @@ def ignore_model(func=None, *, operations: List[str] = (), fields: List[str] = N
     operations, fields = _normalize_model_args(operations, fields)
 
     if func is None:
-        return partial(ignore_model, operations=operations, fields=fields)
+        return partial(exclude_model, operations=operations, fields=fields)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -192,7 +190,7 @@ def include_model(func=None, *, operations: List[str] = (), fields: List[str] = 
     operations, fields = _normalize_model_args(operations, fields)
 
     if func is None:
-        return partial(ignore_model, operations=operations, fields=fields)
+        return partial(include_model, operations=operations, fields=fields)
 
     @wraps(func)
     def wrapper(*args, **kwargs):

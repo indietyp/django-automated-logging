@@ -2,12 +2,12 @@ import re
 from datetime import timedelta
 from logging import Handler, LogRecord
 from pathlib import Path
-from typing import Dict, Any, TYPE_CHECKING, List, Optional, Union
+from typing import Dict, Any, TYPE_CHECKING, List, Optional, Union, Type, Tuple
 
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.db.models import ForeignObject, Model
-from django.db.models.fields.reverse_related import ForeignObjectRel
+
 
 if TYPE_CHECKING:
     # we need to do this, to avoid circular imports
@@ -31,7 +31,7 @@ class DatabaseHandler(Handler):
             max_age = kwargs['maxage']
 
         self.limit = batch or 1
-        self.instances = []
+        self.instances = set()
         self.max_age = self._convert_max_age(max_age) if max_age else None
         super(DatabaseHandler, self).__init__(*args, **kwargs)
 
@@ -76,7 +76,7 @@ class DatabaseHandler(Handler):
 
             return timedelta(**adjusted)
 
-    def save(self, instance):
+    def save(self, instance=None):
         """
         Internal save procedure.
         Handles deletion when an event exceeds max_age
@@ -87,7 +87,8 @@ class DatabaseHandler(Handler):
         from django.db import transaction
         from automated_logging.models import ModelEvent, RequestEvent, UnspecifiedEvent
 
-        self.instances.append(instance)
+        if instance:
+            self.instances.add(instance)
         if len(self.instances) < self.limit:
             return
 
@@ -95,10 +96,30 @@ class DatabaseHandler(Handler):
             [i.save() for i in self.instances]
             self.instances.clear()
 
-            for Event in [ModelEvent, RequestEvent, UnspecifiedEvent]:
-                Event.objects.filter(
-                    created_at__lte=timezone.now() - self.max_age
-                ).delete()
+            if self.max_age:
+                for Event in [ModelEvent, RequestEvent, UnspecifiedEvent]:
+                    Event.objects.filter(
+                        created_at__lte=timezone.now() - self.max_age
+                    ).delete()
+
+    def get_or_create(self, target: Type[Model], **kwargs) -> Tuple[Model, bool]:
+        """
+        proxy for "get_or_create" from django,
+        instead of creating it immediately we
+        dd it to the list of objects to be created in a single swoop
+
+        :type target: Model to be get_or_create
+        :type kwargs: properties to be used to find and create the new object
+        """
+        created = False
+        try:
+            instance = target.objects.get(**kwargs)
+        except ObjectDoesNotExist:
+            instance = target(**kwargs)
+            self.instances.add(instance)
+            created = True
+
+        return instance, created
 
     def prepare_save(self, instance: Model):
         """
@@ -122,28 +143,33 @@ class DatabaseHandler(Handler):
         if isinstance(instance, Application):
             return Application.objects.get_or_create(name=instance.name)[0]
         elif isinstance(instance, ModelMirror):
-            return ModelMirror.objects.get_or_create(
-                name=instance.name, application=self.prepare_save(instance.application)
+            return self.get_or_create(
+                ModelMirror,
+                name=instance.name,
+                application=self.prepare_save(instance.application),
             )[0]
         elif isinstance(instance, ModelField):
-            entry = ModelField.objects.get_or_create(
-                name=instance.name, model=self.prepare_save(instance.model)
-            )[0]
+            entry, _ = self.get_or_create(
+                ModelField, name=instance.name, model=self.prepare_save(instance.model)
+            )
             if entry.type != instance.type:
                 entry.type = instance.type
                 # append to instances so that it gets saved with the next .save() call
-                self.instances.append(entry)
-            return entry
-        elif isinstance(instance, ModelEntry):
-            entry = ModelEntry.objects.get_or_create(
-                model=self.prepare_save(instance.model),
-                primary_key=instance.primary_key,
-            )[0]
-            if entry.value != instance.value:
-                entry.value = instance.value
-                self.instances.append(entry)
+                self.instances.add(entry)
             return entry
 
+        elif isinstance(instance, ModelEntry):
+            entry, _ = self.get_or_create(
+                ModelEntry,
+                model=self.prepare_save(instance.model),
+                primary_key=instance.primary_key,
+            )
+            if entry.value != instance.value:
+                entry.value = instance.value
+                self.instances.add(entry)
+            return entry
+
+        # ForeignObjectRel is untouched rn
         for field in [
             f
             for f in instance._meta.get_fields()
@@ -154,8 +180,7 @@ class DatabaseHandler(Handler):
                 instance, field.name, self.prepare_save(getattr(instance, field.name))
             )
 
-        # ForeignObjectRel is untouched rn
-
+        self.instances.add(instance)
         return instance
 
     def unspecified(self, record: LogRecord) -> None:
@@ -168,6 +193,7 @@ class DatabaseHandler(Handler):
         :return:
         """
         from automated_logging.models import UnspecifiedEvent, Application
+        from automated_logging.signals import unspecified_exclusion
         from django.apps import apps
 
         event = UnspecifiedEvent()
@@ -188,8 +214,9 @@ class DatabaseHandler(Handler):
             # if we cannot find the application, we use the module as application
             event.application = Application(name=record.module)
 
-        self.prepare_save(event)
-        self.save(event)
+        if not unspecified_exclusion(event):
+            self.prepare_save(event)
+            self.save()
 
     def model(
         self,
@@ -210,12 +237,12 @@ class DatabaseHandler(Handler):
         :return:
         """
         self.prepare_save(event)
-        self.save(event)
+        self.save()
 
         for modification in modifications:
             modification.event = event
             self.prepare_save(modification)
-            self.save(modification)
+            self.save()
 
     def m2m(
         self,
@@ -225,19 +252,17 @@ class DatabaseHandler(Handler):
         data: Dict[str, Any],
     ) -> None:
         self.prepare_save(event)
-        self.save(event)
+        self.save()
 
         for relationship in relationships:
             relationship.event = event
             self.prepare_save(relationship)
-            self.save(relationship)
+            self.save()
 
     def request(self, record: LogRecord, event: 'RequestEvent') -> None:
         """
         The request event already has a model prepared that we just
         need to prepare and save.
-
-        TODO: request and response context parsing, masking and removal
 
         :param record: LogRecord
         :param event: Event supplied via the LogRecord
@@ -245,7 +270,7 @@ class DatabaseHandler(Handler):
         """
 
         self.prepare_save(event)
-        self.save(event)
+        self.save()
 
     def emit(self, record: LogRecord) -> None:
         """
