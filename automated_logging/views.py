@@ -1,9 +1,9 @@
-from django.http import JsonResponse
+"""
+Automated Logging specific views,
+currently unused except for testing redirection
+"""
 
+from automated_logging.settings import dev
 
-def request_testcase(request):
-  return JsonResponse({})
-
-
-def exception_testcase(request):
-  raise Exception
+if dev:
+    from automated_logging.tests.views import *

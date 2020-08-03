@@ -1,7 +1,8 @@
-from . import views
-from django.conf.urls import url
+from automated_logging.settings import dev
 
-urlpatterns = [
-    url(r'^$', views.request_testcase),
-    url(r'^500$', views.exception_testcase),
-]
+urlpatterns = []
+
+if dev:
+    from automated_logging.tests.urls import urlpatterns as patterns
+
+    urlpatterns.extend(patterns)

@@ -24,6 +24,7 @@ from automated_logging.helpers import (
     ShortOperationMap,
     PastM2MOperationMap,
 )
+from automated_logging.settings import dev
 
 
 class BaseModel(models.Model):
@@ -335,3 +336,9 @@ class UnspecifiedEvent(BaseModel):
 
     class LoggingIgnore:
         complete = True
+
+
+if dev:
+    # if in development mode (set when testing or development)
+    # import extra models
+    from automated_logging.tests.models import *

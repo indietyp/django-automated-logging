@@ -271,3 +271,5 @@ default: namedtuple = ConfigSchema().load({})
 settings: namedtuple = default
 if hasattr(st, 'AUTOMATED_LOGGING'):
     settings = ConfigSchema().load(st.AUTOMATED_LOGGING)
+
+dev = getattr(st, 'AUTOMATED_LOGGING_DEV', False)
