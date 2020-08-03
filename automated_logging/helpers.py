@@ -128,12 +128,15 @@ def get_or_create_local(target: Any, defaults={}, key='dal') -> bool:
     return False
 
 
-def get_or_create_model_event(instance, force=False, extra=False) -> [Any, bool]:
+def get_or_create_model_event(
+    instance, operation: Operation, force=False, extra=False
+) -> [Any, bool]:
     """
     Get or create the ModelEvent of an instance.
     This function will also populate the event with the current information.
 
     :param instance: instance to derive an event from
+    :param operation: specified operation that is done
     :param force: force creation of new event?
     :param extra: extra information inserted?
     :return: [event, created?]
@@ -165,12 +168,13 @@ def get_or_create_model_event(instance, force=False, extra=False) -> [Any, bool]
     ):
         event.performance = datetime.now() - instance._meta.dal.performance
 
-    event.model = ModelEntry()
-    event.model.model = ModelMirror()
-    event.model.model.name = instance.__class__.__name__
-    event.model.model.application = Application(name=instance._meta.app_label)
-    event.model.value = repr(instance) or str(instance)
-    event.model.primary_key = instance.pk
+    event.operation = operation
+    event.entry = ModelEntry()
+    event.entry.mirror = ModelMirror()
+    event.entry.mirror.name = instance.__class__.__name__
+    event.entry.mirror.application = Application(name=instance._meta.app_label)
+    event.entry.value = repr(instance) or str(instance)
+    event.entry.primary_key = instance.pk
 
     instance._meta.dal.event = event
 

@@ -92,7 +92,7 @@ class ModelField(BaseModel):
 
     name = CharField(max_length=255)
 
-    model = ForeignKey(ModelMirror, on_delete=CASCADE)
+    mirror = ForeignKey(ModelMirror, on_delete=CASCADE)
     type = CharField(max_length=255)  # string of type
 
     class Meta:
@@ -109,7 +109,7 @@ class ModelEntry(BaseModel):
     to ensure the log integrity independent of presence of the entry.
     """
 
-    model = ForeignKey(ModelMirror, on_delete=CASCADE)
+    mirror = ForeignKey(ModelMirror, on_delete=CASCADE)
 
     value = TextField()  # (repr)
     primary_key = TextField()
@@ -122,20 +122,20 @@ class ModelEntry(BaseModel):
         complete = True
 
     def __str__(self) -> str:
-        return f'{self.model.name}' f'(pk="{self.primary_key}", value="{self.value}")'
+        return f'{self.mirror.name}' f'(pk="{self.primary_key}", value="{self.value}")'
 
     def long(self) -> str:
         """
         long representation
         """
 
-        return f'{self.model.application.name}.{self})'
+        return f'{self.mirror.application.name}.{self})'
 
     def short(self) -> str:
         """
         short representation
         """
-        return f'{self.model.name}({self.primary_key})'
+        return f'{self.mirror.name}({self.primary_key})'
 
 
 class ModelEvent(BaseModel):
@@ -144,10 +144,16 @@ class ModelEvent(BaseModel):
     values or relationships.
     """
 
+    operation = SmallIntegerField(
+        validators=[MinValueValidator(-1), MaxValueValidator(1)],
+        null=True,
+        choices=DjangoOperations,
+    )
+
     user = ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=CASCADE, null=True
     )  # maybe don't cascade?
-    model = ForeignKey(ModelEntry, on_delete=CASCADE)
+    entry = ForeignKey(ModelEntry, on_delete=CASCADE)
 
     # modifications = None  # One2Many -> ModelModification
     # relationships = None  # One2Many -> ModelRelationship
@@ -196,8 +202,8 @@ class ModelValueModification(BaseModel):
 
     def __str__(self) -> str:
         return (
-            f'[{self.field.model.application.name}:'
-            f'{self.field.model.name}:'
+            f'[{self.field.mirror.application.name}:'
+            f'{self.field.mirror.name}:'
             f'{self.field.name}] '
             f'{self.previous} -> {self.current}'
         )
@@ -231,7 +237,7 @@ class ModelRelationshipModification(BaseModel):
     )
 
     field = ForeignKey(ModelField, on_delete=CASCADE)
-    model = ForeignKey(ModelEntry, on_delete=CASCADE)
+    entry = ForeignKey(ModelEntry, on_delete=CASCADE)
 
     event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name='relationships')
 
@@ -247,10 +253,10 @@ class ModelRelationshipModification(BaseModel):
         past = {v: k for k, v in PastM2MOperationMap.items()}[operation]
 
         return (
-            f'[{self.field.model.application}:'
-            f'{self.field.model.name}:'
+            f'[{self.field.mirror.application}:'
+            f'{self.field.mirror.name}:'
             f'{self.field.name}] '
-            f'{past} {self.model}'
+            f'{past} {self.entry}'
         )
 
     def short(self) -> str:
@@ -259,7 +265,7 @@ class ModelRelationshipModification(BaseModel):
         """
         operation = Operation(self.operation)
         shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
-        return f'{shorthand}{self.model.short()}'
+        return f'{shorthand}{self.entry.short()}'
 
     def medium(self) -> [str, str]:
         """
@@ -269,7 +275,7 @@ class ModelRelationshipModification(BaseModel):
         operation = Operation(self.operation)
         shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
 
-        return f'{shorthand}{self.field.name}', f'{self.model.short()}'
+        return f'{shorthand}{self.field.name}', f'{self.entry.short()}'
 
 
 class RequestContext(BaseModel):

@@ -152,7 +152,7 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     for entry in summary:
         field = ModelField()
         field.name = entry['key']
-        field.model = model
+        field.mirror = model
 
         field.type = repr(fields[entry['key']])
 
@@ -166,7 +166,7 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     instance._meta.dal.modifications = modifications
 
-    if settings.model.performance:
+    if settings.entry.performance:
         instance._meta.dal.performance = datetime.now()
 
 
@@ -192,7 +192,7 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
         instance._meta.dal.performance = datetime.now() - instance._meta.dal.performance
 
-    event, _ = get_or_create_model_event(instance, force=True, extra=True)
+    event, _ = get_or_create_model_event(instance, status, force=True, extra=True)
     modifications = getattr(instance._meta.dal, 'modifications', [])
 
     if len(modifications) == 0 and status == Operation.MODIFY:
@@ -202,7 +202,7 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     logger.log(
         settings.model.loglevel,
         f'{event.user or "Anonymous"} {past[status]} '
-        f'{event.model.model.application}.{sender.__name__} | '
+        f'{event.entry.mirror.application}.{sender.__name__} | '
         f'Instance: {instance!r}{suffix}',
         extra={
             'action': 'model',

@@ -65,7 +65,7 @@ def post_processor(sender, instance, model, operation, targets):
 
     field = ModelField()
     field.name = m2m_rel.name
-    field.model = ModelMirror(
+    field.mirror = ModelMirror(
         name=model.__name__, application=Application(name=instance._meta.app_label)
     )
 
@@ -89,7 +89,7 @@ def post_processor(sender, instance, model, operation, targets):
         mirror = ModelMirror()
         mirror.name = target.__class__.__name__
         mirror.application = Application(name=target._meta.app_label)
-        relationship.model = ModelEntry(
+        relationship.entry = ModelEntry(
             model=mirror, value=repr(target), primary_key=target.pk
         )
         relationships.append(relationship)
@@ -98,14 +98,14 @@ def post_processor(sender, instance, model, operation, targets):
         # there was no actual change, so we're not propagating the event
         return
 
-    event, _ = get_or_create_model_event(instance)
+    event, _ = get_or_create_model_event(instance, operation)
 
     user = None
     logger.log(
         settings.model.loglevel,
         f'{user or "Anonymous"} modified field '
         f'{field.name} | Model: '
-        f'{field.model.application}.{field.model} '
+        f'{field.mirror.application}.{field.mirror} '
         f'| Modifications: {", ".join([r.short() for r in relationships])}',
         extra={
             'action': 'model[m2m]',

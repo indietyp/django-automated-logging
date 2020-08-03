@@ -150,7 +150,9 @@ class DatabaseHandler(Handler):
             )[0]
         elif isinstance(instance, ModelField):
             entry, _ = self.get_or_create(
-                ModelField, name=instance.name, model=self.prepare_save(instance.model)
+                ModelField,
+                name=instance.name,
+                mirror=self.prepare_save(instance.mirror),
             )
             if entry.type != instance.type:
                 entry.type = instance.type
@@ -161,7 +163,7 @@ class DatabaseHandler(Handler):
         elif isinstance(instance, ModelEntry):
             entry, _ = self.get_or_create(
                 ModelEntry,
-                model=self.prepare_save(instance.model),
+                mirror=self.prepare_save(instance.mirror),
                 primary_key=instance.primary_key,
             )
             if entry.value != instance.value:

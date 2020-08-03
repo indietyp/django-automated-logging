@@ -59,13 +59,13 @@ class ModelEntryAdmin(ReadOnlyAdminMixin):
 
     def get_model(self, instance):
         """ get the model mirror """
-        return self.model_admin_url(instance.model)
+        return self.model_admin_url(instance.mirror)
 
     get_model.short_description = 'Model'
 
     def get_application(self, instance):
         """ get the application """
-        return instance.model.application
+        return instance.mirror.application
 
     get_application.short_description = 'Application'
 

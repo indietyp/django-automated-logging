@@ -124,13 +124,13 @@ class ModelEventAdmin(ReadOnlyAdminMixin):
         get the model
         TODO: consider splitting this up to model/pk/value
         """
-        return instance.model.short()
+        return instance.entry.short()
 
     get_model.short_description = 'Model'
 
     def get_model_link(self, instance):
         """ get the model with a link to the entry """
-        return self.model_admin_url(instance.model)
+        return self.model_admin_url(instance.entry)
 
     get_model_link.short_description = 'Model'
 
@@ -140,7 +140,7 @@ class ModelEventAdmin(ReadOnlyAdminMixin):
         :param instance:
         :return:
         """
-        return instance.model.model.application
+        return instance.entry.mirror.application
 
     get_application.short_description = 'Application'
 

@@ -79,7 +79,7 @@ class FullClassBasedExclusionTest(OrdinaryTest):
         app_label = 'automated_logging_tests'
 
     class AutomatedLogging:
-        ignore = True
+        complete = True
 
 
 class PartialClassBasedExclusionTest(OrdinaryTest):
@@ -120,4 +120,4 @@ class DecoratorOverrideExclusionTest(OrdinaryTest):
         app_label = 'automated_logging_tests'
 
     class AutomatedLogging:
-        ignore = True
+        complete = True

@@ -139,10 +139,10 @@ def convert(apps, schema_editor):
             entry = next((e for e in entries if e.value == e.value), None)
             if not entry:
                 entry = ModelEntry(
-                    value=old.information.value, primary_key='', model=mirror
+                    value=old.information.value, primary_key='', mirror=mirror
                 )
                 entries.append(entry)
-        event.model = entry
+        event.entry = entry
 
         # TODO: action
         ACTION_TRANSLATIONS = {0: None, 1: 1, 2: 0, 3: -1}
@@ -150,6 +150,7 @@ def convert(apps, schema_editor):
         # TODO: modification conversion
         # old.modification -> event.modifications, event.relationships
         # if information has content_type then relationship, else modification
+        # problem: field is unknown
         #   modification => modifications
         #       operation.MODIFY => operation
         #       previously       => previous
@@ -237,12 +238,23 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 (
+                    'operation',
+                    models.SmallIntegerField(
+                        choices=[(1, 'create'), (0, 'modify'), (-1, 'delete')],
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(-1),
+                            django.core.validators.MaxValueValidator(1),
+                        ],
+                    ),
+                ),
+                (
                     'snapshot',
                     picklefield.fields.PickledObjectField(editable=False, null=True),
                 ),
                 ('performance', models.DurationField(null=True)),
                 (
-                    'model',
+                    'entry',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to='automated_logging.ModelEntry',
@@ -483,7 +495,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'model',
+                    'entry',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to='automated_logging.ModelEntry',
@@ -525,7 +537,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='modelfield',
-            name='model',
+            name='mirror',
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 to='automated_logging.ModelMirror',
@@ -533,7 +545,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='modelentry',
-            name='model',
+            name='mirror',
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
                 to='automated_logging.ModelMirror',
