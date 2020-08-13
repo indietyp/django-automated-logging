@@ -19,23 +19,15 @@ def convert(apps, schema_editor):
 
     # convert all new applications
     logger.info('Converting Applications from 5.x.x to 6.x.x')
-    ApplicationOld = apps.get_model('automated_logging', 'Application')
-    ApplicationNew = apps.get_model('automated_logging', 'ApplicationTemp')
-
-    applications = [
-        ApplicationNew(
-            id=a.id, created_at=a.created_at, updated_at=a.updated_at, name=a.name
-        )
-        for a in ApplicationOld.objects.using(alias).all()
-    ]
-    no_application = ApplicationNew(name=None)
-    applications.append(no_application)
-    ApplicationNew.objects.using(alias).bulk_create(applications)
+    # Application does not change, except new unknown Application
+    Application = apps.get_model('automated_logging', 'Application')
+    applications = [Application(name=None)]
+    no_application = applications[0]
 
     # convert request events
     logger.info('Converting Request Events from 5.x.x to 6.x.x')
     RequestOld = apps.get_model('automated_logging', 'Request')
-    RequestEvent = apps.get_model('automated_logging', 'RequestModel')
+    RequestEvent = apps.get_model('automated_logging', 'RequestEvent')
     requests = [
         RequestEvent(
             id=r.id,
@@ -45,11 +37,10 @@ def convert(apps, schema_editor):
             uri=str(r.uri),
             method=r.method[:32],
             status=r.status,
-            application=ApplicationNew.objects.using(alias).get(id=r.application.id),
+            application=Application.objects.using(alias).get(id=r.application.id),
         )
         for r in RequestOld.objects.using(alias).all()
     ]
-    RequestEvent.objects.using(alias).bulk_create(requests)
 
     # convert unspecified events
     logger.info('Converting Unspecified Events from 5.x.x to 6.x.x')
@@ -68,7 +59,6 @@ def convert(apps, schema_editor):
         )
         for u in UnspecifiedOld.objects.using(alias).all()
     ]
-    UnspecifiedEvent.objects.using(alias).bulk_create(unspecified)
 
     # convert model events
     logger.info(
@@ -79,16 +69,87 @@ def convert(apps, schema_editor):
 
     ModelMirror = apps.get_model('automated_logging', 'ModelMirror')
     ModelEntry = apps.get_model('automated_logging', 'ModelEntry')
+    ModelField = apps.get_model('automated_logging', 'ModelField')
+    ModelRelationshipModification = apps.get_model(
+        'automated_logging', 'ModelRelationshipModification'
+    )
+    ModelValueModification = apps.get_model(
+        'automated_logging', 'ModelValueModification'
+    )
 
     mirrors = [ModelMirror(name='', application=no_application)]
     no_mirror = mirrors[0]
 
-    entries = [ModelEntry(value='', primary_key='', model=no_mirror)]
+    entries = [ModelEntry(value='', primary_key='', mirror=no_mirror)]
     no_entry = entries[0]
 
+    fields = [ModelField(name='', mirror=no_mirror, type='')]
+    no_field = fields[0]
+
     events = []
+
     value_modifications = []
     relationship_modifications = []
+
+    def get_application(content_type):
+        """
+        simple helper function to get a new application from a content type
+        :return: ApplicationNew
+        """
+        app = next((a for a in applications if a.name == content_type.app_label), None,)
+
+        if not app:
+            app = Application(name=content_type.app_label)
+            applications.append(app)
+
+        return app
+
+    def get_mirror(content_type):
+        """
+        simple helper function to get the new mirror from content type
+        :return: ModelMirror
+        """
+        app = get_application(content_type)
+        mir = next((m for m in mirrors if m.name == content_type.model), None)
+        if not mir:
+            mir = ModelMirror(name=content_type.model, application=app)
+            mirrors.append(mir)
+
+        return mir
+
+    def get_entry(value, mir):
+        """
+        simple helper function to find the appropriate entry
+        :return: ModelEntry
+        """
+        ent = next((e for e in entries if e.value == value), None)
+        if not ent:
+            ent = ModelEntry(value=value, primary_key='', mirror=mir)
+            entries.append(ent)
+        return ent
+
+    def get_field(target):
+        """
+        simple inline helper function to get the correct field
+        :return: ModelField
+        """
+
+        app = get_application(target.model)
+
+        mir = next(
+            (m for m in mirrors if m.application.name == target.model.app_label), None,
+        )
+        if not mir:
+            mir = ModelMirror(name=target.model.model, application=app)
+
+        fie = next(
+            (e for e in fields if e.name == target.name and e.mirror == mir), None,
+        )
+        if not fie:
+            fie = ModelField(name=target.name, mirror=mir, type='<UNKNOWN>')
+            fields.append(fie)
+
+        return fie
 
     oldies = ModelOld.objects.using(alias).all()
 
@@ -114,29 +175,9 @@ def convert(apps, schema_editor):
             # there is a chance old.information.type is null,
             # we need to check for that case
             if old.information.type:
-                application = next(
-                    (
-                        a
-                        for a in applications
-                        if a.name == old.information.type.app_label
-                    ),
-                    None,
-                )
+                mirror = get_mirror(old.information.type)
 
-                if not application:
-                    application = ApplicationNew(name=old.information.type.app_label)
-                    applications.append(application)
-
-                mirror = next(
-                    (m for m in mirrors if m.name == old.information.type.model), None
-                )
-                if not mirror:
-                    mirror = ModelMirror(
-                        name=old.information.type.model, application=application
-                    )
-                    mirrors.append(mirror)
-
-            entry = next((e for e in entries if e.value == e.value), None)
+            entry = next((e for e in entries if e.value == old.information.value), None)
             if not entry:
                 entry = ModelEntry(
                     value=old.information.value, primary_key='', mirror=mirror
@@ -144,32 +185,94 @@ def convert(apps, schema_editor):
                 entries.append(entry)
         event.entry = entry
 
-        # TODO: action
         ACTION_TRANSLATIONS = {0: None, 1: 1, 2: 0, 3: -1}
 
-        # TODO: modification conversion
         # old.modification -> event.modifications, event.relationships
         # if information has content_type then relationship, else modification
         # problem: field is unknown
         #   modification => modifications
-        #       operation.MODIFY => operation
+        #       operation.YOUCANDECIDE => operation
         #       previously       => previous
         #       currently        => current
-        #   inserted => modifications
-        #       operation.CREATE => operation
-        #       None             => previous
-        #       currently        => current
-        #   removed => modifications
-        #       operation.DELETE => operation
-        #       previously       => previous
-        #       None             => current
+        #   inserted => relationship
+        #   removed => relationship
 
+        event.operation = ACTION_TRANSLATIONS[old.action]
+
+        for inserted in old.modification.inserted:
+            mirror = get_mirror(inserted.type)
+            rel = ModelRelationshipModification(
+                field=get_field(inserted.field),
+                entry=get_entry(inserted.value, mirror),
+                operation=1,
+            )
+            event.relationships.add(rel)
+            relationship_modifications.append(rel)
+        for removed in old.modification.removed:
+            mirror = get_mirror(removed.type)
+            rel = ModelRelationshipModification(
+                field=get_field(removed.field),
+                entry=get_entry(removed.value, mirror),
+                operation=-1,
+            )
+            event.relationships.add(rel)
+            relationship_modifications.append(rel)
+
+        previously = {f.field.id: f for f in old.modification.previously}
+        for currently in old.modification.currently:
+            operation = 0
+            previous = None
+            if currently.field.id not in previously:
+                operation = 1
+            else:
+                previous = previously[currently.field.id].value
+
+            value_modification = ModelValueModification(
+                operation=operation,
+                field=get_field(currently.field),
+                previous=previous,
+                current=currently.value,
+            )
+            value_modifications.append(value_modification)
+            event.modifications.add(value_modification)
+
+        for removed in set(old.modification.previously).difference(
+            old.modification.currently
+        ):
+            value_modification = ModelValueModification(
+                operation=-1,
+                field=get_field(removed.field),
+                previous=removed.value,
+                current=None,
+            )
+            value_modifications.append(value_modification)
+            event.modifications.add(value_modification)
+
+        events.append(event)
         if idx % progress == 0:
             logger.info(f'{(idx // progress) * 10}%...')
         idx += 1
 
     logger.info('Bulk Saving Converted Objects (This can take a while)')
-    # TODO: move everything down!
+    Application.objects.using(alias).bulk_create(applications)
+    RequestEvent.objects.using(alias).bulk_create(requests)
+    UnspecifiedEvent.objects.using(alias).bulk_create(unspecified)
+    logger.info('Saved Application, RequestEvent and UnspecifiedEvent')
+
+    ModelMirror.objects.using(alias).bulk_create(mirrors)
+    ModelEntry.objects.using(alias).bulk_create(entries)
+    ModelField.objects.using(alias).bulk_create(fields)
+    logger.info('Saved ModelMirror, ModelEntry, ModelField')
+
+    ModelValueModification.objects.using(alias).bulk_create(value_modifications)
+    ModelRelationshipModification.objects.using(alias).bulk_create(
+        relationship_modifications
+    )
+
+    ModelEvent.objects.using(alias).bulk_create(events)
+    logger.info(
+        'Saved ModelValueModification, ModelRelationshipModification and ModelEvent'
+    )
 
 
 class Migration(migrations.Migration):
@@ -178,29 +281,29 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            # create temporary model
-            # will be renamed
-            name='ApplicationTemp',
-            fields=[
-                (
-                    'id',
-                    models.UUIDField(
-                        db_index=True,
-                        default=uuid.uuid4,
-                        primary_key=True,
-                        serialize=False,
-                    ),
-                ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255, null=True)),
-            ],
-            options={
-                'verbose_name': 'Application',
-                'verbose_name_plural': 'Applications',
-            },
-        ),
+        # migrations.CreateModel(
+        #     # create temporary model
+        #     # will be renamed
+        #     name='ApplicationTemp',
+        #     fields=[
+        #         (
+        #             'id',
+        #             models.UUIDField(
+        #                 db_index=True,
+        #                 default=uuid.uuid4,
+        #                 primary_key=True,
+        #                 serialize=False,
+        #             ),
+        #         ),
+        #         ('created_at', models.DateTimeField(auto_now_add=True)),
+        #         ('updated_at', models.DateTimeField(auto_now=True)),
+        #         ('name', models.CharField(max_length=255, null=True)),
+        #     ],
+        #     options={
+        #         'verbose_name': 'Application',
+        #         'verbose_name_plural': 'Applications',
+        #     },
+        # ),
         migrations.CreateModel(
             name='ModelEntry',
             fields=[
@@ -551,10 +654,15 @@ class Migration(migrations.Migration):
                 to='automated_logging.ModelMirror',
             ),
         ),
+        migrations.AlterField(
+            model_name='application',
+            name='name',
+            field=models.CharField(max_length=255, null=True),
+        ),
         # end of adding
         # conversion
         migrations.RunPython(convert),
-        migrations.RenameModel('ApplicationTemp', 'Application'),
+        # migrations.RenameModel('ApplicationTemp', 'Application'),
         # removing 5.x.x
         migrations.RemoveField(model_name='field', name='model',),
         migrations.RemoveField(model_name='model', name='application',),
@@ -572,7 +680,7 @@ class Migration(migrations.Migration):
         migrations.RemoveField(model_name='request', name='application',),
         migrations.RemoveField(model_name='request', name='user',),
         migrations.DeleteModel(name='Unspecified',),
-        migrations.DeleteModel(name='Application',),
+        # migrations.DeleteModel(name='Application',),
         migrations.DeleteModel(name='Field',),
         migrations.DeleteModel(name='Model',),
         migrations.DeleteModel(name='ModelChangelog',),

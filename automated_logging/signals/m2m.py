@@ -90,7 +90,7 @@ def post_processor(sender, instance, model, operation, targets):
         mirror.name = target.__class__.__name__
         mirror.application = Application(name=target._meta.app_label)
         relationship.entry = ModelEntry(
-            model=mirror, value=repr(target), primary_key=target.pk
+            mirror=mirror, value=repr(target), primary_key=target.pk
         )
         relationships.append(relationship)
 
