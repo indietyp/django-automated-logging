@@ -134,6 +134,9 @@ def convert(apps, schema_editor):
         :return: ModelField
         """
 
+        if target is None:
+            return no_field
+
         app = get_application(target.model)
 
         mir = next(
@@ -199,55 +202,66 @@ def convert(apps, schema_editor):
 
         event.operation = ACTION_TRANSLATIONS[old.action]
 
-        for inserted in old.modification.inserted:
-            mirror = get_mirror(inserted.type)
-            rel = ModelRelationshipModification(
-                field=get_field(inserted.field),
-                entry=get_entry(inserted.value, mirror),
-                operation=1,
-            )
-            event.relationships.add(rel)
-            relationship_modifications.append(rel)
-        for removed in old.modification.removed:
-            mirror = get_mirror(removed.type)
-            rel = ModelRelationshipModification(
-                field=get_field(removed.field),
-                entry=get_entry(removed.value, mirror),
-                operation=-1,
-            )
-            event.relationships.add(rel)
-            relationship_modifications.append(rel)
+        if old.modification:
+            for inserted in old.modification.inserted.all():
+                mirror = get_mirror(inserted.type)
+                rel = ModelRelationshipModification(
+                    field=get_field(inserted.field),
+                    entry=get_entry(inserted.value, mirror),
+                    operation=1,
+                )
+                rel.event = event
+                relationship_modifications.append(rel)
 
-        previously = {f.field.id: f for f in old.modification.previously}
-        for currently in old.modification.currently:
-            operation = 0
-            previous = None
-            if currently.field.id not in previously:
-                operation = 1
-            else:
-                previous = previously[currently.field.id].value
+            for removed in old.modification.removed.all():
+                mirror = get_mirror(removed.type)
+                rel = ModelRelationshipModification(
+                    field=get_field(removed.field),
+                    entry=get_entry(removed.value, mirror),
+                    operation=-1,
+                )
+                rel.event = event
+                relationship_modifications.append(rel)
 
-            value_modification = ModelValueModification(
-                operation=operation,
-                field=get_field(currently.field),
-                previous=previous,
-                current=currently.value,
-            )
-            value_modifications.append(value_modification)
-            event.modifications.add(value_modification)
+            if old.modification.modification:
+                previously = {
+                    f.field.id: f
+                    for f in old.modification.modification.previously.all()
+                }
+                for currently in old.modification.modification.currently.all():
+                    operation = 0
+                    previous = None
+                    if currently.field.id not in previously:
+                        operation = 1
+                    else:
+                        previous = previously[currently.field.id].value
+                        # previous can be "None" string
+                        if previous == 'None':
+                            operation = 1
+                            previous = None
 
-        for removed in set(old.modification.previously).difference(
-            old.modification.currently
-        ):
-            value_modification = ModelValueModification(
-                operation=-1,
-                field=get_field(removed.field),
-                previous=removed.value,
-                current=None,
-            )
-            value_modifications.append(value_modification)
-            event.modifications.add(value_modification)
+                    val = ModelValueModification(
+                        operation=operation,
+                        field=get_field(currently.field),
+                        previous=previous,
+                        current=currently.value,
+                    )
+                    val.event = event
+                    value_modifications.append(val)
 
+                for removed in set(
+                    old.modification.modification.previously.all()
+                ).difference(old.modification.modification.currently.all()):
+                    val = ModelValueModification(
+                        operation=-1,
+                        field=get_field(removed.field),
+                        previous=removed.value,
+                        current=None,
+                    )
+                    val.event = event
+                    value_modifications.append(val)
+
+        event.user = old.user
         events.append(event)
         if idx % progress == 0:
             logger.info(f'{(idx // progress) * 10}%...')
@@ -264,12 +278,13 @@ def convert(apps, schema_editor):
     ModelField.objects.using(alias).bulk_create(fields)
     logger.info('Saved ModelMirror, ModelEntry, ModelField')
 
+    ModelEvent.objects.using(alias).bulk_create(events)
+
     ModelValueModification.objects.using(alias).bulk_create(value_modifications)
     ModelRelationshipModification.objects.using(alias).bulk_create(
         relationship_modifications
     )
 
-    ModelEvent.objects.using(alias).bulk_create(events)
     logger.info(
         'Saved ModelValueModification, ModelRelationshipModification and ModelEvent'
     )
