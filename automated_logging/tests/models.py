@@ -23,16 +23,17 @@ class TestBase(Model):
 
     class Meta:
         abstract = True
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 class OrdinaryTest(TestBase):
     """ Ordinary test. Has a random char field."""
 
     random = CharField(max_length=255, null=True)
+    random2 = CharField(max_length=255, null=True)
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 class M2MTest(TestBase):
@@ -41,7 +42,7 @@ class M2MTest(TestBase):
     relationship = ManyToManyField(OrdinaryTest)
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 class ForeignKeyTest(TestBase):
@@ -50,7 +51,7 @@ class ForeignKeyTest(TestBase):
     relationship = ForeignKey(OrdinaryTest, on_delete=CASCADE, null=True)
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 class OneToOneTest(TestBase):
@@ -59,26 +60,26 @@ class OneToOneTest(TestBase):
     relationship = OneToOneField(OrdinaryTest, on_delete=CASCADE, null=True)
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 class SpeedTest(TestBase):
     """ Used to test the speed of DAL """
 
     for idx in range(100):
-        eval(f"column{idx} = CharField(max_length=15, null=True)")
+        exec(f"column{idx} = CharField(max_length=15, null=True)")
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 class FullClassBasedExclusionTest(OrdinaryTest):
     """ Used to test the full model exclusion via meta class"""
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
-    class AutomatedLogging:
+    class LoggingIgnore:
         complete = True
 
 
@@ -86,9 +87,9 @@ class PartialClassBasedExclusionTest(OrdinaryTest):
     """ Used to test partial ignore via fields """
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
-    class AutomatedLogging:
+    class LoggingIgnore:
         ignore_fields = ['random']
         ignore_operations = ['delete']
 
@@ -98,7 +99,7 @@ class FullDecoratorBasedExclusionTest(OrdinaryTest):
     """ Used to test full decorator exclusion """
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 @exclude_model(operations=['delete'], fields=['random'])
@@ -106,7 +107,7 @@ class PartialDecoratorBasedExclusionTest(OrdinaryTest):
     """ Used to test partial decorator exclusion """
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
 
 @include_model
@@ -117,7 +118,7 @@ class DecoratorOverrideExclusionTest(OrdinaryTest):
     """
 
     class Meta:
-        app_label = 'automated_logging_tests'
+        app_label = 'automated_logging'
 
-    class AutomatedLogging:
+    class LoggingIgnore:
         complete = True

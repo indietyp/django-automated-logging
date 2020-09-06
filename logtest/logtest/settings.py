@@ -38,12 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'automated_logging',
-    'testmodels',
     'django_admin_generator',
 ]
 
 MIDDLEWARE = [
-    'automated_logging.middleware.AutomatedLoggingMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'automated_logging.middleware.AutomatedLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'logtest.urls'
@@ -169,7 +168,7 @@ AUTOMATED_LOGGING = {
             'fields': [],
             'applications': [
                 'session',
-                'automated_logging',
+                # 'automated_logging',
                 'admin',
                 'basehttp',
                 'migrations',
@@ -202,3 +201,5 @@ AUTOMATED_LOGGING = {
         'loglevel': 20,
     },
 }
+
+AUTOMATED_LOGGING_DEV = True

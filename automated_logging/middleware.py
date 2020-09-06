@@ -1,8 +1,11 @@
+import logging
 import threading
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, TYPE_CHECKING
 
-from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.http import HttpRequest, HttpResponse
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
 
 RequestInformation = NamedTuple(
     'RequestInformation',
@@ -104,13 +107,17 @@ class AutomatedLoggingMiddleware:
         return None
 
     @staticmethod
-    def get_current_user(environ: RequestInformation = None) -> Optional[AbstractUser]:
+    def get_current_user(
+        environ: RequestInformation = None,
+    ) -> Optional['AbstractUser']:
         """
         Helper staticmethod that returns the current user, taken from
         the current environment.
 
         :return: Optional[User]
         """
+        from django.contrib.auth.models import AnonymousUser
+
         if not environ:
             environ = AutomatedLoggingMiddleware.get_current_environ()
 

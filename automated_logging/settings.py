@@ -1,14 +1,35 @@
+"""
+Serialization of AUTOMATED_LOGGING_SETTINGS
+"""
+
 import re
 from collections import namedtuple
+from functools import lru_cache
 from logging import INFO, NOTSET, CRITICAL
+from pprint import pprint
 from typing import NamedTuple
 
+import typing
 from django.conf import settings as st
 from marshmallow import Schema, post_load, EXCLUDE
 from marshmallow.fields import Boolean, String, List, Nested, Integer
 from marshmallow.validate import OneOf, Range
 
 Search = NamedTuple('Search', (('type', str), ('value', str)))
+
+
+class Set(List):
+    """
+    This is like a list, just compiles down to a set when serializing.
+    """
+
+    def _serialize(
+        self, value, attr, obj, **kwargs
+    ) -> typing.Optional[typing.Set[typing.Any]]:
+        return set(super(Set, self)._serialize(value, attr, obj, **kwargs))
+
+    def _deserialize(self, value, attr, data, **kwargs) -> typing.Set[typing.Any]:
+        return set(super(Set, self)._deserialize(value, attr, data, **kwargs))
 
 
 class LowerCaseString(String):
@@ -23,12 +44,14 @@ class LowerCaseString(String):
         return output.lower()
 
 
-# ModelString
-# FieldString
-# ApplicationString
-# FileString
 class SearchString(String):
     """
+    Used for:
+    - ModelString
+    - FieldString
+    - ApplicationString
+    - FileString
+
     SearchStrings are used for models, fields and applications.
     They can be either a glob (prefixed with either glob or gl),
     regex (prefixed with either regex or re)
@@ -62,6 +85,7 @@ class SearchString(String):
                 return Search('plain', match.lower())
             elif module.startswith('re'):
                 # regex shouldn't be lowercase
+                # we just ignore the case =
                 return Search('regex', match)
 
         return Search('glob', output)
@@ -92,12 +116,44 @@ class BaseSchema(Schema):
 
         super().__init__(*args, **kwargs)
 
+    @staticmethod
+    def namedtuple_or(left: NamedTuple, right: NamedTuple):
+        """
+        __or__ implementation for the namedtuple
+        """
+        values = {}
+
+        if not isinstance(left, tuple) or not isinstance(right, tuple):
+            raise NotImplemented
+
+        for name in left._fields:
+            field = getattr(left, name)
+            values[name] = field
+
+            if not hasattr(right, name):
+                continue
+
+            if isinstance(field, tuple) or isinstance(field, set):
+                values[name] = field | getattr(right, name)
+
+        return left._replace(**values)
+
+    @staticmethod
+    def namedtuple_factory(name, keys):
+        """
+        create the namedtuple from the name and keys to attach functions that are needed.
+
+        Attaches:
+            binary **or** operation to support globals propagation
+        """
+        Object = namedtuple(name, keys)
+        Object.__or__ = BaseSchema.namedtuple_or
+        return Object
+
     @post_load
-    def make_namedtuple(self, data, **kwargs):
+    def make_namedtuple(self, data: typing.Dict, **kwargs):
         """
         converts the loaded data dict into a namedtuple
-
-        TODO: post_load globals propagation
 
         :param data: loaded data
         :param kwargs: marshmallow kwargs
@@ -105,7 +161,7 @@ class BaseSchema(Schema):
         """
         name = self.__class__.__name__.replace('Schema', '')
 
-        Object = namedtuple(name, data.keys())
+        Object = BaseSchema.namedtuple_factory(name, data.keys())
         return Object(**data)
 
 
@@ -116,10 +172,10 @@ class RequestExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    applications = List(SearchString(), missing=[])
+    applications = Set(SearchString(), missing=set())
 
-    methods = List(LowerCaseString(), missing=['GET'])
-    status = List(Integer(validate=Range(min=0)), missing=[200])
+    methods = Set(LowerCaseString(), missing={'GET'})
+    status = Set(Integer(validate=Range(min=0)), missing={200})
 
 
 class RequestDataSchema(BaseSchema):
@@ -129,18 +185,18 @@ class RequestDataSchema(BaseSchema):
     mask keys (their value is going to be replaced with <REDACTED>)
     """
 
-    enabled = List(
-        LowerCaseString(validate=OneOf(['request', 'response'])), missing=[],
+    enabled = Set(
+        LowerCaseString(validate=OneOf(['request', 'response'])), missing=set(),
     )
     query = Boolean(missing=False)
 
-    ignore = List(LowerCaseString(), missing=[])
-    mask = List(LowerCaseString(), missing=['password'])
+    ignore = Set(LowerCaseString(), missing=set())
+    mask = Set(LowerCaseString(), missing={'password'})
 
     # TODO: add more, change name?
-    content_types = List(
+    content_types = Set(
         LowerCaseString(validate=OneOf(['application/json'])),
-        missing=['application/json'],
+        missing={'application/json'},
     )
 
 
@@ -171,19 +227,9 @@ class ModelExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    fields = List(SearchString(), missing=[])
-    models = List(SearchString(), missing=[])
-    applications = List(
-        SearchString(),
-        missing=[
-            Search('plain', 'session'),
-            Search('plain', 'automated_logging'),
-            Search('plain', 'admin'),
-            Search('plain', 'basehttp'),
-            Search('plain', 'migrations'),
-            Search('plain', 'contenttypes'),
-        ],
-    )
+    fields = Set(SearchString(), missing=set())
+    models = Set(SearchString(), missing=set())
+    applications = Set(SearchString(), missing=set())
 
 
 class ModelSchema(BaseSchema):
@@ -197,7 +243,7 @@ class ModelSchema(BaseSchema):
     loglevel = Integer(missing=INFO, validate=Range(min=NOTSET, max=CRITICAL))
     exclude = MissingNested(ModelExcludeSchema)
 
-    mask = List(LowerCaseString(), missing=[])
+    mask = Set(LowerCaseString(), missing=set())
     user_mirror = Boolean(missing=False)  # maybe, name not good
 
     # should the log message include all modifications done?
@@ -216,8 +262,8 @@ class UnspecifiedExcludeSchema(BaseSchema):
     """
 
     unknown = Boolean(missing=False)
-    files = List(SearchString(), missing=[])
-    applications = List(SearchString(), missing=[])
+    files = Set(SearchString(), missing=set())
+    applications = Set(SearchString(), missing=set())
 
 
 class UnspecifiedSchema(BaseSchema):
@@ -238,7 +284,17 @@ class GlobalsExcludeSchema(BaseSchema):
     Things specified in globals will get appended to the other configurations.
     """
 
-    applications = List(SearchString(), missing=[])
+    applications = Set(
+        SearchString(),
+        missing={
+            Search('glob', 'session*'),
+            # Search('plain', 'automated_logging'),
+            Search('plain', 'admin'),
+            Search('plain', 'basehttp'),
+            Search('plain', 'migrations'),
+            Search('plain', 'contenttypes'),
+        },
+    )
 
 
 class GlobalsSchema(BaseSchema):
@@ -255,9 +311,9 @@ class ConfigSchema(BaseSchema):
     and includes the nested module configurations.
     """
 
-    modules = List(
+    modules = Set(
         LowerCaseString(validate=OneOf(['request', 'model', 'unspecified'])),
-        missing=['request', 'model', 'unspecified'],
+        missing={'request', 'model', 'unspecified'},
     )
 
     request = MissingNested(RequestSchema)
@@ -268,8 +324,38 @@ class ConfigSchema(BaseSchema):
 
 
 default: namedtuple = ConfigSchema().load({})
-settings: namedtuple = default
-if hasattr(st, 'AUTOMATED_LOGGING'):
-    settings = ConfigSchema().load(st.AUTOMATED_LOGGING)
 
+
+@lru_cache
+def load_settings():
+    """
+    loads settings from the schemes provided,
+    done via function to utilize LRU cache
+    """
+
+    loaded: namedtuple = default
+
+    if hasattr(st, 'AUTOMATED_LOGGING'):
+        loaded = ConfigSchema().load(st.AUTOMATED_LOGGING)
+
+    # be sure `loaded` has globals as we're working with those,
+    # if that is not the case early return.
+    if not hasattr(loaded, 'globals'):
+        return loaded
+
+    # use the binary **or** operator to apply globals to Set() attributes
+    values = {}
+    for name in loaded._fields:
+        field = getattr(loaded, name)
+        values[name] = field
+
+        if not isinstance(field, tuple) or name == 'globals':
+            continue
+
+        values[name] = field | loaded.globals
+
+    return loaded._replace(**values)
+
+
+settings = load_settings()
 dev = getattr(st, 'AUTOMATED_LOGGING_DEV', False)

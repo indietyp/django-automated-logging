@@ -2,66 +2,14 @@
 Helpers that are used throughout django-automated-logging
 """
 
+
 from collections import namedtuple
 from datetime import datetime
-from enum import Enum
-from typing import Any, Tuple
+from typing import Any
 
+from automated_logging.helpers.enums import Operation
 from automated_logging.middleware import AutomatedLoggingMiddleware
 from automated_logging.settings import settings
-
-
-class Operation(int, Enum):
-    """
-    Simple Enum that will be used across the code to
-    indicate the current operation that happened.
-
-    Due to the fact that enum support for django was
-    only added in 3.0 we have DjangoOperations to convert
-    it to the old django format.
-    """
-
-    CREATE = 1
-    MODIFY = 0
-    DELETE = -1
-
-
-# should these be maybe lower-cased?
-DjangoOperations = [(e.value, o.lower()) for o, e in Operation.__members__.items()]
-
-VerbOperationMap = {
-    'create': Operation.CREATE,
-    'modify': Operation.MODIFY,
-    'delete': Operation.DELETE,
-    'add': Operation.CREATE,
-    'remove': Operation.DELETE,
-}
-
-VerbM2MOperationMap = {
-    'add': Operation.CREATE,
-    'modify': Operation.MODIFY,
-    'remove': Operation.DELETE,
-}
-
-PastOperationMap = {
-    'created': Operation.CREATE,
-    'modified': Operation.MODIFY,
-    'deleted': Operation.DELETE,
-}
-
-PastM2MOperationMap = {
-    'added': Operation.CREATE,
-    'modified': Operation.MODIFY,
-    'removed': Operation.DELETE,
-}
-
-ShortOperationMap = {
-    '+': Operation.CREATE,
-    '~': Operation.MODIFY,
-    '-': Operation.DELETE,
-}
-
-TranslationOperationMap = {**VerbOperationMap, **PastOperationMap, **ShortOperationMap}
 
 
 def namedtuple2dict(root: namedtuple) -> dict:

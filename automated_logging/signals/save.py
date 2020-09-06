@@ -5,6 +5,8 @@ File handles every signal related to the saving/deletion of django models.
 import logging
 from collections import namedtuple
 from datetime import datetime
+from pprint import pprint
+from typing import Any
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
@@ -27,11 +29,21 @@ from automated_logging.helpers import (
     get_or_create_meta,
     Operation,
     get_or_create_model_event,
-    PastOperationMap,
 )
+from automated_logging.helpers.enums import PastOperationMap
 
 ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
 logger = logging.getLogger(__name__)
+
+
+def normalize_save_value(value: Any):
+    """ normalize the values given to the function to make stuff more readable """
+    if value is None or value == '':
+        return None
+    if isinstance(value, str):
+        return value
+
+    return repr(value)
 
 
 @receiver(pre_save, weak=False)
@@ -154,19 +166,20 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         field.name = entry['key']
         field.mirror = model
 
-        field.type = repr(fields[entry['key']])
+        field.type = fields[entry['key']].__class__.__name__
 
         modification = ModelValueModification()
         modification.operation = entry['operation']
         modification.field = field
-        modification.previous = repr(entry['previous'])
-        modification.current = repr(entry['current'])
+
+        modification.previous = normalize_save_value(entry['previous'])
+        modification.current = normalize_save_value(entry['current'])
 
         modifications.append(modification)
 
     instance._meta.dal.modifications = modifications
 
-    if settings.entry.performance:
+    if settings.model.performance:
         instance._meta.dal.performance = datetime.now()
 
 
@@ -194,6 +207,9 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
 
     event, _ = get_or_create_model_event(instance, status, force=True, extra=True)
     modifications = getattr(instance._meta.dal, 'modifications', [])
+
+    # clear the modifications meta list
+    instance._meta.dal.modifications = []
 
     if len(modifications) == 0 and status == Operation.MODIFY:
         # if the event is modify, but nothing changed, don't actually propagate
@@ -260,6 +276,8 @@ def post_delete_signal(sender, instance, **kwargs) -> None:
     """
     Signal is getting called after instance deletion. We just redirect the
     event to the post_processor.
+
+    TODO: consider doing a "delete snapshot"
 
     :param sender: model class
     :param instance: model instance

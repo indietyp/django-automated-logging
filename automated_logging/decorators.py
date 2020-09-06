@@ -6,6 +6,7 @@ from automated_logging.helpers import (
     get_or_create_thread,
     function2path,
 )
+from automated_logging.helpers.enums import VerbOperationMap
 
 
 def _normalize_view_args(methods: List[str]) -> Set[str]:
@@ -30,10 +31,10 @@ def exclude_view(func=None, *, methods: List[str] = ()):
 
     :return: function
     """
-    methods = _normalize_view_args(methods)
-
     if func is None:
         return partial(exclude_view, methods=methods)
+
+    methods = _normalize_view_args(methods)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -68,10 +69,10 @@ def include_view(func=None, *, methods: List[str] = None):
                     [] => No method will be explicitly included
     :return: function
     """
-    methods = _normalize_view_args(methods)
-
     if func is None:
         return partial(include_view, methods=methods)
+
+    methods = _normalize_view_args(methods)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -92,17 +93,14 @@ def include_view(func=None, *, methods: List[str] = None):
     return wrapper
 
 
-def _normalize_model_args(operations, fields) -> [Set[Operation], Set[str]]:
+def _normalize_model_args(
+    operations: List[str], fields: List[str]
+) -> [Set[Operation], Set[str]]:
     if operations is not None:
-        translation = {
-            'create': Operation.CREATE,
-            'modify': Operation.MODIFY,
-            'delete': Operation.DELETE,
-        }
         operations = {
-            translation[o.lower()]
+            VerbOperationMap[o.lower()]
             for o in operations
-            if o.lower() in translation.keys()
+            if o.lower() in VerbOperationMap.keys()
         }
 
     if fields is not None:
@@ -134,10 +132,10 @@ def exclude_model(func=None, *, operations: List[str] = (), fields: List[str] = 
                    None => No field will be ignored
     :return: function
     """
-    operations, fields = _normalize_model_args(operations, fields)
-
     if func is None:
         return partial(exclude_model, operations=operations, fields=fields)
+
+    operations, fields = _normalize_model_args(operations, fields)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -187,10 +185,10 @@ def include_model(func=None, *, operations: List[str] = (), fields: List[str] = 
 
     :return: function
     """
-    operations, fields = _normalize_model_args(operations, fields)
-
     if func is None:
         return partial(include_model, operations=operations, fields=fields)
+
+    operations, fields = _normalize_model_args(operations, fields)
 
     @wraps(func)
     def wrapper(*args, **kwargs):

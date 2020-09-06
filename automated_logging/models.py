@@ -19,11 +19,11 @@ from django.db.models import (
 )
 from picklefield.fields import PickledObjectField
 
-from automated_logging.helpers import (
-    Operation,
+from automated_logging.helpers import Operation
+from automated_logging.helpers.enums import (
     DjangoOperations,
-    ShortOperationMap,
     PastM2MOperationMap,
+    ShortOperationMap,
 )
 from automated_logging.settings import dev
 
@@ -285,6 +285,9 @@ class RequestContext(BaseModel):
 
     content = PickledObjectField(null=True)
     type = CharField(max_length=255)
+
+    class LoggingIgnore:
+        complete = True
 
 
 class RequestEvent(BaseModel):

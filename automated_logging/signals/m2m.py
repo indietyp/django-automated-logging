@@ -68,6 +68,7 @@ def post_processor(sender, instance, model, operation, targets):
     field.mirror = ModelMirror(
         name=model.__name__, application=Application(name=instance._meta.app_label)
     )
+    field.type = m2m_rel.__class__.__name__
 
     # there is the possibility that a pre_clear occurred, if that is the case
     # extend the targets and pop the list of affected instances from the attached
