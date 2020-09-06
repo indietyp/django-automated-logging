@@ -1,9 +1,15 @@
 """ Test the save functionality """
+from django.http import JsonResponse
+from django.urls import path
+
 from automated_logging.helpers import Operation
 from automated_logging.models import ModelEvent
-from automated_logging.tests.base import BaseTestCase
+from automated_logging.tests.base import BaseTestCase, USER_CREDENTIALS
 from automated_logging.tests.helpers import random_string
 from automated_logging.tests.models import OrdinaryTest
+
+from django.conf import settings
+import importlib
 
 
 class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
@@ -171,3 +177,35 @@ class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
         current state from all the accumulated changes
         """
         pass
+
+
+class SimpleLoggedInSaveModificationsTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.client.login(**USER_CREDENTIALS)
+
+        # delete all previous model events
+        ModelEvent.objects.all().delete()
+
+    @staticmethod
+    def view(request):
+        value = random_string()
+
+        instance = OrdinaryTest()
+        instance.random = value
+        instance.save()
+
+        return JsonResponse({})
+
+    def test_user(self):
+        """ Test if DAL recognizes the user through the middleware """
+
+        response = self.request('GET', self.view)
+        self.assertEqual(response.content, b'{}')
+
+        events = ModelEvent.objects.all()
+        self.assertEqual(events.count(), 1)
+
+        event = events[0]
+        self.assertEqual(event.user, self.user)
