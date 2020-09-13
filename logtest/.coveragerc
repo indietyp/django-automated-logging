@@ -1,0 +1,9 @@
+[run]
+source = automated_logging
+branch = 1
+
+[xml]
+output = coverage.xml
+
+[report]
+omit = *tests*,*migrations*,*admin*

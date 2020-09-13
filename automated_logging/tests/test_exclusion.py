@@ -442,3 +442,6 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
         self.assertEqual(RequestEvent.objects.count(), 1)
 
         delattr(AutomatedLoggingMiddleware.thread, 'dal')
+
+
+# TODO: test different exclusion methods better

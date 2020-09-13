@@ -226,3 +226,6 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
         self.assertEqual(relationship.operation, int(Operation.CREATE))
         self.assertEqual(relationship.field.name, 'relationship')
         self.assertEqual(relationship.entry.primary_key, str(subject.id))
+
+
+# TODO: test lazy_model_exclusion
