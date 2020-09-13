@@ -72,8 +72,7 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         pre = lambda _: None
         operation = Operation.CREATE
 
-    excluded = model_exclusion(instance, operation, instance.__class__)
-    instance._meta.dal.excluded = excluded
+    excluded = lazy_model_exclusion(instance, operation, instance.__class__)
     if excluded:
         return
 
@@ -157,7 +156,11 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     summary = [s for s in summary if s['key'] in fields.keys()]
 
     # field exclusion
-    summary = [s for s in summary if not field_exclusion(s['key'], instance)]
+    summary = [
+        s
+        for s in summary
+        if not field_exclusion(s['key'], instance, instance.__class__)
+    ]
 
     model = ModelMirror()
     model.name = sender.__name__
@@ -285,6 +288,10 @@ def post_delete_signal(sender, instance, **kwargs) -> None:
     :param kwargs: required bt django
     :return: -
     """
+
+    get_or_create_meta(instance)
+    instance._meta.dal.event = None
+
     if lazy_model_exclusion(instance, Operation.DELETE, instance.__class__):
         return
 

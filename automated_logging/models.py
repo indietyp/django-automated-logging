@@ -59,7 +59,7 @@ class Application(BaseModel):
         complete = True
 
     def __str__(self):
-        return self.name
+        return self.name or "Unknown"
 
 
 class ModelMirror(BaseModel):

@@ -2,27 +2,43 @@
 Helpers that are used throughout django-automated-logging
 """
 
-
-from collections import namedtuple
 from datetime import datetime
-from typing import Any
+from typing import Any, Union, Dict, NamedTuple
 
 from automated_logging.helpers.enums import Operation
 from automated_logging.middleware import AutomatedLoggingMiddleware
 from automated_logging.settings import settings
 
 
-def namedtuple2dict(root: namedtuple) -> dict:
+def namedtuple2dict(root: Union[NamedTuple, Dict]) -> dict:
     """
     transforms nested namedtuple into a dict
 
     :param root: namedtuple to convert
     :return: dictionary from namedtuple
     """
-    return {
-        k: v if not isinstance(v, tuple) else namedtuple2dict(v)
-        for k, v in root._asdict().items()
-    }
+
+    output = {}
+    if (
+        isinstance(root, tuple)
+        and hasattr(root, '_serialize')
+        and callable(root._serialize)
+    ):
+        return root._serialize()
+
+    root = root if isinstance(root, dict) else root._asdict()
+
+    def eligible(x):
+        """ check if value x is eligible for recursion """
+        return isinstance(x, tuple) or isinstance(x, dict)
+
+    for k, v in root.items():
+        if isinstance(v, set) or isinstance(v, list):
+            output[k] = [namedtuple2dict(i) if eligible(i) else i for i in v]
+        else:
+            output[k] = namedtuple2dict(v) if eligible(v) else v
+
+    return output
 
 
 def get_or_create_meta(instance) -> [Any, bool]:

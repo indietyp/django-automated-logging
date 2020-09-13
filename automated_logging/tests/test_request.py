@@ -9,7 +9,7 @@ from automated_logging.tests.base import BaseTestCase, USER_CREDENTIALS
 from automated_logging.tests.helpers import random_string
 
 
-class SimpleLoggedOutRequestsTestCase(BaseTestCase):
+class LoggedOutRequestsTestCase(BaseTestCase):
     def setUp(self):
         from django.conf import settings
         from automated_logging.settings import settings as conf
@@ -37,7 +37,7 @@ class SimpleLoggedOutRequestsTestCase(BaseTestCase):
         return JsonResponse({})
 
     def test_simple(self):
-        RequestEvent.objects.all().delete()
+        self.bypass_request_restrictions()
 
         self.request('GET', self.view)
 
@@ -49,7 +49,7 @@ class SimpleLoggedOutRequestsTestCase(BaseTestCase):
         self.assertEqual(event.user, None)
 
 
-class SimpleLoggedInRequestsTestCase(BaseTestCase):
+class LoggedInRequestsTestCase(BaseTestCase):
     def setUp(self):
         from django.conf import settings
         from automated_logging.settings import settings as conf
@@ -79,7 +79,7 @@ class SimpleLoggedInRequestsTestCase(BaseTestCase):
         return JsonResponse({})
 
     def test_simple(self):
-        RequestEvent.objects.all().delete()
+        self.bypass_request_restrictions()
 
         self.request('GET', self.view)
 
@@ -95,7 +95,7 @@ class SimpleLoggedInRequestsTestCase(BaseTestCase):
         self.assertEqual(event.uri, '/')
 
     def test_404(self):
-        RequestEvent.objects.all().delete()
+        self.bypass_request_restrictions()
 
         self.client.get(f'/{random_string()}')
 
@@ -110,7 +110,7 @@ class SimpleLoggedInRequestsTestCase(BaseTestCase):
         raise Exception
 
     def test_500(self):
-        RequestEvent.objects.all().delete()
+        self.bypass_request_restrictions()
 
         try:
             self.request('GET', self.exception)
@@ -124,7 +124,7 @@ class SimpleLoggedInRequestsTestCase(BaseTestCase):
         self.assertGreaterEqual(event.status, 500)
 
 
-class SimpleDataRecordingRequestsTestCase(BaseTestCase):
+class DataRecordingRequestsTestCase(BaseTestCase):
     def setUp(self):
         from django.conf import settings
         from automated_logging.settings import settings as conf
@@ -157,7 +157,16 @@ class SimpleDataRecordingRequestsTestCase(BaseTestCase):
 
     def test_payload(self):
         # TODO: preliminary until request/response parsing is implemented
-        RequestEvent.objects.all().delete()
+        from django.conf import settings
+        from automated_logging.settings import settings as conf
+
+        self.bypass_request_restrictions()
+
+        settings.AUTOMATED_LOGGING['request']['data']['enabled'] = [
+            'request',
+            'response',
+        ]
+        conf.load.cache_clear()
 
         self.request('GET', self.view, data=json.dumps({'X': 'Y'}))
 

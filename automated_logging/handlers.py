@@ -92,6 +92,7 @@ class DatabaseHandler(Handler):
         if len(self.instances) < self.limit:
             return
 
+        # TODO: consider threading
         with transaction.atomic():
             [i.save() for i in self.instances]
             self.instances.clear()
@@ -203,18 +204,22 @@ class DatabaseHandler(Handler):
             event.message = record.message
         event.level = record.levelno
         event.line = record.lineno
-        event.file = Path(record.pathname) / Path(record.filename)
+        event.file = Path(record.pathname)
 
         # this is semi-reliable, but I am unsure of a better way to do this.
         applications = apps.app_configs.keys()
-        path = Path(record.pathname) / Path(record.filename).stem
+        path = Path(record.pathname)
         candidates = [p for p in path.parts if p in applications]
         if candidates:
             # use the last candidate (closest to file)
             event.application = Application(name=candidates[-1])
-        else:
+        elif record.module in applications:
             # if we cannot find the application, we use the module as application
             event.application = Application(name=record.module)
+        else:
+            # if we cannot determine the application from the application
+            # or from the module we presume that the application is unknown
+            event.application = Application(name=None)
 
         if not unspecified_exclusion(event):
             self.prepare_save(event)

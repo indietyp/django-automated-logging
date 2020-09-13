@@ -16,7 +16,7 @@ from automated_logging.tests.base import BaseTestCase
 from automated_logging.tests.helpers import random_string
 
 
-class SimpleLoggedOutM2MRelationshipsTestCase(BaseTestCase):
+class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
 
@@ -226,6 +226,3 @@ class SimpleLoggedOutM2MRelationshipsTestCase(BaseTestCase):
         self.assertEqual(relationship.operation, int(Operation.CREATE))
         self.assertEqual(relationship.field.name, 'relationship')
         self.assertEqual(relationship.entry.primary_key, str(subject.id))
-
-
-#     TODO: exclusion in different test

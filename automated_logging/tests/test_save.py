@@ -2,7 +2,6 @@
 import datetime
 
 from django.http import JsonResponse
-from django.urls import path
 
 from automated_logging.helpers import Operation
 from automated_logging.models import ModelEvent
@@ -10,13 +9,8 @@ from automated_logging.tests.base import BaseTestCase, USER_CREDENTIALS
 from automated_logging.tests.helpers import random_string
 from automated_logging.tests.models import OrdinaryTest
 
-# from automated_logging.settings import settings as conf
 
-from django.conf import settings
-import importlib
-
-
-class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
+class LoggedOutSaveModificationsTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
 
@@ -28,7 +22,7 @@ class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
         test if creation results in the correct fields
         :return:
         """
-
+        self.bypass_request_restrictions()
         value = random_string()
 
         instance = OrdinaryTest()
@@ -188,11 +182,12 @@ class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
 
         :return:
         """
-
-        settings.AUTOMATED_LOGGING['model']['performance'] = True
-
+        from django.conf import settings
         from automated_logging.settings import settings as conf
 
+        self.bypass_request_restrictions()
+
+        settings.AUTOMATED_LOGGING['model']['performance'] = True
         conf.load.cache_clear()
 
         ModelEvent.objects.all().delete()
@@ -210,14 +205,13 @@ class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
         self.assertLess(event.performance.total_seconds(), checkpoint.total_seconds())
 
 
-class SimpleLoggedInSaveModificationsTestCase(BaseTestCase):
+class LoggedInSaveModificationsTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
 
         self.client.login(**USER_CREDENTIALS)
 
-        # delete all previous model events
-        ModelEvent.objects.all().delete()
+        self.clear()
 
     @staticmethod
     def view(request):
@@ -231,6 +225,7 @@ class SimpleLoggedInSaveModificationsTestCase(BaseTestCase):
 
     def test_user(self):
         """ Test if DAL recognizes the user through the middleware """
+        self.bypass_request_restrictions()
 
         response = self.request('GET', self.view)
         self.assertEqual(response.content, b'{}')

@@ -16,6 +16,7 @@ def _normalize_view_args(methods: List[str]) -> Set[str]:
     return methods
 
 
+# TODO: consider adding status_codes
 def exclude_view(func=None, *, methods: List[str] = ()):
     """
     Decorator used for ignoring specific views, without adding them
@@ -144,18 +145,18 @@ def exclude_model(func=None, *, operations: List[str] = (), fields: List[str] = 
         path = function2path(func)
 
         if (
-            path in thread['ignore.models']
-            and thread['ignore.models'][path].operations is not None
+            path in thread.dal['ignore.models']
+            and thread.dal['ignore.models'][path].operations is not None
             and operations is not None
         ):
-            operations.update(thread['ignore.models'][path].operations)
+            operations.update(thread.dal['ignore.models'][path].operations)
 
         if (
-            path in thread['ignore.models']
-            and thread['ignore.models'][path].fields is not None
+            path in thread.dal['ignore.models']
+            and thread.dal['ignore.models'][path].fields is not None
             and fields is not None
         ):
-            fields.update(thread['ignore.models'][path].fields)
+            fields.update(thread.dal['ignore.models'][path].fields)
 
         thread.dal['ignore.models'][path] = IgnoreModel(operations, fields)
 
@@ -169,7 +170,7 @@ IncludeModel = NamedTuple(
 )
 
 
-def include_model(func=None, *, operations: List[str] = (), fields: List[str] = None):
+def include_model(func=None, *, operations: List[str] = None, fields: List[str] = None):
     """
     Decorator used for including specific models, despite potentially being ignored
     by the exclusion preferences set in the configuration.
@@ -197,18 +198,18 @@ def include_model(func=None, *, operations: List[str] = (), fields: List[str] = 
         path = function2path(func)
 
         if (
-            path in thread['include.models']
-            and thread['include.models'][path].operations is not None
+            path in thread.dal['include.models']
+            and thread.dal['include.models'][path].operations is not None
             and operations is not None
         ):
-            operations.update(thread['include.models'][path].operations)
+            operations.update(thread.dal['include.models'][path].operations)
 
         if (
-            path in thread['include.models']
-            and thread['include.models'][path].fields is not None
+            path in thread.dal['include.models']
+            and thread.dal['include.models'][path].fields is not None
             and fields is not None
         ):
-            fields.update(thread['include.models'][path].fields)
+            fields.update(thread.dal['include.models'][path].fields)
 
         thread.dal['include.models'][path] = IncludeModel(operations, fields)
 

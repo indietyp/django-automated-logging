@@ -26,11 +26,19 @@ class TestBase(Model):
         app_label = 'automated_logging'
 
 
-class OrdinaryTest(TestBase):
-    """ Ordinary test. Has a random char field."""
+class OrdinaryBaseTest(TestBase):
+    """ Ordinary base test. Has a random char field."""
 
     random = CharField(max_length=255, null=True)
     random2 = CharField(max_length=255, null=True)
+
+    class Meta:
+        abstract = True
+        app_label = 'automated_logging'
+
+
+class OrdinaryTest(OrdinaryBaseTest):
+    """ Ordinary test. Has a random char field."""
 
     class Meta:
         app_label = 'automated_logging'
@@ -73,7 +81,7 @@ class SpeedTest(TestBase):
         app_label = 'automated_logging'
 
 
-class FullClassBasedExclusionTest(OrdinaryTest):
+class FullClassBasedExclusionTest(OrdinaryBaseTest):
     """ Used to test the full model exclusion via meta class"""
 
     class Meta:
@@ -83,19 +91,19 @@ class FullClassBasedExclusionTest(OrdinaryTest):
         complete = True
 
 
-class PartialClassBasedExclusionTest(OrdinaryTest):
+class PartialClassBasedExclusionTest(OrdinaryBaseTest):
     """ Used to test partial ignore via fields """
 
     class Meta:
         app_label = 'automated_logging'
 
     class LoggingIgnore:
-        ignore_fields = ['random']
-        ignore_operations = ['delete']
+        fields = ['random']
+        operations = ['delete']
 
 
 @exclude_model
-class FullDecoratorBasedExclusionTest(OrdinaryTest):
+class FullDecoratorBasedExclusionTest(OrdinaryBaseTest):
     """ Used to test full decorator exclusion """
 
     class Meta:
@@ -103,7 +111,7 @@ class FullDecoratorBasedExclusionTest(OrdinaryTest):
 
 
 @exclude_model(operations=['delete'], fields=['random'])
-class PartialDecoratorBasedExclusionTest(OrdinaryTest):
+class PartialDecoratorBasedExclusionTest(OrdinaryBaseTest):
     """ Used to test partial decorator exclusion """
 
     class Meta:
@@ -111,7 +119,7 @@ class PartialDecoratorBasedExclusionTest(OrdinaryTest):
 
 
 @include_model
-class DecoratorOverrideExclusionTest(OrdinaryTest):
+class DecoratorOverrideExclusionTest(OrdinaryBaseTest):
     """
     Used to check if include_model
     has precedence over class based configuration

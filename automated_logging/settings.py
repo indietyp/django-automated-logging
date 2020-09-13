@@ -14,6 +14,7 @@ from marshmallow.fields import Boolean, String, List, Nested, Integer
 from marshmallow.validate import OneOf, Range
 
 Search = NamedTuple('Search', (('type', str), ('value', str)))
+Search._serialize = lambda self: f'{self.type}:{self.value}'
 
 
 class Set(List):
@@ -70,6 +71,9 @@ class SearchString(String):
     """
 
     def _deserialize(self, value, attr, data, **kwargs) -> Search:
+        if isinstance(value, dict) and 'type' in value and 'value' in value:
+            value = f'{value["type"]}:{value["value"]}'
+
         output = super()._deserialize(value, attr, data, **kwargs)
 
         match = re.match(r'^(\w*):(.*)$', output, re.IGNORECASE)
@@ -286,7 +290,6 @@ class GlobalsExcludeSchema(BaseSchema):
         SearchString(),
         missing={
             Search('glob', 'session*'),
-            # Search('plain', 'automated_logging'),
             Search('plain', 'admin'),
             Search('plain', 'basehttp'),
             Search('plain', 'migrations'),
