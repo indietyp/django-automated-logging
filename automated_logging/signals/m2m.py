@@ -134,7 +134,7 @@ def pre_clear_processor(sender, instance, pks, model, reverse, operation) -> Non
 
     get_or_create_meta(instance)
 
-    rel = find_m2m_rel(sender, model)
+    rel = find_m2m_rel(sender, instance.__class__)
     if 'm2m_pre_clear' not in instance._meta.dal:
         instance._meta.dal.m2m_pre_clear = {}
 

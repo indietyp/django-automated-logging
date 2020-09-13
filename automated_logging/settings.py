@@ -6,11 +6,9 @@ import re
 from collections import namedtuple
 from functools import lru_cache
 from logging import INFO, NOTSET, CRITICAL
-from pprint import pprint
 from typing import NamedTuple
 
 import typing
-from django.conf import settings as st
 from marshmallow import Schema, post_load, EXCLUDE
 from marshmallow.fields import Boolean, String, List, Nested, Integer
 from marshmallow.validate import OneOf, Range
@@ -326,36 +324,69 @@ class ConfigSchema(BaseSchema):
 default: namedtuple = ConfigSchema().load({})
 
 
+class Settings:
+    """
+    Settings wrapper,
+    with the wrapper we can force lru_cache to be
+    cleared on the specific instance
+    """
+
+    def __init__(self):
+        self.loaded = None
+        self.load()
+
+    @lru_cache
+    def load(self):
+        """
+        loads settings from the schemes provided,
+        done via function to utilize LRU cache
+        """
+
+        from django.conf import settings as st
+
+        loaded: namedtuple = default
+
+        if hasattr(st, 'AUTOMATED_LOGGING'):
+            loaded = ConfigSchema().load(st.AUTOMATED_LOGGING)
+
+        # be sure `loaded` has globals as we're working with those,
+        # if that is not the case early return.
+        if not hasattr(loaded, 'globals'):
+            return loaded
+
+        # use the binary **or** operator to apply globals to Set() attributes
+        values = {}
+        for name in loaded._fields:
+            field = getattr(loaded, name)
+            values[name] = field
+
+            if not isinstance(field, tuple) or name == 'globals':
+                continue
+
+            values[name] = field | loaded.globals
+
+        self.loaded = loaded._replace(**values)
+        return self
+
+    def __getattr__(self, item):
+        # self.load() should only trigger when the cache is invalid
+        self.load()
+
+        return getattr(self.loaded, item)
+
+
 @lru_cache
-def load_settings():
+def load_dev():
     """
-    loads settings from the schemes provided,
-    done via function to utilize LRU cache
+    utilize LRU cache and local imports to always
+    have an up to date version of the settings
+
+    :return:
     """
+    from django.conf import settings as st
 
-    loaded: namedtuple = default
-
-    if hasattr(st, 'AUTOMATED_LOGGING'):
-        loaded = ConfigSchema().load(st.AUTOMATED_LOGGING)
-
-    # be sure `loaded` has globals as we're working with those,
-    # if that is not the case early return.
-    if not hasattr(loaded, 'globals'):
-        return loaded
-
-    # use the binary **or** operator to apply globals to Set() attributes
-    values = {}
-    for name in loaded._fields:
-        field = getattr(loaded, name)
-        values[name] = field
-
-        if not isinstance(field, tuple) or name == 'globals':
-            continue
-
-        values[name] = field | loaded.globals
-
-    return loaded._replace(**values)
+    return getattr(st, 'AUTOMATED_LOGGING_DEV', False)
 
 
-settings = load_settings()
-dev = getattr(st, 'AUTOMATED_LOGGING_DEV', False)
+settings = Settings()
+dev = load_dev()

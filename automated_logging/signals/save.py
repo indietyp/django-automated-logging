@@ -151,6 +151,9 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     # exclude fields not present in _meta.get_fields
     fields = {f.name: f for f in instance._meta.get_fields()}
+    extra = {f.attname: f for f in instance._meta.get_fields() if hasattr(f, 'attname')}
+    fields = {**extra, **fields}
+
     summary = [s for s in summary if s['key'] in fields.keys()]
 
     # field exclusion
@@ -202,8 +205,6 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     past = {v: k for k, v in PastOperationMap.items()}
 
     get_or_create_meta(instance)
-    if settings.model.performance and hasattr(instance._meta.dal, 'performance'):
-        instance._meta.dal.performance = datetime.now() - instance._meta.dal.performance
 
     event, _ = get_or_create_model_event(instance, status, force=True, extra=True)
     modifications = getattr(instance._meta.dal, 'modifications', [])

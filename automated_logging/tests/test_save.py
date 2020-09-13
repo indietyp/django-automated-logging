@@ -1,4 +1,6 @@
 """ Test the save functionality """
+import datetime
+
 from django.http import JsonResponse
 from django.urls import path
 
@@ -8,13 +10,13 @@ from automated_logging.tests.base import BaseTestCase, USER_CREDENTIALS
 from automated_logging.tests.helpers import random_string
 from automated_logging.tests.models import OrdinaryTest
 
+# from automated_logging.settings import settings as conf
+
 from django.conf import settings
 import importlib
 
 
 class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
-    """ NOTE: seems like we need some sort of request to simulate logging in """
-
     def setUp(self):
         super().setUp()
 
@@ -175,8 +177,37 @@ class SimpleLoggedOutSaveModificationsTestCase(BaseTestCase):
         test if all the changes where done
         correctly so that you can properly derive the
         current state from all the accumulated changes
+
+        TODO
         """
         pass
+
+    def test_performance(self):
+        """
+        test if setting the performance parameter works correctly
+
+        :return:
+        """
+
+        settings.AUTOMATED_LOGGING['model']['performance'] = True
+
+        from automated_logging.settings import settings as conf
+
+        conf.load.cache_clear()
+
+        ModelEvent.objects.all().delete()
+        instance = OrdinaryTest()
+        instance.random = random_string(10)
+        checkpoint = datetime.datetime.now()
+        instance.save()
+        checkpoint = datetime.datetime.now() - checkpoint
+
+        events = ModelEvent.objects.all()
+        self.assertEqual(events.count(), 1)
+
+        event = events[0]
+        self.assertIsNotNone(event.performance)
+        self.assertLess(event.performance.total_seconds(), checkpoint.total_seconds())
 
 
 class SimpleLoggedInSaveModificationsTestCase(BaseTestCase):
@@ -209,3 +240,6 @@ class SimpleLoggedInSaveModificationsTestCase(BaseTestCase):
 
         event = events[0]
         self.assertEqual(event.user, self.user)
+
+
+# TODO: test snapshot

@@ -115,6 +115,7 @@ def get_or_create_model_event(
         and extra
     ):
         event.performance = datetime.now() - instance._meta.dal.performance
+        instance._meta.dal.performance = None
 
     event.operation = operation
     event.entry = ModelEntry()
