@@ -18,15 +18,10 @@ env:
 #      env: "DJANGO_VERSION=2.2"
 
 install:
-#  - sudo add-apt-repository -y ppa:jonathonf/backports
   - sudo apt-get update -y
   - sudo apt-get install -y sqlite3
-  - pip install -r requirements.dev.txt
-  - pip install Django~=$DJANGO_VERSION
+  - pip install poetry
+  - poetry install
 
 script:
-  - coverage run --source=automated_logging logtest/manage.py test automated_logging
-
-after_success:
-  - coveralls
-  - python-codacy-coverage -r coverage.xml
+  - poetry run python tests/run.py

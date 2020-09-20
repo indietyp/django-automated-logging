@@ -6,4 +6,4 @@ branch = 1
 output = coverage.xml
 
 [report]
-omit = *tests*,*migrations*
+omit = *tests*,*migrations*,*admin*,*models.py,*apps.py
