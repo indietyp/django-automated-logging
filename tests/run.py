@@ -37,5 +37,3 @@ if __name__ == '__main__':
     location = BASE_DIR / 'tmp' / 'coverage'
     Coverage.html_report(directory=location.as_posix())
     print(f'HTML version: file://{location}/index.html')
-
-    Coverage.erase()

@@ -5,6 +5,7 @@ Serialization of AUTOMATED_LOGGING_SETTINGS
 from collections import namedtuple
 from functools import lru_cache
 from logging import INFO, NOTSET, CRITICAL
+from pprint import pprint
 
 from marshmallow.fields import Boolean, Integer
 from marshmallow.validate import OneOf, Range
@@ -253,7 +254,7 @@ def load_dev():
 if __name__ == '__main__':
     from automated_logging.helpers import namedtuple2dict
 
-    print(namedtuple2dict(default))
+    pprint(namedtuple2dict(default))
 
 settings = Settings()
 dev = load_dev()

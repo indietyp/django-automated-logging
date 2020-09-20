@@ -116,7 +116,7 @@ IgnoreModel = NamedTuple(
 
 
 def exclude_model(
-    func=None, *, operations: Optional[List[str]] = (), fields: List[str] = None
+    func=None, *, operations: Optional[List[str]] = (), fields: List[str] = ()
 ):
     """
     Decorator used for ignoring specific models, without using the
