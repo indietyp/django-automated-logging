@@ -27,4 +27,4 @@ script:
   - poetry run python tests/run.py
 
 after_success:
-  - coveralls
+  - poetry run coveralls
