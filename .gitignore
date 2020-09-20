@@ -17,3 +17,4 @@ node_modules
 .venv/
 todo
 tmp/
+poetry.lock
