@@ -21,7 +21,10 @@ install:
   - sudo apt-get update -y
   - sudo apt-get install -y sqlite3
   - pip install poetry
-  - poetry add "django^${DJANGO_VERSION}"
+  - poetry add "django~=${DJANGO_VERSION}"
 
 script:
   - poetry run python tests/run.py
+
+after_success:
+  - coveralls
