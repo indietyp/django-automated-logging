@@ -102,3 +102,6 @@ class TestDatabaseHandlerTestCase(BaseTestCase):
         self.assertEqual(UnspecifiedEvent.objects.count(), 0)
         logger.info('I can\'t see a thing. My cockpit\'s fogging')
         self.assertEqual(UnspecifiedEvent.objects.count(), 10)
+
+        config['handlers']['db']['batch'] = 1
+        logging.config.dictConfig(config)

@@ -8,6 +8,7 @@ from logging import INFO, NOTSET, CRITICAL
 
 from marshmallow.fields import Boolean, Integer
 from marshmallow.validate import OneOf, Range
+
 from automated_logging.helpers.schemas import (
     Set,
     LowerCaseString,
@@ -248,6 +249,11 @@ def load_dev():
 
     return getattr(st, 'AUTOMATED_LOGGING_DEV', False)
 
+
+if __name__ == '__main__':
+    from automated_logging.helpers import namedtuple2dict
+
+    print(namedtuple2dict(default))
 
 settings = Settings()
 dev = load_dev()

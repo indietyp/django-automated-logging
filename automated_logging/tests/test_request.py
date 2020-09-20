@@ -14,23 +14,12 @@ class LoggedOutRequestsTestCase(BaseTestCase):
         from django.conf import settings
         from automated_logging.settings import settings as conf
 
-        self.backup = deepcopy(
-            settings.AUTOMATED_LOGGING['request']['exclude']['applications']
-        )
+        super().setUp()
 
         settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = []
         conf.load.cache_clear()
 
-        super().setUp()
-
         RequestEvent.objects.all().delete()
-
-    def tearDown(self) -> None:
-        from django.conf import settings
-
-        super().tearDown()
-
-        settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = self.backup
 
     @staticmethod
     def view(request):
@@ -54,25 +43,14 @@ class LoggedInRequestsTestCase(BaseTestCase):
         from django.conf import settings
         from automated_logging.settings import settings as conf
 
-        self.backup = deepcopy(
-            settings.AUTOMATED_LOGGING['request']['exclude']['applications']
-        )
+        super().setUp()
 
         settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = []
         conf.load.cache_clear()
 
-        super().setUp()
-
         self.client.login(**USER_CREDENTIALS)
 
         RequestEvent.objects.all().delete()
-
-    def tearDown(self) -> None:
-        from django.conf import settings
-
-        super().tearDown()
-
-        settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = self.backup
 
     @staticmethod
     def view(request):
@@ -129,7 +107,7 @@ class DataRecordingRequestsTestCase(BaseTestCase):
         from django.conf import settings
         from automated_logging.settings import settings as conf
 
-        self.backup = deepcopy(settings.AUTOMATED_LOGGING['request'])
+        super().setUp()
 
         settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = []
         settings.AUTOMATED_LOGGING['request']['data']['enabled'] = [
@@ -138,18 +116,9 @@ class DataRecordingRequestsTestCase(BaseTestCase):
         ]
         conf.load.cache_clear()
 
-        super().setUp()
-
         self.client.login(**USER_CREDENTIALS)
 
         RequestEvent.objects.all().delete()
-
-    def tearDown(self) -> None:
-        from django.conf import settings
-
-        super().tearDown()
-
-        settings.AUTOMATED_LOGGING['request'] = self.backup
 
     @staticmethod
     def view(request):

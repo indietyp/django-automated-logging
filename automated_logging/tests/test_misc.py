@@ -46,6 +46,10 @@ class MiscellaneousTestCase(BaseTestCase):
 
         self.assertRaises(ValidationError, conf.load)
 
+        # settings.AUTOMATED_LOGGING['unspecified']['exclude']['applications'] = []
+        conf.load.cache_clear()
+        self.clear()
+
     def test_duration_none(self):
         from django.conf import settings
         from automated_logging.settings import settings as conf

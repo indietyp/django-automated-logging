@@ -31,6 +31,7 @@ from automated_logging.tests.models import (
     FullDecoratorBasedExclusionTest,
     PartialDecoratorBasedExclusionTest,
     DecoratorOverrideExclusionTest,
+    M2MTest,
 )
 from automated_logging.tests.base import BaseTestCase, USER_CREDENTIALS
 from automated_logging.tests.helpers import random_string
@@ -339,6 +340,7 @@ class ConfigurationBasedExclusionsTestCase(BaseTestCase):
         settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = [
             're:automated.*'
         ]
+        self.bypass_request_restrictions()
         conf.load.cache_clear()
         cached_model_exclusion.cache_clear()
 
@@ -382,6 +384,29 @@ class ConfigurationBasedExclusionsTestCase(BaseTestCase):
         self.assertTrue(
             request_exclusion(RequestEvent(application=Application(name=None)))
         )
+
+    def test_m2m_exclusion(self):
+        from django.conf import settings
+        from automated_logging.settings import settings as conf
+
+        settings.AUTOMATED_LOGGING['model']['exclude']['applications'] = [
+            'gl:automated*'
+        ]
+        conf.load.cache_clear()
+        cached_model_exclusion.cache_clear()
+
+        instance = M2MTest()
+        instance.save()
+
+        children = [OrdinaryTest()]
+        [c.save() for c in children]
+
+        self.clear()
+
+        instance.relationship.add(*children)
+        instance.save()
+
+        self.assertEqual(ModelEvent.objects.count(), 0)
 
 
 class ClassBasedExclusionsTestCase(BaseTestCase):
