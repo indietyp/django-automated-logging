@@ -12,7 +12,8 @@ if __name__ == '__main__':
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     BASE_DIR = Path(BASE_DIR)
 
-    os.chdir(BASE_DIR)
+    sys.path.append(BASE_DIR.as_posix())
+    os.chdir(BASE_DIR.as_posix())
 
     Coverage = coverage(config_file='.coveragerc')
     Coverage.start()
