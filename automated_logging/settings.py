@@ -197,7 +197,7 @@ class Settings:
         self.loaded = None
         self.load()
 
-    @lru_cache
+    @lru_cache()
     def load(self):
         """
         loads settings from the schemes provided,
@@ -237,7 +237,7 @@ class Settings:
         return getattr(self.loaded, item)
 
 
-@lru_cache
+@lru_cache()
 def load_dev():
     """
     utilize LRU cache and local imports to always

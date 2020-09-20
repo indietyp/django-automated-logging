@@ -20,7 +20,7 @@ from automated_logging.helpers.schemas import Search
 
 
 # suboptimal meta is also cached -> look into how to solve
-@lru_cache
+@lru_cache()
 def cached_model_exclusion(sender, meta, operation) -> bool:
     """ cached so that we don't need to abuse ._meta and can invalidate the cache """
     return model_exclusion(sender, meta, operation)
