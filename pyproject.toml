@@ -6,7 +6,7 @@ authors = ["Bilal Mahmoud <bilalmahmoud@posteo.net>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.6"
+python = ">=3.6, <4"
 django = "^3.0 || ^2.2"
 marshmallow = "^3.6.1"
 django-picklefield = "^3.0.1"
@@ -17,6 +17,7 @@ black = "^19.10b0"
 django-admin-generator = "^2.2.0"
 psycopg2-binary = "^2.8.5"
 pytz = "^2020.1"
+coverage = "^5.3"
 
 [build-system]
 requires = ["poetry>=0.12"]
