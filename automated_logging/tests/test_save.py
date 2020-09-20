@@ -204,6 +204,25 @@ class LoggedOutSaveModificationsTestCase(BaseTestCase):
         self.assertIsNotNone(event.performance)
         self.assertLess(event.performance.total_seconds(), checkpoint.total_seconds())
 
+    def test_snapshot(self):
+        from django.conf import settings
+        from automated_logging.settings import settings as conf
+
+        self.bypass_request_restrictions()
+
+        settings.AUTOMATED_LOGGING['model']['snapshot'] = True
+        conf.load.cache_clear()
+
+        instance = OrdinaryTest(random=random_string())
+        instance.save()
+
+        events = ModelEvent.objects.all()
+        self.assertEqual(events.count(), 1)
+
+        event = events[0]
+        self.assertIsNotNone(event.snapshot)
+        self.assertEqual(instance, event.snapshot)
+
 
 class LoggedInSaveModificationsTestCase(BaseTestCase):
     def setUp(self):

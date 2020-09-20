@@ -15,7 +15,8 @@ from automated_logging.helpers import (
     Operation,
 )
 from automated_logging.models import RequestEvent, UnspecifiedEvent
-from automated_logging.settings import settings, Search
+from automated_logging.settings import settings
+from automated_logging.helpers.schemas import Search
 
 
 # suboptimal meta is also cached -> look into how to solve

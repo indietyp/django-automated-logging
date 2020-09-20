@@ -1,5 +1,5 @@
 from functools import wraps, partial
-from typing import List, NamedTuple, Set
+from typing import List, NamedTuple, Set, Optional
 
 from automated_logging.helpers import (
     Operation,
@@ -17,7 +17,7 @@ def _normalize_view_args(methods: List[str]) -> Set[str]:
 
 
 # TODO: consider adding status_codes
-def exclude_view(func=None, *, methods: List[str] = ()):
+def exclude_view(func=None, *, methods: Optional[List[str]] = ()):
     """
     Decorator used for ignoring specific views, without adding them
     to the AUTOMATED_LOGGING configuration.
@@ -115,7 +115,9 @@ IgnoreModel = NamedTuple(
 )
 
 
-def exclude_model(func=None, *, operations: List[str] = (), fields: List[str] = None):
+def exclude_model(
+    func=None, *, operations: Optional[List[str]] = (), fields: List[str] = None
+):
     """
     Decorator used for ignoring specific models, without using the
     class or AUTOMATED_LOGGING configuration

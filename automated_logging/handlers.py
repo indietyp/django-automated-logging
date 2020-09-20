@@ -2,6 +2,7 @@ import re
 from datetime import timedelta
 from logging import Handler, LogRecord
 from pathlib import Path
+from threading import Thread
 from typing import Dict, Any, TYPE_CHECKING, List, Optional, Union, Type, Tuple
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -21,60 +22,12 @@ if TYPE_CHECKING:
 
 class DatabaseHandler(Handler):
     def __init__(
-        self,
-        *args,
-        max_age: Optional[Union[int, str, timedelta]] = None,
-        batch: Optional[int] = 1,
-        **kwargs
+        self, *args, batch: Optional[int] = 1, threading: bool = False, **kwargs
     ):
-        if 'maxage' in kwargs and not max_age:
-            max_age = kwargs['maxage']
-
         self.limit = batch or 1
+        self.threading = threading
         self.instances = set()
-        self.max_age = self._convert_max_age(max_age) if max_age else None
         super(DatabaseHandler, self).__init__(*args, **kwargs)
-
-    @staticmethod
-    def _convert_max_age(target: Union[int, str, timedelta]) -> Optional[timedelta]:
-        if isinstance(target, timedelta):
-            return target
-
-        if isinstance(target, int):
-            return timedelta(seconds=target)
-
-        if isinstance(target, str):
-            REGEX = (
-                r'^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+S)?)?$'
-            )
-            match = re.match(REGEX, target, re.IGNORECASE)
-            if not match:
-                return None
-
-            components = list(match.groups())
-            # remove leading T capture - isn't used, by removing the 5th capture group
-            components.pop(4)
-
-            adjusted = {'days': 0, 'seconds': 0}
-            conversion = [
-                ['days', 365],  # year
-                ['days', 30],  # month
-                ['days', 7],  # week
-                ['days', 1],  # day
-                ['seconds', 3600],  # hour
-                ['seconds', 60],  # minute
-                ['seconds', 1],  # second
-            ]
-
-            for pointer in range(len(components)):
-                if not components[pointer]:
-                    continue
-                rate = conversion[pointer]
-                native = int(re.findall(r'(\d+)', components[pointer])[0])
-
-                adjusted[rate[0]] += native * rate[1]
-
-            return timedelta(**adjusted)
 
     def save(self, instance=None):
         """
@@ -86,22 +39,40 @@ class DatabaseHandler(Handler):
         """
         from django.db import transaction
         from automated_logging.models import ModelEvent, RequestEvent, UnspecifiedEvent
+        from automated_logging.settings import settings
 
         if instance:
             self.instances.add(instance)
         if len(self.instances) < self.limit:
             return
 
-        # TODO: consider threading
-        with transaction.atomic():
-            [i.save() for i in self.instances]
-            self.instances.clear()
+        def database(instances, config):
+            """ wrapper so that we can actually use threading """
+            with transaction.atomic():
+                [i.save() for i in instances]
 
-            if self.max_age:
-                for Event in [ModelEvent, RequestEvent, UnspecifiedEvent]:
-                    Event.objects.filter(
-                        created_at__lte=timezone.now() - self.max_age
+                current = timezone.now()
+                if config.model.max_age:
+                    ModelEvent.objects.filter(
+                        created_at__lte=current - config.model.max_age
                     ).delete()
+                if config.unspecified.max_age:
+                    UnspecifiedEvent.objects.filter(
+                        created_at__lte=current - config.unspecified.max_age
+                    ).delete()
+
+                if config.request.max_age:
+                    RequestEvent.objects.filter(
+                        created_at__lte=current - config.request.max_age
+                    ).delete()
+                instances.clear()
+
+        thread = Thread(group=None, target=database, args=(self.instances, settings))
+
+        if self.threading:
+            thread.start()
+        else:
+            thread.run()
 
     def get_or_create(self, target: Type[Model], **kwargs) -> Tuple[Model, bool]:
         """

@@ -1,5 +1,6 @@
 """ Test base every unit test uses """
 import importlib
+import logging.config
 from copy import copy, deepcopy
 
 from django.conf import settings
@@ -48,6 +49,7 @@ class BaseTestCase(TestCase):
         return response
 
     def setUp(self):
+        """ setUp the DAL specific test environment """
         from django.conf import settings
         from automated_logging.settings import default, settings as conf
 
@@ -63,14 +65,18 @@ class BaseTestCase(TestCase):
             settings.AUTOMATED_LOGGING[key] = deepcopy(value)
 
         conf.load.cache_clear()
+
+        self.setUpLogging()
         super().setUp()
-        # reset automated_logging configuration via default and then reset when done
 
     def tearDown(self) -> None:
+        """ tearDown the DAL specific environment """
         from django.conf import settings
         from automated_logging.settings import settings as conf
 
         super().tearDown()
+
+        self.tearDownLogging()
 
         settings.AUTOMATED_LOGGING.clear()
         for key, value in self.original_config.items():
@@ -90,7 +96,66 @@ class BaseTestCase(TestCase):
         RequestEvent.objects.all().delete()
         UnspecifiedEvent.objects.all().delete()
 
+    def tearDownLogging(self):
+        """
+        replace our own logging config
+        with the original to not break any other tests
+        that might depend on it.
+        """
+        from django.conf import settings
+
+        settings.LOGGING = self.logging_backup
+        logging.config.dictConfig(settings.LOGGING)
+
+    def setUpLogging(self):
+        """ sets up logging dict, so that we can actually use our own """
+        from django.conf import settings
+
+        self.logging_backup = deepcopy(settings.LOGGING)
+        settings.LOGGING = {
+            'version': 1,
+            'disable_existing_loggers': False,
+            'root': {'level': 'INFO', 'handlers': ['console', 'db'],},
+            'formatters': {
+                'verbose': {
+                    'format': '%(levelname)s %(asctime)s %(module)s '
+                    '%(process)d %(thread)d %(message)s'
+                },
+                'simple': {'format': '%(levelname)s %(message)s'},
+                'syslog': {
+                    'format': '%(asctime)s %%LOCAL0-%(levelname) %(message)s'
+                    # 'format': '%(levelname)s %(message)s'
+                },
+            },
+            'handlers': {
+                'console': {
+                    'level': 'INFO',
+                    'class': 'logging.StreamHandler',
+                    'formatter': 'verbose',
+                },
+                'db': {
+                    'level': 'INFO',
+                    'class': 'automated_logging.handlers.DatabaseHandler',
+                },
+            },
+            'loggers': {
+                'automated_logging': {
+                    'level': 'INFO',
+                    'handlers': ['console', 'db'],
+                    'propagate': False,
+                },
+                'django': {
+                    'level': 'INFO',
+                    'handlers': ['console', 'db'],
+                    'propagate': False,
+                },
+            },
+        }
+
+        logging.config.dictConfig(settings.LOGGING)
+
     def bypass_request_restrictions(self):
+        """ bypass all request default restrictions of DAL """
         from django.conf import settings
         from automated_logging.settings import settings as conf
 

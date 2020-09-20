@@ -4,8 +4,8 @@
 import random
 
 from automated_logging.helpers import Operation
-from automated_logging.models import (
-    ModelEvent,
+from automated_logging.models import ModelEvent
+from automated_logging.tests.models import (
     M2MTest,
     OrdinaryTest,
     OneToOneTest,

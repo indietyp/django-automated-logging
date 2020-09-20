@@ -7,7 +7,6 @@ from typing import Any, Union, Dict, NamedTuple
 
 from automated_logging.helpers.enums import Operation
 from automated_logging.middleware import AutomatedLoggingMiddleware
-from automated_logging.settings import settings
 
 
 def namedtuple2dict(root: Union[NamedTuple, Dict]) -> dict:
@@ -111,6 +110,7 @@ def get_or_create_model_event(
         ModelMirror,
         Application,
     )
+    from automated_logging.settings import settings
 
     get_or_create_meta(instance)
 

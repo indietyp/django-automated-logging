@@ -4,12 +4,26 @@ from pathlib import Path
 
 from django.http import JsonResponse
 
-from automated_logging.decorators import include_model, exclude_view, include_view
+from automated_logging.decorators import (
+    include_model,
+    exclude_view,
+    include_view,
+    exclude_model,
+)
+from automated_logging.helpers import Operation
 from automated_logging.middleware import AutomatedLoggingMiddleware
 from automated_logging.models import (
     ModelEvent,
     RequestEvent,
     UnspecifiedEvent,
+    Application,
+)
+from automated_logging.signals import (
+    cached_model_exclusion,
+    model_exclusion,
+    request_exclusion,
+)
+from automated_logging.tests.models import (
     OrdinaryTest,
     OneToOneTest,
     FullClassBasedExclusionTest,
@@ -298,6 +312,77 @@ class ConfigurationBasedExclusionsTestCase(BaseTestCase):
 
         logging.setLogRecordFactory(default_factory)
 
+    def test_search_types(self):
+        from django.conf import settings
+        from automated_logging.settings import settings as conf
+
+        settings.AUTOMATED_LOGGING['globals']['exclude']['applications'] = []
+        settings.AUTOMATED_LOGGING['model']['exclude']['applications'] = [
+            'pl:automated_logging'
+        ]
+        conf.load.cache_clear()
+        cached_model_exclusion.cache_clear()
+
+        self.clear()
+        OrdinaryTest().save()
+        self.assertEqual(ModelEvent.objects.count(), 0)
+
+        settings.AUTOMATED_LOGGING['model']['exclude']['applications'] = [
+            'gl:automated_*'
+        ]
+        conf.load.cache_clear()
+        cached_model_exclusion.cache_clear()
+
+        OrdinaryTest().save()
+        self.assertEqual(ModelEvent.objects.count(), 0)
+
+        settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = [
+            're:automated.*'
+        ]
+        conf.load.cache_clear()
+        cached_model_exclusion.cache_clear()
+
+        self.request('GET', self.view)
+        self.assertEqual(RequestEvent.objects.count(), 0)
+
+    def test_module(self):
+        from django.conf import settings
+        from automated_logging.settings import settings as conf
+
+        settings.AUTOMATED_LOGGING['globals']['exclude']['applications'] = []
+        settings.AUTOMATED_LOGGING['model']['exclude']['models'] = [
+            'automated_logging.tests.models'
+        ]
+        conf.load.cache_clear()
+        cached_model_exclusion.cache_clear()
+        self.clear()
+
+        OrdinaryTest().save()
+        self.assertEqual(ModelEvent.objects.count(), 0)
+
+    def test_mock_sender(self):
+        from django.conf import settings
+        from automated_logging.settings import settings as conf
+
+        class MockModel:
+            __module__ = '[TEST]'
+            __name__ = 'MockModel'
+
+        class MockMeta:
+            app_label = None
+
+        settings.AUTOMATED_LOGGING['model']['exclude']['unknown'] = True
+        conf.load.cache_clear()
+
+        self.assertTrue(model_exclusion(MockModel, MockMeta, Operation.CREATE))
+
+        settings.AUTOMATED_LOGGING['request']['exclude']['unknown'] = True
+        conf.load.cache_clear()
+
+        self.assertTrue(
+            request_exclusion(RequestEvent(application=Application(name=None)))
+        )
+
 
 class ClassBasedExclusionsTestCase(BaseTestCase):
     def test_complete(self):
@@ -443,5 +528,59 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
 
         delattr(AutomatedLoggingMiddleware.thread, 'dal')
 
+    def test_partial_decorator(self):
+        self.clear()
+        Model = include_model(operations=['create'])(OrdinaryTest)
+        Model().save()
+        self.assertEqual(ModelEvent.objects.count(), 1)
 
-# TODO: test different exclusion methods better
+    def test_layering(self):
+        Model = include_model(operations=['modify'], fields=['random2'])(
+            include_model(operations=['create'], fields=['random2'])(OrdinaryTest)
+        )
+
+        self.clear()
+        subject = Model()
+        subject.save()
+
+        subject.random = random_string()
+        subject.save()
+
+        self.assertEqual(ModelEvent.objects.count(), 2)
+
+        delattr(AutomatedLoggingMiddleware.thread, 'dal')
+        cached_model_exclusion.cache_clear()
+
+        Model = exclude_model(operations=['modify'], fields=['random2'])(
+            exclude_model(operations=['create'], fields=['random2'])(OrdinaryTest)
+        )
+
+        self.clear()
+
+        subject = Model()
+        subject.save()
+
+        subject.random = random_string()
+        subject.save()
+
+        self.assertEqual(ModelEvent.objects.count(), 0)
+
+    def test_model_fields(self):
+        Model = include_model(operations=[], fields=['random'])(
+            exclude_model(operations=None, fields=['random2'])(OrdinaryTest)
+        )
+
+        subject = Model()
+        subject.save()
+
+        self.clear()
+
+        subject.random = random_string()
+        subject.save()
+
+        self.assertEqual(ModelEvent.objects.count(), 1)
+
+        subject.random2 = random_string()
+        subject.save()
+
+        self.assertEqual(ModelEvent.objects.count(), 1)

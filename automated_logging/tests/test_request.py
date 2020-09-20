@@ -178,3 +178,7 @@ class DataRecordingRequestsTestCase(BaseTestCase):
         event = events[0]
         self.assertEqual(event.response.content.decode(), response)
         self.assertEqual(event.request.content.decode(), request)
+
+    def test_exclusion_by_application(self):
+        self.request('GET', self.view)
+        self.assertEqual(RequestEvent.objects.count(), 0)

@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from datetime import timedelta
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -147,7 +149,7 @@ LOGGING = {
         'db': {
             'level': 'INFO',
             'class': 'automated_logging.handlers.DatabaseHandler',
-            # 'max_age': 'P7DT5H',
+            'threading': False,
         },
     },
     'loggers': {
@@ -182,6 +184,7 @@ AUTOMATED_LOGGING = {
     'unspecified': {
         'exclude': {'unknown': False, 'applications': [], 'files': []},
         'loglevel': 20,
+        'max_age': timedelta(seconds=20),
     },
     'modules': ['request', 'model', 'unspecified'],
     'request': {
@@ -202,4 +205,4 @@ AUTOMATED_LOGGING = {
     },
 }
 
-AUTOMATED_LOGGING_DEV = True
+AUTOMATED_LOGGING_DEV = False
