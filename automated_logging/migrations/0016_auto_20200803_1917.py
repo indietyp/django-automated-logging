@@ -38,7 +38,9 @@ def convert(apps, schema_editor):
             uri=str(r.uri),
             method=r.method[:32],
             status=r.status,
-            application=Application.objects.using(alias).get(id=r.application.id),
+            application=Application.objects.using(alias).get(id=r.application.id)
+            if r.application
+            else no_application,
         )
         for r in RequestOld.objects.using(alias).all()
     ]
@@ -97,7 +99,10 @@ def convert(apps, schema_editor):
         simple helper function to get a new application from a content type
         :return: ApplicationNew
         """
-        app = next((a for a in applications if a.name == content_type.app_label), None,)
+        app = next(
+            (a for a in applications if a.name == content_type.app_label),
+            None,
+        )
 
         if not app:
             app = Application(name=content_type.app_label)
@@ -141,13 +146,15 @@ def convert(apps, schema_editor):
         app = get_application(target.model)
 
         mir = next(
-            (m for m in mirrors if m.application.name == target.model.app_label), None,
+            (m for m in mirrors if m.application.name == target.model.app_label),
+            None,
         )
         if not mir:
             mir = ModelMirror(name=target.model.model, application=app)
 
         fie = next(
-            (e for e in fields if e.name == target.name and e.mirror == mir), None,
+            (e for e in fields if e.name == target.name and e.mirror == mir),
+            None,
         )
         if not fie:
             fie = ModelField(name=target.name, mirror=mir, type='<UNKNOWN>')
@@ -448,7 +455,9 @@ class Migration(migrations.Migration):
                 ),
                 ('type', models.CharField(max_length=255)),
             ],
-            options={'abstract': False,},
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='UnspecifiedEvent',
@@ -693,28 +702,87 @@ class Migration(migrations.Migration):
         migrations.RunPython(convert),
         # migrations.RenameModel('ApplicationTemp', 'Application'),
         # removing 5.x.x
-        migrations.RemoveField(model_name='field', name='model',),
-        migrations.RemoveField(model_name='model', name='application',),
-        migrations.RemoveField(model_name='model', name='information',),
-        migrations.RemoveField(model_name='model', name='modification',),
-        migrations.RemoveField(model_name='model', name='user',),
-        migrations.RemoveField(model_name='modelchangelog', name='information',),
-        migrations.RemoveField(model_name='modelchangelog', name='inserted',),
-        migrations.RemoveField(model_name='modelchangelog', name='modification',),
-        migrations.RemoveField(model_name='modelchangelog', name='removed',),
-        migrations.RemoveField(model_name='modelmodification', name='currently',),
-        migrations.RemoveField(model_name='modelmodification', name='previously',),
-        migrations.RemoveField(model_name='modelobject', name='field',),
-        migrations.RemoveField(model_name='modelobject', name='type',),
-        migrations.RemoveField(model_name='request', name='application',),
-        migrations.RemoveField(model_name='request', name='user',),
-        migrations.DeleteModel(name='Unspecified',),
+        migrations.RemoveField(
+            model_name='field',
+            name='model',
+        ),
+        migrations.RemoveField(
+            model_name='model',
+            name='application',
+        ),
+        migrations.RemoveField(
+            model_name='model',
+            name='information',
+        ),
+        migrations.RemoveField(
+            model_name='model',
+            name='modification',
+        ),
+        migrations.RemoveField(
+            model_name='model',
+            name='user',
+        ),
+        migrations.RemoveField(
+            model_name='modelchangelog',
+            name='information',
+        ),
+        migrations.RemoveField(
+            model_name='modelchangelog',
+            name='inserted',
+        ),
+        migrations.RemoveField(
+            model_name='modelchangelog',
+            name='modification',
+        ),
+        migrations.RemoveField(
+            model_name='modelchangelog',
+            name='removed',
+        ),
+        migrations.RemoveField(
+            model_name='modelmodification',
+            name='currently',
+        ),
+        migrations.RemoveField(
+            model_name='modelmodification',
+            name='previously',
+        ),
+        migrations.RemoveField(
+            model_name='modelobject',
+            name='field',
+        ),
+        migrations.RemoveField(
+            model_name='modelobject',
+            name='type',
+        ),
+        migrations.RemoveField(
+            model_name='request',
+            name='application',
+        ),
+        migrations.RemoveField(
+            model_name='request',
+            name='user',
+        ),
+        migrations.DeleteModel(
+            name='Unspecified',
+        ),
         # migrations.DeleteModel(name='Application',),
-        migrations.DeleteModel(name='Field',),
-        migrations.DeleteModel(name='Model',),
-        migrations.DeleteModel(name='ModelChangelog',),
-        migrations.DeleteModel(name='ModelModification',),
-        migrations.DeleteModel(name='ModelObject',),
-        migrations.DeleteModel(name='Request',),
+        migrations.DeleteModel(
+            name='Field',
+        ),
+        migrations.DeleteModel(
+            name='Model',
+        ),
+        migrations.DeleteModel(
+            name='ModelChangelog',
+        ),
+        migrations.DeleteModel(
+            name='ModelModification',
+        ),
+        migrations.DeleteModel(
+            name='ModelObject',
+        ),
+        migrations.DeleteModel(
+            name='Request',
+        ),
         # end of removing
     ]

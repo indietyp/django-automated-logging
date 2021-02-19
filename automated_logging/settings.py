@@ -101,9 +101,6 @@ class ModelSchema(BaseSchema):
     loglevel = Integer(missing=INFO, validate=Range(min=NOTSET, max=CRITICAL))
     exclude = MissingNested(ModelExcludeSchema)
 
-    mask = Set(LowerCaseString(), missing=set())
-    user_mirror = Boolean(missing=False)  # maybe, name not good
-
     # should the log message include all modifications done?
     detailed_message = Boolean(missing=True)
 

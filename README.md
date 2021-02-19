@@ -231,6 +231,7 @@ as described above `operations` and `fields` work the same way. `complete = True
 - [ ] archive options
 - [ ] decorators greater flexibility
 - [ ] wiki -> documentation
+- [ ] make django-ipware optional via extras
 - [ ] and more!
 
 ### Version 7.x.x
