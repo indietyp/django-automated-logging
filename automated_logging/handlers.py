@@ -67,12 +67,13 @@ class DatabaseHandler(Handler):
                     ).delete()
                 instances.clear()
 
-        thread = Thread(group=None, target=database, args=(self.instances, settings))
-
         if self.threading:
+            thread = Thread(
+                group=None, target=database, args=(self.instances, settings)
+            )
             thread.start()
         else:
-            thread.run()
+            database(self.instances, settings)
 
     def get_or_create(self, target: Type[Model], **kwargs) -> Tuple[Model, bool]:
         """
