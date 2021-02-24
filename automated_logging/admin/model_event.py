@@ -168,8 +168,8 @@ class ModelEventAdmin(ReadOnlyAdminMixin):
     list_filter = (
         'updated_at',
         ('user', RelatedOnlyFieldListFilter),
-        ('model__model__application', RelatedOnlyFieldListFilter),
-        ('model__model', RelatedOnlyFieldListFilter),
+        ('entry__mirror__application', RelatedOnlyFieldListFilter),
+        ('entry__mirror', RelatedOnlyFieldListFilter),
     )
 
     date_hierarchy = 'updated_at'

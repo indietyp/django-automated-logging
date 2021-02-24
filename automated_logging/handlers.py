@@ -75,7 +75,6 @@ class DatabaseHandler(Handler):
         def database(instances, config):
             """ wrapper so that we can actually use threading """
             with transaction.atomic():
-                print(instances.values())
                 [i.save() for k, i in instances.items()]
 
                 if clear:
@@ -166,6 +165,10 @@ class DatabaseHandler(Handler):
             for f in instance._meta.get_fields()
             if isinstance(f, ForeignObject)
             and getattr(instance, f.name, None) is not None
+            # check the attribute module really being automated_logging
+            # to make sure that we do not follow down a rabbit hole
+            and getattr(instance, f.name).__class__.__module__.split('.', 1)[0]
+            == 'automated_logging'
         ]:
             setattr(
                 instance, field.name, self.prepare_save(getattr(instance, field.name))
@@ -247,7 +250,7 @@ class DatabaseHandler(Handler):
         data: Dict[str, Any],
     ) -> None:
         self.prepare_save(event)
-        self.save()
+        self.save(event)
 
         for relationship in relationships:
             relationship.event = event
