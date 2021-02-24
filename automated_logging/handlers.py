@@ -145,7 +145,7 @@ class DatabaseHandler(Handler):
             )
             if entry.type != instance.type:
                 entry.type = instance.type
-                self.save(entry, clear=False)
+                self.save(entry, commit=False, clear=False)
             return entry
 
         elif isinstance(instance, ModelEntry):
@@ -156,7 +156,7 @@ class DatabaseHandler(Handler):
             )
             if entry.value != instance.value:
                 entry.value = instance.value
-                self.save(entry, clear=False)
+                self.save(entry, commit=False, clear=False)
             return entry
 
         # ForeignObjectRel is untouched rn
@@ -170,7 +170,7 @@ class DatabaseHandler(Handler):
                 instance, field.name, self.prepare_save(getattr(instance, field.name))
             )
 
-        self.save(instance, clear=False)
+        self.save(instance, commit=False, clear=False)
         return instance
 
     def unspecified(self, record: LogRecord) -> None:
