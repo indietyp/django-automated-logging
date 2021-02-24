@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 from datetime import timedelta
 from logging import Handler, LogRecord
 from pathlib import Path
@@ -26,10 +27,31 @@ class DatabaseHandler(Handler):
     ):
         self.limit = batch or 1
         self.threading = threading
-        self.instances = set()
+        self.instances = OrderedDict()
         super(DatabaseHandler, self).__init__(*args, **kwargs)
 
-    def save(self, instance=None):
+    @staticmethod
+    def _clear(config):
+        from automated_logging.models import ModelEvent, RequestEvent, UnspecifiedEvent
+        from django.db import transaction
+
+        current = timezone.now()
+        with transaction.atomic():
+            if config.model.max_age:
+                ModelEvent.objects.filter(
+                    created_at__lte=current - config.model.max_age
+                ).delete()
+            if config.unspecified.max_age:
+                UnspecifiedEvent.objects.filter(
+                    created_at__lte=current - config.unspecified.max_age
+                ).delete()
+
+            if config.request.max_age:
+                RequestEvent.objects.filter(
+                    created_at__lte=current - config.request.max_age
+                ).delete()
+
+    def save(self, instance=None, commit=True, clear=True):
         """
         Internal save procedure.
         Handles deletion when an event exceeds max_age
@@ -38,33 +60,25 @@ class DatabaseHandler(Handler):
         :return: None
         """
         from django.db import transaction
-        from automated_logging.models import ModelEvent, RequestEvent, UnspecifiedEvent
         from automated_logging.settings import settings
 
         if instance:
-            self.instances.add(instance)
+            self.instances[instance.pk] = instance
         if len(self.instances) < self.limit:
-            return
+            if clear:
+                self._clear(settings)
+            return instance
+
+        if not commit:
+            return instance
 
         def database(instances, config):
             """ wrapper so that we can actually use threading """
             with transaction.atomic():
-                [i.save() for i in instances]
+                [i.save() for k, i in instances.items()]
 
-                current = timezone.now()
-                if config.model.max_age:
-                    ModelEvent.objects.filter(
-                        created_at__lte=current - config.model.max_age
-                    ).delete()
-                if config.unspecified.max_age:
-                    UnspecifiedEvent.objects.filter(
-                        created_at__lte=current - config.unspecified.max_age
-                    ).delete()
-
-                if config.request.max_age:
-                    RequestEvent.objects.filter(
-                        created_at__lte=current - config.request.max_age
-                    ).delete()
+                if clear:
+                    self._clear(config)
                 instances.clear()
 
         if self.threading:
@@ -74,6 +88,8 @@ class DatabaseHandler(Handler):
             thread.start()
         else:
             database(self.instances, settings)
+
+        return instance
 
     def get_or_create(self, target: Type[Model], **kwargs) -> Tuple[Model, bool]:
         """
@@ -89,7 +105,7 @@ class DatabaseHandler(Handler):
             instance = target.objects.get(**kwargs)
         except ObjectDoesNotExist:
             instance = target(**kwargs)
-            self.instances.add(instance)
+            self.save(instance, clear=False)
             created = True
 
         return instance, created
@@ -129,8 +145,7 @@ class DatabaseHandler(Handler):
             )
             if entry.type != instance.type:
                 entry.type = instance.type
-                # append to instances so that it gets saved with the next .save() call
-                self.instances.add(entry)
+                self.save(entry, clear=False)
             return entry
 
         elif isinstance(instance, ModelEntry):
@@ -141,7 +156,7 @@ class DatabaseHandler(Handler):
             )
             if entry.value != instance.value:
                 entry.value = instance.value
-                self.instances.add(entry)
+                self.save(entry, clear=False)
             return entry
 
         # ForeignObjectRel is untouched rn
@@ -155,7 +170,7 @@ class DatabaseHandler(Handler):
                 instance, field.name, self.prepare_save(getattr(instance, field.name))
             )
 
-        self.instances.add(instance)
+        self.save(instance, clear=False)
         return instance
 
     def unspecified(self, record: LogRecord) -> None:
