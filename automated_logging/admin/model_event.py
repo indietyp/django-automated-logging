@@ -65,7 +65,7 @@ class ModelRelationshipModificationInline(ReadOnlyTabularInlineMixin):
 
     get_field.short_description = 'Field'
 
-    fields = ('get_uuid', 'operation', 'get_field', 'model')
+    fields = ('get_uuid', 'operation', 'get_field', 'entry')
     can_delete = False
 
     verbose_name = 'Relationship'
