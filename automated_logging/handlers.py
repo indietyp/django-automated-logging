@@ -75,6 +75,7 @@ class DatabaseHandler(Handler):
         def database(instances, config):
             """ wrapper so that we can actually use threading """
             with transaction.atomic():
+                print(instances.values())
                 [i.save() for k, i in instances.items()]
 
                 if clear:
@@ -105,7 +106,7 @@ class DatabaseHandler(Handler):
             instance = target.objects.get(**kwargs)
         except ObjectDoesNotExist:
             instance = target(**kwargs)
-            self.save(instance, clear=False)
+            self.save(instance, commit=False, clear=False)
             created = True
 
         return instance, created
@@ -210,7 +211,7 @@ class DatabaseHandler(Handler):
 
         if not unspecified_exclusion(event):
             self.prepare_save(event)
-            self.save()
+            self.save(event)
 
     def model(
         self,
@@ -231,7 +232,7 @@ class DatabaseHandler(Handler):
         :return:
         """
         self.prepare_save(event)
-        self.save()
+        self.save(event)
 
         for modification in modifications:
             modification.event = event
@@ -251,7 +252,7 @@ class DatabaseHandler(Handler):
         for relationship in relationships:
             relationship.event = event
             self.prepare_save(relationship)
-            self.save()
+            self.save(relationship)
 
     def request(self, record: LogRecord, event: 'RequestEvent') -> None:
         """
@@ -264,7 +265,7 @@ class DatabaseHandler(Handler):
         """
 
         self.prepare_save(event)
-        self.save()
+        self.save(event)
 
     def emit(self, record: LogRecord) -> None:
         """
