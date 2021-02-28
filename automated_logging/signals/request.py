@@ -42,10 +42,11 @@ def request_finished_signal(sender, **kwargs) -> None:
     environ = AutomatedLoggingMiddleware.get_current_environ()
 
     if not environ:
-        logger.info(
-            "Environment for request couldn't be determined. "
-            "Request was not recorded."
-        )
+        if settings.request.log_request_was_not_recorded:
+            logger.info(
+                "Environment for request couldn't be determined. "
+                "Request was not recorded."
+            )
         return
 
     request = RequestEvent()

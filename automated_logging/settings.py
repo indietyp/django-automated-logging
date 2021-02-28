@@ -42,7 +42,8 @@ class RequestDataSchema(BaseSchema):
     """
 
     enabled = Set(
-        LowerCaseString(validate=OneOf(['request', 'response'])), missing=set(),
+        LowerCaseString(validate=OneOf(['request', 'response'])),
+        missing=set(),
     )
     query = Boolean(missing=False)
 
@@ -69,6 +70,7 @@ class RequestSchema(BaseSchema):
     ip = Boolean(missing=True)
     # TODO: performance setting?
 
+    log_request_was_not_recorded = Boolean(missing=True)
     max_age = Duration(missing=None)
 
 
