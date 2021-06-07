@@ -67,7 +67,7 @@ Initial Configuration is via your projects `settings.py`
        'db': {
            'level': 'INFO',
            'class': 'automated_logging.handlers.DatabaseHandler',
-       {
+       }
     ```
 4. `LOGGING` section `loggers` add: (only required if database logging desired)
     ```python
