@@ -87,36 +87,16 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     added = currently.difference(previously)
     deleted = previously.difference(currently)
-    changed = (
-        set(
-            k
-            for k, v in set(
-                # generate a set from the dict of old values
-                # exclude protected and magic attributes
-                (k, v)
-                for k, v in old.items()
-                if not k.startswith('_')
-            ).difference(
-                set(
-                    # generate a set from the dict of new values
-                    # also exclude the protected and magic attributes
-                    (k, v)
-                    for k, v in new.items()
-                    if not k.startswith('_')
-                )
-            )
-            # the difference between the two sets
-            # because the keys are the same, but values are different
-            # will result in a change set of changed values
-            # ('a', 'b') in old and new will get eliminated
-            # ('a', 'b') in old and ('a', 'c') in new will
-            # result in ('a', 'b') in the new set as that is
-            # different.
-        )
-        # remove all added and deleted attributes from the changelist
-        # they would still be present, because None -> Value
+    changed = {
+        k
+        for k in
+        # take all keys from old and new, and only use those that are in both
+        set(old.keys()) & set(new.keys())
+        # remove values that have been added or deleted (optimization)
         .difference(added).difference(deleted)
-    )
+        # check if the value is equal, if not they are not changed
+        if old[k] != new[k]
+    }
 
     summary = [
         *(
@@ -251,7 +231,11 @@ def post_save_signal(
     :return: -
     """
     status = Operation.CREATE if created else Operation.MODIFY
-    if lazy_model_exclusion(instance, status, instance.__class__,):
+    if lazy_model_exclusion(
+        instance,
+        status,
+        instance.__class__,
+    ):
         return
     get_or_create_meta(instance)
 
