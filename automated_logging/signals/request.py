@@ -91,12 +91,13 @@ def request_finished_signal(sender, **kwargs) -> None:
 
     if request_exclusion(request, function):
         return
-
+    
+    logger_ip = f' from {request.ip}' if get_client_ip and settings.request.ip else ''
     logger.log(
         level,
         f'[{request.method}] [{request.status}] '
         f'{getattr(request, "user", None) or "Anonymous"} '
-        f'at {request.uri}',
+        f'at {request.uri}{logger_ip}',
         extra={'action': 'request', 'event': request},
     )
 

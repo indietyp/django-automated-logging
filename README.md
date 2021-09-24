@@ -1,13 +1,13 @@
 # Django Database Based Automated Logging
 
-![https://pypi.python.org/pypi?name=django-automated-logging](https://img.shields.io/pypi/v/django-automated-logging.svg)
-![https://pypi.python.org/pypi?name=django-automated-logging](https://img.shields.io/pypi/l/django-automated-logging.svg)
-![https://pypi.python.org/pypi?name=django-automated-logging](https://img.shields.io/pypi/status/django-automated-logging.svg)
-![https://pypi.python.org/pypi?name=django-automated-logging](https://img.shields.io/pypi/pyversions/django-automated-logging.svg)
-![https://travis-ci.org/indietyp/django-automated-logging](https://travis-ci.org/indietyp/django-automated-logging.svg?branch=master)
-![https://coveralls.io/github/indietyp/django-automated-logging?branch=master](https://coveralls.io/repos/github/indietyp/django-automated-logging/badge.svg?branch=master)
-![https://www.codacy.com/app/bilalmahmoud/django-automated-logging?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=indietyp/django-automated-logging&amp;utm_campaign=Badge_Grade](https://api.codacy.com/project/badge/Grade/96fdb764fc34486399802b2f8267efcc)
-![https://paypal.me/indietyp/5](https://img.shields.io/badge/Support%20the%20Project-PayPal-green.svg)
+[![](https://badgen.net/pypi/v/django-automated-logging)](https://pypi.python.org/pypi?name=django-automated-logging)
+[![](https://badgen.net/pypi/license/django-automated-logging)](https://pypi.python.org/pypi?name=django-automated-logging)
+[![](https://img.shields.io/pypi/status/django-automated-logging.svg)](https://pypi.python.org/pypi?name=django-automated-logging)
+[![](https://badgen.net/pypi/python/django-automated-logging)](https://pypi.python.org/pypi?name=django-automated-logging)
+[![Build Status](https://www.travis-ci.com/indietyp/django-automated-logging.svg?branch=master)](https://www.travis-ci.com/indietyp/django-automated-logging)
+[![](https://coveralls.io/repos/github/indietyp/django-automated-logging/badge.svg?branch=master)](https://coveralls.io/github/indietyp/django-automated-logging?branch=master)
+[![](https://api.codacy.com/project/badge/Grade/96fdb764fc34486399802b2f8267efcc)](https://www.codacy.com/app/bilalmahmoud/django-automated-logging?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=indietyp/django-automated-logging&amp;utm_campaign=Badge_Grade)
+[![](https://img.shields.io/badge/Support%20the%20Project-PayPal-green.svg)](https://paypal.me/indietyp/5)
 
 **Notice:** Most of this will be moved into a wiki.
 
