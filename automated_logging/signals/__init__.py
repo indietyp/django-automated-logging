@@ -15,6 +15,7 @@ from automated_logging.helpers import (
     Operation,
 )
 from automated_logging.models import RequestEvent, UnspecifiedEvent
+import automated_logging.decorators
 from automated_logging.settings import settings
 from automated_logging.helpers.schemas import Search
 
@@ -118,8 +119,11 @@ def _function_model_exclusion(sender, scope: str, item: Any) -> Optional[bool]:
         return None
 
     thread, _ = get_or_create_thread()
-    ignore = thread.dal['ignore.models']
-    include = thread.dal['include.models']
+
+    # noinspection PyProtectedMember
+    ignore = automated_logging.decorators._exclude_models
+    # noinspection PyProtectedMember
+    include = automated_logging.decorators._include_models
 
     path = function2path(sender)
 

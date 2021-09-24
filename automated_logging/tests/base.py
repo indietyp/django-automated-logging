@@ -18,6 +18,21 @@ User: AbstractUser = get_user_model()
 USER_CREDENTIALS = {'username': 'example', 'password': 'example'}
 
 
+def clear_cache():
+    """ utility method to clear the cache """
+    if hasattr(AutomatedLoggingMiddleware.thread, 'dal'):
+        delattr(AutomatedLoggingMiddleware.thread, 'dal')
+
+    import automated_logging.decorators
+
+    # noinspection PyProtectedMember
+    automated_logging.decorators._exclude_models.clear()
+    # noinspection PyProtectedMember
+    automated_logging.decorators._include_models.clear()
+
+    cached_model_exclusion.cache_clear()
+
+
 class BaseTestCase(TestCase):
     def __init__(self, method_name):
         from django.conf import settings
@@ -84,10 +99,7 @@ class BaseTestCase(TestCase):
 
         conf.load.cache_clear()
 
-        if hasattr(AutomatedLoggingMiddleware.thread, 'dal'):
-            delattr(AutomatedLoggingMiddleware.thread, 'dal')
-
-        cached_model_exclusion.cache_clear()
+        clear_cache()
 
     @staticmethod
     def clear():

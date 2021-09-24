@@ -2,6 +2,7 @@ import logging
 import threading
 from pathlib import Path
 
+from django.contrib import admin
 from django.http import JsonResponse
 
 from automated_logging.decorators import (
@@ -33,7 +34,7 @@ from automated_logging.tests.models import (
     DecoratorOverrideExclusionTest,
     M2MTest,
 )
-from automated_logging.tests.base import BaseTestCase, USER_CREDENTIALS
+from automated_logging.tests.base import BaseTestCase, USER_CREDENTIALS, clear_cache
 from automated_logging.tests.helpers import random_string
 
 
@@ -439,12 +440,16 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
     def test_exclude_model(self):
         self.clear()
 
+        # manual here as the cache clear, clears the first appliance
+        FullDecoratorBasedExclusionTest.__dal_register__()
         subject = FullDecoratorBasedExclusionTest()
         subject.save()
 
         self.assertEqual(ModelEvent.objects.count(), 0)
 
-        subject = PartialDecoratorBasedExclusionTest(random=random_string())
+        subject = PartialDecoratorBasedExclusionTest.__dal_register__()(
+            random=random_string()
+        )
         subject.save()
 
         events = ModelEvent.objects.all()
@@ -461,7 +466,9 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
     def test_include_model(self):
         self.clear()
 
-        subject = DecoratorOverrideExclusionTest(random=random_string())
+        subject = DecoratorOverrideExclusionTest.__dal_register__()(
+            random=random_string()
+        )
         subject.save()
 
         self.assertEqual(ModelEvent.objects.count(), 1)
@@ -481,7 +488,7 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
         self.assertEqual(ModelEvent.objects.count(), 1)
 
         # just to make sure we clean up
-        delattr(AutomatedLoggingMiddleware.thread, 'dal')
+        clear_cache()
 
     @staticmethod
     @exclude_view
@@ -551,7 +558,7 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
         self.request('POST', view)
         self.assertEqual(RequestEvent.objects.count(), 1)
 
-        delattr(AutomatedLoggingMiddleware.thread, 'dal')
+        clear_cache()
 
     def test_partial_decorator(self):
         self.clear()
@@ -573,8 +580,7 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
 
         self.assertEqual(ModelEvent.objects.count(), 2)
 
-        delattr(AutomatedLoggingMiddleware.thread, 'dal')
-        cached_model_exclusion.cache_clear()
+        clear_cache()
 
         Model = exclude_model(operations=['modify'], fields=['random2'])(
             exclude_model(operations=['create'], fields=['random2'])(OrdinaryTest)
@@ -609,3 +615,8 @@ class DecoratorBasedExclusionsTestCase(BaseTestCase):
         subject.save()
 
         self.assertEqual(ModelEvent.objects.count(), 1)
+
+    def test_model_admin(self):
+        FullDecoratorBasedExclusionTest.__dal_register__()
+
+        admin.site.register(FullDecoratorBasedExclusionTest)

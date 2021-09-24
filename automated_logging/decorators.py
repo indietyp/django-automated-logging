@@ -1,5 +1,6 @@
 from functools import wraps, partial
-from typing import List, NamedTuple, Set, Optional
+from typing import List, NamedTuple, Set, Optional, Type, Dict, Callable, Union
+
 
 from automated_logging.helpers import (
     Operation,
@@ -97,7 +98,9 @@ def include_view(func=None, *, methods: List[str] = None):
 def _normalize_model_args(
     operations: List[str], fields: List[str]
 ) -> [Set[Operation], Set[str]]:
-    if operations is not None:
+    if operations is not None and not all(
+        isinstance(op, Operation) for op in operations
+    ):
         operations = {
             VerbOperationMap[o.lower()]
             for o in operations
@@ -110,13 +113,49 @@ def _normalize_model_args(
     return operations, fields
 
 
+_include_models = {}
+_exclude_models = {}
+
 IgnoreModel = NamedTuple(
     "IgnoreModel", (('operations', Set[Operation]), ('fields', Set[str]))
 )
 
 
+def _register_model(
+    registry: Dict[str, Union['IgnoreModel', 'IncludeModel']],
+    container: Type[Union['IgnoreModel', 'IncludeModel']],
+    decorator: Callable,
+    model=None,
+    operations: List[str] = None,
+    fields: List[str] = None,
+):
+    if model is None:
+        return partial(decorator, operations=operations, fields=fields)
+
+    operations, fields = _normalize_model_args(operations, fields)
+    path = function2path(model)
+
+    if (
+        path in registry
+        and registry[path].operations is not None
+        and operations is not None
+    ):
+        operations.update(registry[path].operations)
+
+    if path in registry and registry[path].fields is not None and fields is not None:
+        fields.update(registry[path].fields)
+
+    registry[path] = container(operations, fields)
+
+    # this makes it so that we have a method we can call to re apply dal.
+    model.__dal_register__ = lambda: _register_model(
+        registry, container, decorator, model, operations, fields
+    )
+    return model
+
+
 def exclude_model(
-    func=None, *, operations: Optional[List[str]] = (), fields: List[str] = ()
+    model=None, *, operations: Optional[List[str]] = (), fields: List[str] = ()
 ):
     """
     Decorator used for ignoring specific models, without using the
@@ -125,7 +164,7 @@ def exclude_model(
     This is done via the local threading object. __module__ and __name__ are used
     to determine the right model.
 
-    :param func: function to be decorated
+    :param model: function to be decorated
     :param operations: operations to be ignored can be a list of:
                        modify, create, delete (case-insensitive)
                        [] => All operations will be ignored
@@ -135,36 +174,11 @@ def exclude_model(
                    None => No field will be ignored
     :return: function
     """
-    if func is None:
-        return partial(exclude_model, operations=operations, fields=fields)
+    global _exclude_models
 
-    operations, fields = _normalize_model_args(operations, fields)
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        """ simple wrapper """
-        thread, _ = get_or_create_thread()
-        path = function2path(func)
-
-        if (
-            path in thread.dal['ignore.models']
-            and thread.dal['ignore.models'][path].operations is not None
-            and operations is not None
-        ):
-            operations.update(thread.dal['ignore.models'][path].operations)
-
-        if (
-            path in thread.dal['ignore.models']
-            and thread.dal['ignore.models'][path].fields is not None
-            and fields is not None
-        ):
-            fields.update(thread.dal['ignore.models'][path].fields)
-
-        thread.dal['ignore.models'][path] = IgnoreModel(operations, fields)
-
-        return func(*args, **kwargs)
-
-    return wrapper
+    return _register_model(
+        _exclude_models, IgnoreModel, exclude_model, model, operations, fields
+    )
 
 
 IncludeModel = NamedTuple(
@@ -172,12 +186,14 @@ IncludeModel = NamedTuple(
 )
 
 
-def include_model(func=None, *, operations: List[str] = None, fields: List[str] = None):
+def include_model(
+    model=None, *, operations: List[str] = None, fields: List[str] = None
+):
     """
     Decorator used for including specific models, despite potentially being ignored
     by the exclusion preferences set in the configuration.
 
-    :param func: function to be decorated
+    :param model: function to be decorated
     :param operations: operations to be ignored can be a list of:
                        modify, create, delete (case-insensitive)
                        [] => No operation will be explicitly included
@@ -188,33 +204,9 @@ def include_model(func=None, *, operations: List[str] = None, fields: List[str] 
 
     :return: function
     """
-    if func is None:
-        return partial(include_model, operations=operations, fields=fields)
 
-    operations, fields = _normalize_model_args(operations, fields)
+    global _include_models
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        """ simple wrapper """
-        thread, _ = get_or_create_thread()
-        path = function2path(func)
-
-        if (
-            path in thread.dal['include.models']
-            and thread.dal['include.models'][path].operations is not None
-            and operations is not None
-        ):
-            operations.update(thread.dal['include.models'][path].operations)
-
-        if (
-            path in thread.dal['include.models']
-            and thread.dal['include.models'][path].fields is not None
-            and fields is not None
-        ):
-            fields.update(thread.dal['include.models'][path].fields)
-
-        thread.dal['include.models'][path] = IncludeModel(operations, fields)
-
-        return func(*args, **kwargs)
-
-    return wrapper
+    return _register_model(
+        _include_models, IncludeModel, include_model, model, operations, fields
+    )
