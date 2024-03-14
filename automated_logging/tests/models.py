@@ -1,13 +1,13 @@
 import uuid
 from django.db.models import (
-    Model,
-    UUIDField,
-    DateTimeField,
-    ManyToManyField,
     CASCADE,
-    ForeignKey,
-    OneToOneField,
     CharField,
+    DateTimeField,
+    ForeignKey,
+    ManyToManyField,
+    Model,
+    OneToOneField,
+    UUIDField,
 )
 
 from automated_logging.decorators import exclude_model, include_model

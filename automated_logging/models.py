@@ -8,15 +8,15 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import (
-    CharField,
-    ForeignKey,
     CASCADE,
-    TextField,
-    SmallIntegerField,
-    PositiveIntegerField,
+    CharField,
     DurationField,
+    ForeignKey,
     GenericIPAddressField,
+    PositiveIntegerField,
     PositiveSmallIntegerField,
+    SmallIntegerField,
+    TextField,
 )
 from picklefield.fields import PickledObjectField
 
