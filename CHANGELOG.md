@@ -1,3 +1,8 @@
+# 6.2.0
+
+* **Changed:** Dependencies have been upgraded and newer django versions have been added 
+* **CI:** Travis CI has been replaced by GitHub Actions
+
 # 6.1.3
 
 * **Added** ip is now record (fixes #12)
