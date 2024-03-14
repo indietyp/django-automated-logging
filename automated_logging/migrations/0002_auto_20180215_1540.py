@@ -8,48 +8,54 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0001_initial'),
+        ("automated_logging", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Application',
+            name="Application",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4, primary_key=True, serialize=False
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255)),
             ],
-            options={'abstract': False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.RenameField(
-            model_name='modelobject', old_name='application', new_name='type',
+            model_name="modelobject",
+            old_name="application",
+            new_name="type",
         ),
-        migrations.RemoveField(model_name='modelobject', name='model',),
-        migrations.RemoveField(model_name='model', name='application'),
+        migrations.RemoveField(
+            model_name="modelobject",
+            name="model",
+        ),
+        migrations.RemoveField(model_name="model", name="application"),
         migrations.AddField(
-            model_name='model',
-            name='application',
+            model_name="model",
+            name="application",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='atl_model_application',
-                to='automated_logging.Application',
+                related_name="atl_model_application",
+                to="automated_logging.Application",
             ),
         ),
-        migrations.RemoveField(model_name='request', name='application'),
+        migrations.RemoveField(model_name="request", name="application"),
         migrations.AddField(
-            model_name='request',
-            name='application',
+            model_name="request",
+            name="application",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                to='automated_logging.Application',
+                to="automated_logging.Application",
             ),
         ),
     ]

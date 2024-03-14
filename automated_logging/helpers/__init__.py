@@ -20,7 +20,7 @@ def namedtuple2dict(root: Union[NamedTuple, Dict]) -> dict:
     output = {}
     if (
         isinstance(root, tuple)
-        and hasattr(root, '_serialize')
+        and hasattr(root, "_serialize")
         and callable(root._serialize)
     ):
         return root._serialize()
@@ -28,7 +28,7 @@ def namedtuple2dict(root: Union[NamedTuple, Dict]) -> dict:
     root = root if isinstance(root, dict) else root._asdict()
 
     def eligible(x):
-        """ check if value x is eligible for recursion """
+        """check if value x is eligible for recursion"""
         return isinstance(x, tuple) or isinstance(x, dict)
 
     for k, v in root.items():
@@ -67,16 +67,16 @@ def get_or_create_thread() -> [Any, bool]:
         get_or_create_local(
             thread,
             {
-                'ignore.views': dict,
-                'ignore.models': dict,
-                'include.views': dict,
-                'include.models': dict,
+                "ignore.views": dict,
+                "ignore.models": dict,
+                "include.views": dict,
+                "include.models": dict,
             },
         ),
     )
 
 
-def get_or_create_local(target: Any, defaults={}, key='dal') -> bool:
+def get_or_create_local(target: Any, defaults={}, key="dal") -> bool:
     """
     Get or create local storage DAL metadata container,
     where dal specific data is.
@@ -114,7 +114,7 @@ def get_or_create_model_event(
 
     get_or_create_meta(instance)
 
-    if hasattr(instance._meta.dal, 'event') and not force:
+    if hasattr(instance._meta.dal, "event") and not force:
         return instance._meta.dal.event, False
 
     instance._meta.dal.event = None
@@ -127,7 +127,7 @@ def get_or_create_model_event(
 
     if (
         settings.model.performance
-        and hasattr(instance._meta.dal, 'performance')
+        and hasattr(instance._meta.dal, "performance")
         and extra
     ):
         event.performance = datetime.now() - instance._meta.dal.performance
@@ -147,8 +147,8 @@ def get_or_create_model_event(
 
 
 def function2path(func):
-    """ simple helper function to return the module path of a function """
-    return f'{func.__module__}.{func.__name__}'
+    """simple helper function to return the module path of a function"""
+    return f"{func.__module__}.{func.__name__}"
 
 
 class MetaDataContainer(dict):

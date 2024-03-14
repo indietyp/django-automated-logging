@@ -1,4 +1,5 @@
 """ Test everything related to requests """
+
 import json
 from copy import deepcopy
 
@@ -16,7 +17,7 @@ class LoggedOutRequestsTestCase(BaseTestCase):
 
         super().setUp()
 
-        settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = []
+        settings.AUTOMATED_LOGGING["request"]["exclude"]["applications"] = []
         conf.load.cache_clear()
 
         RequestEvent.objects.all().delete()
@@ -28,7 +29,7 @@ class LoggedOutRequestsTestCase(BaseTestCase):
     def test_simple(self):
         self.bypass_request_restrictions()
 
-        self.request('GET', self.view)
+        self.request("GET", self.view)
 
         events = RequestEvent.objects.all()
         self.assertEqual(events.count(), 1)
@@ -45,7 +46,7 @@ class LoggedInRequestsTestCase(BaseTestCase):
 
         super().setUp()
 
-        settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = []
+        settings.AUTOMATED_LOGGING["request"]["exclude"]["applications"] = []
         conf.load.cache_clear()
 
         self.client.login(**USER_CREDENTIALS)
@@ -59,23 +60,23 @@ class LoggedInRequestsTestCase(BaseTestCase):
     def test_simple(self):
         self.bypass_request_restrictions()
 
-        self.request('GET', self.view)
+        self.request("GET", self.view)
 
         events = RequestEvent.objects.all()
         self.assertEqual(events.count(), 1)
 
         event = events[0]
 
-        self.assertEqual(event.ip, '127.0.0.1')
+        self.assertEqual(event.ip, "127.0.0.1")
         self.assertEqual(event.user, self.user)
         self.assertEqual(event.status, 200)
-        self.assertEqual(event.method, 'GET')
-        self.assertEqual(event.uri, '/')
+        self.assertEqual(event.method, "GET")
+        self.assertEqual(event.uri, "/")
 
     def test_404(self):
         self.bypass_request_restrictions()
 
-        self.client.get(f'/{random_string()}')
+        self.client.get(f"/{random_string()}")
 
         events = RequestEvent.objects.all()
         self.assertEqual(events.count(), 1)
@@ -91,7 +92,7 @@ class LoggedInRequestsTestCase(BaseTestCase):
         self.bypass_request_restrictions()
 
         try:
-            self.request('GET', self.exception)
+            self.request("GET", self.exception)
         except:
             pass
 
@@ -109,10 +110,10 @@ class DataRecordingRequestsTestCase(BaseTestCase):
 
         super().setUp()
 
-        settings.AUTOMATED_LOGGING['request']['exclude']['applications'] = []
-        settings.AUTOMATED_LOGGING['request']['data']['enabled'] = [
-            'response',
-            'request',
+        settings.AUTOMATED_LOGGING["request"]["exclude"]["applications"] = []
+        settings.AUTOMATED_LOGGING["request"]["data"]["enabled"] = [
+            "response",
+            "request",
         ]
         conf.load.cache_clear()
 
@@ -122,7 +123,7 @@ class DataRecordingRequestsTestCase(BaseTestCase):
 
     @staticmethod
     def view(request):
-        return JsonResponse({'test': 'example'})
+        return JsonResponse({"test": "example"})
 
     def test_payload(self):
         # TODO: preliminary until request/response parsing is implemented
@@ -131,23 +132,23 @@ class DataRecordingRequestsTestCase(BaseTestCase):
 
         self.bypass_request_restrictions()
 
-        settings.AUTOMATED_LOGGING['request']['data']['enabled'] = [
-            'request',
-            'response',
+        settings.AUTOMATED_LOGGING["request"]["data"]["enabled"] = [
+            "request",
+            "response",
         ]
         conf.load.cache_clear()
 
-        self.request('GET', self.view, data=json.dumps({'X': 'Y'}))
+        self.request("GET", self.view, data=json.dumps({"X": "Y"}))
 
         events = RequestEvent.objects.all()
         self.assertEqual(events.count(), 1)
 
-        response = json.dumps({'test': 'example'})
-        request = json.dumps({'X': 'Y'})
+        response = json.dumps({"test": "example"})
+        request = json.dumps({"X": "Y"})
         event = events[0]
         self.assertEqual(event.response.content.decode(), response)
         self.assertEqual(event.request.content.decode(), request)
 
     def test_exclusion_by_application(self):
-        self.request('GET', self.view)
+        self.request("GET", self.view)
         self.assertEqual(RequestEvent.objects.count(), 0)

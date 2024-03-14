@@ -4,26 +4,28 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0010_auto_20180216_1430'),
+        ("automated_logging", "0010_auto_20180216_1430"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='model',
-            options={'verbose_name': 'Changelog', 'verbose_name_plural': 'Changelogs'},
+            name="model",
+            options={"verbose_name": "Changelog", "verbose_name_plural": "Changelogs"},
         ),
         migrations.AlterModelOptions(
-            name='modelchangelog',
+            name="modelchangelog",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='request',
-            options={'verbose_name': 'Request', 'verbose_name_plural': 'Requests'},
+            name="request",
+            options={"verbose_name": "Request", "verbose_name_plural": "Requests"},
         ),
         migrations.AlterModelOptions(
-            name='unspecified',
-            options={'verbose_name': 'Non DJL Message', 'verbose_name_plural': 'Non DJL Messages'},
+            name="unspecified",
+            options={
+                "verbose_name": "Non DJL Message",
+                "verbose_name_plural": "Non DJL Messages",
+            },
         ),
     ]

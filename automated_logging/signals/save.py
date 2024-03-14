@@ -32,13 +32,13 @@ from automated_logging.helpers import (
 )
 from automated_logging.helpers.enums import PastOperationMap
 
-ChangeSet = namedtuple('ChangeSet', ('deleted', 'added', 'changed'))
+ChangeSet = namedtuple("ChangeSet", ("deleted", "added", "changed"))
 logger = logging.getLogger(__name__)
 
 
 def normalize_save_value(value: Any):
-    """ normalize the values given to the function to make stuff more readable """
-    if value is None or value == '':
+    """normalize the values given to the function to make stuff more readable"""
+    if value is None or value == "":
         return None
     if isinstance(value, str):
         return value
@@ -79,10 +79,10 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     old, new = pre.__dict__, instance.__dict__
 
     previously = set(
-        k for k in old.keys() if not k.startswith('_') and old[k] is not None
+        k for k in old.keys() if not k.startswith("_") and old[k] is not None
     )
     currently = set(
-        k for k in new.keys() if not k.startswith('_') and new[k] is not None
+        k for k in new.keys() if not k.startswith("_") and new[k] is not None
     )
 
     added = currently.difference(previously)
@@ -101,28 +101,28 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     summary = [
         *(
             {
-                'operation': Operation.CREATE,
-                'previous': None,
-                'current': new[k],
-                'key': k,
+                "operation": Operation.CREATE,
+                "previous": None,
+                "current": new[k],
+                "key": k,
             }
             for k in added
         ),
         *(
             {
-                'operation': Operation.DELETE,
-                'previous': old[k],
-                'current': None,
-                'key': k,
+                "operation": Operation.DELETE,
+                "previous": old[k],
+                "current": None,
+                "key": k,
             }
             for k in deleted
         ),
         *(
             {
-                'operation': Operation.MODIFY,
-                'previous': old[k],
-                'current': new[k],
-                'key': k,
+                "operation": Operation.MODIFY,
+                "previous": old[k],
+                "current": new[k],
+                "key": k,
             }
             for k in changed
         ),
@@ -130,16 +130,16 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
 
     # exclude fields not present in _meta.get_fields
     fields = {f.name: f for f in instance._meta.get_fields()}
-    extra = {f.attname: f for f in instance._meta.get_fields() if hasattr(f, 'attname')}
+    extra = {f.attname: f for f in instance._meta.get_fields() if hasattr(f, "attname")}
     fields = {**extra, **fields}
 
-    summary = [s for s in summary if s['key'] in fields.keys()]
+    summary = [s for s in summary if s["key"] in fields.keys()]
 
     # field exclusion
     summary = [
         s
         for s in summary
-        if not field_exclusion(s['key'], instance, instance.__class__)
+        if not field_exclusion(s["key"], instance, instance.__class__)
     ]
 
     model = ModelMirror()
@@ -149,17 +149,17 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
     modifications = []
     for entry in summary:
         field = ModelField()
-        field.name = entry['key']
+        field.name = entry["key"]
         field.mirror = model
 
-        field.type = fields[entry['key']].__class__.__name__
+        field.type = fields[entry["key"]].__class__.__name__
 
         modification = ModelValueModification()
-        modification.operation = entry['operation']
+        modification.operation = entry["operation"]
         modification.field = field
 
-        modification.previous = normalize_save_value(entry['previous'])
-        modification.current = normalize_save_value(entry['current'])
+        modification.previous = normalize_save_value(entry["previous"])
+        modification.current = normalize_save_value(entry["current"])
 
         modifications.append(modification)
 
@@ -169,7 +169,7 @@ def pre_save_signal(sender, instance, **kwargs) -> None:
         instance._meta.dal.performance = datetime.now()
 
 
-def post_processor(status, sender, instance, updated=None, suffix='') -> None:
+def post_processor(status, sender, instance, updated=None, suffix="") -> None:
     """
     Due to the fact that both post_delete and post_save have
     the same logic for propagating changes, we have this helper class
@@ -190,7 +190,7 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     get_or_create_meta(instance)
 
     event, _ = get_or_create_model_event(instance, status, force=True, extra=True)
-    modifications = getattr(instance._meta.dal, 'modifications', [])
+    modifications = getattr(instance._meta.dal, "modifications", [])
 
     # clear the modifications meta list
     instance._meta.dal.modifications = []
@@ -202,13 +202,13 @@ def post_processor(status, sender, instance, updated=None, suffix='') -> None:
     logger.log(
         settings.model.loglevel,
         f'{event.user or "Anonymous"} {past[status]} '
-        f'{event.entry.mirror.application}.{sender.__name__} | '
-        f'Instance: {instance!r}{suffix}',
+        f"{event.entry.mirror.application}.{sender.__name__} | "
+        f"Instance: {instance!r}{suffix}",
         extra={
-            'action': 'model',
-            'data': {'status': status, 'instance': instance},
-            'event': event,
-            'modifications': modifications,
+            "action": "model",
+            "data": {"status": status, "instance": instance},
+            "event": event,
+            "modifications": modifications,
         },
     )
 
@@ -239,18 +239,18 @@ def post_save_signal(
         return
     get_or_create_meta(instance)
 
-    suffix = f''
+    suffix = f""
     if (
         status == Operation.MODIFY
-        and hasattr(instance._meta.dal, 'modifications')
+        and hasattr(instance._meta.dal, "modifications")
         and settings.model.detailed_message
     ):
         suffix = (
-            f' | Modifications: '
+            f" | Modifications: "
             f'{", ".join([m.short() for m in instance._meta.dal.modifications])}'
         )
 
-    if update_fields is not None and hasattr(instance._meta.dal, 'modifications'):
+    if update_fields is not None and hasattr(instance._meta.dal, "modifications"):
         instance._meta.dal.modifications = [
             m for m in instance._meta.dal.modifications if m.field.name in update_fields
         ]

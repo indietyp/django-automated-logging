@@ -23,7 +23,7 @@ from automated_logging.helpers.schemas import Search
 # suboptimal meta is also cached -> look into how to solve
 @lru_cache()
 def cached_model_exclusion(sender, meta, operation) -> bool:
-    """ cached so that we don't need to abuse ._meta and can invalidate the cache """
+    """cached so that we don't need to abuse ._meta and can invalidate the cache"""
     return model_exclusion(sender, meta, operation)
 
 
@@ -51,11 +51,11 @@ def candidate_in_scope(candidate: str, scope: List[Search]) -> bool:
 
     for search in scope:
         match = False
-        if search.type == 'glob':
+        if search.type == "glob":
             match = fnmatch(candidate.lower(), search.value.lower())
-        if search.type == 'plain':
+        if search.type == "plain":
             match = candidate.lower() == search.value.lower()
-        if search.type == 'regex':
+        if search.type == "regex":
             match = bool(re.match(search.value, candidate, re.IGNORECASE))
 
         if match:
@@ -76,8 +76,8 @@ def request_exclusion(event: RequestEvent, view: Optional[Callable] = None) -> b
 
     if view:
         thread, _ = get_or_create_thread()
-        ignore = thread.dal['ignore.views']
-        include = thread.dal['include.views']
+        ignore = thread.dal["ignore.views"]
+        include = thread.dal["include.views"]
         path = function2path(view)
 
         # if include None or method in include return False and don't
@@ -150,18 +150,18 @@ def model_exclusion(sender, meta, operation: Operation) -> bool:
     :param operation:
     :return: should be excluded?
     """
-    decorators = _function_model_exclusion(sender, 'operations', operation)
+    decorators = _function_model_exclusion(sender, "operations", operation)
     if decorators is not None:
         return decorators
 
-    if hasattr(sender, 'LoggingIgnore') and (
-        getattr(sender.LoggingIgnore, 'complete', False)
+    if hasattr(sender, "LoggingIgnore") and (
+        getattr(sender.LoggingIgnore, "complete", False)
         or {
-            Operation.CREATE: 'create',
-            Operation.MODIFY: 'modify',
-            Operation.DELETE: 'delete',
+            Operation.CREATE: "create",
+            Operation.MODIFY: "modify",
+            Operation.DELETE: "delete",
         }[operation]
-        in [o.lower() for o in getattr(sender.LoggingIgnore, 'operations', [])]
+        in [o.lower() for o in getattr(sender.LoggingIgnore, "operations", [])]
     ):
         return True
 
@@ -172,8 +172,8 @@ def model_exclusion(sender, meta, operation: Operation) -> bool:
 
     if (
         candidate_in_scope(name, exclusions.models)
-        or candidate_in_scope(f'{module}.{name}', exclusions.models)
-        or candidate_in_scope(f'{application}.{name}', exclusions.models)
+        or candidate_in_scope(f"{module}.{name}", exclusions.models)
+        or candidate_in_scope(f"{application}.{name}", exclusions.models)
     ):
         return True
 
@@ -196,13 +196,13 @@ def field_exclusion(field: str, instance, sender=None) -> bool:
     Determine if the field of an instance should be excluded.
     """
 
-    decorators = _function_model_exclusion(sender, 'fields', field)
+    decorators = _function_model_exclusion(sender, "fields", field)
     if decorators is not None:
         return decorators
 
-    if hasattr(instance.__class__, 'LoggingIgnore') and (
-        getattr(instance.__class__.LoggingIgnore, 'complete', False)
-        or field in getattr(instance.__class__.LoggingIgnore, 'fields', [])
+    if hasattr(instance.__class__, "LoggingIgnore") and (
+        getattr(instance.__class__.LoggingIgnore, "complete", False)
+        or field in getattr(instance.__class__.LoggingIgnore, "fields", [])
     ):
         return True
 
@@ -212,8 +212,8 @@ def field_exclusion(field: str, instance, sender=None) -> bool:
 
     if (
         candidate_in_scope(field, exclusions.fields)
-        or candidate_in_scope(f'{model}.{field}', exclusions.fields)
-        or candidate_in_scope(f'{application}.{model}.{field}', exclusions.fields)
+        or candidate_in_scope(f"{model}.{field}", exclusions.fields)
+        or candidate_in_scope(f"{application}.{model}.{field}", exclusions.fields)
     ):
         return True
 
@@ -240,13 +240,13 @@ def unspecified_exclusion(event: UnspecifiedEvent) -> bool:
     if [
         v
         for v in exclusions.files
-        if v.type != 'regex'
+        if v.type != "regex"
         and (
             path.match(v.value)
-            or path.match(f'/*{v.value}')
-            or fnmatch(path, f'{v.value}/*')
-            or fnmatch(path, f'/*{v.value}')
-            or fnmatch(path, f'/*{v.value}/*')
+            or path.match(f"/*{v.value}")
+            or fnmatch(path, f"{v.value}/*")
+            or fnmatch(path, f"/*{v.value}")
+            or fnmatch(path, f"/*{v.value}/*")
         )
     ]:
         return True

@@ -30,7 +30,7 @@ class RequestExcludeSchema(BaseSchema):
     unknown = Boolean(missing=False)
     applications = Set(SearchString(), missing=set())
 
-    methods = Set(LowerCaseString(), missing={'GET'})
+    methods = Set(LowerCaseString(), missing={"GET"})
     status = Set(Integer(validate=Range(min=0)), missing={200})
 
 
@@ -42,18 +42,18 @@ class RequestDataSchema(BaseSchema):
     """
 
     enabled = Set(
-        LowerCaseString(validate=OneOf(['request', 'response'])),
+        LowerCaseString(validate=OneOf(["request", "response"])),
         missing=set(),
     )
     query = Boolean(missing=False)
 
     ignore = Set(LowerCaseString(), missing=set())
-    mask = Set(LowerCaseString(), missing={'password'})
+    mask = Set(LowerCaseString(), missing={"password"})
 
     # TODO: add more, change name?
     content_types = Set(
-        LowerCaseString(validate=OneOf(['application/json'])),
-        missing={'application/json'},
+        LowerCaseString(validate=OneOf(["application/json"])),
+        missing={"application/json"},
     )
 
 
@@ -148,11 +148,11 @@ class GlobalsExcludeSchema(BaseSchema):
     applications = Set(
         SearchString(),
         missing={
-            Search('glob', 'session*'),
-            Search('plain', 'admin'),
-            Search('plain', 'basehttp'),
-            Search('plain', 'migrations'),
-            Search('plain', 'contenttypes'),
+            Search("glob", "session*"),
+            Search("plain", "admin"),
+            Search("plain", "basehttp"),
+            Search("plain", "migrations"),
+            Search("plain", "contenttypes"),
         },
     )
 
@@ -172,8 +172,8 @@ class ConfigSchema(BaseSchema):
     """
 
     modules = Set(
-        LowerCaseString(validate=OneOf(['request', 'model', 'unspecified'])),
-        missing={'request', 'model', 'unspecified'},
+        LowerCaseString(validate=OneOf(["request", "model", "unspecified"])),
+        missing={"request", "model", "unspecified"},
     )
 
     request = MissingNested(RequestSchema)
@@ -208,12 +208,12 @@ class Settings:
 
         loaded: namedtuple = default
 
-        if hasattr(st, 'AUTOMATED_LOGGING'):
+        if hasattr(st, "AUTOMATED_LOGGING"):
             loaded = ConfigSchema().load(st.AUTOMATED_LOGGING)
 
         # be sure `loaded` has globals as we're working with those,
         # if that is not the case early return.
-        if not hasattr(loaded, 'globals'):
+        if not hasattr(loaded, "globals"):
             return loaded
 
         # use the binary **or** operator to apply globals to Set() attributes
@@ -222,7 +222,7 @@ class Settings:
             field = getattr(loaded, name)
             values[name] = field
 
-            if not isinstance(field, tuple) or name == 'globals':
+            if not isinstance(field, tuple) or name == "globals":
                 continue
 
             values[name] = field | loaded.globals
@@ -247,10 +247,10 @@ def load_dev():
     """
     from django.conf import settings as st
 
-    return getattr(st, 'AUTOMATED_LOGGING_DEV', False)
+    return getattr(st, "AUTOMATED_LOGGING_DEV", False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from automated_logging.helpers import namedtuple2dict
 
     pprint(namedtuple2dict(default))

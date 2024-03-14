@@ -8,19 +8,19 @@ from automated_logging.tests.base import BaseTestCase
 
 class MiscellaneousTestCase(BaseTestCase):
     def test_no_sender(self):
-        self.assertIsNone(_function_model_exclusion(None, '', ''))
+        self.assertIsNone(_function_model_exclusion(None, "", ""))
 
     def test_wrong_duration(self):
         from django.conf import settings
         from automated_logging.settings import settings as conf
 
-        settings.AUTOMATED_LOGGING['unspecified']['max_age'] = complex(1, 1)
+        settings.AUTOMATED_LOGGING["unspecified"]["max_age"] = complex(1, 1)
         conf.load.cache_clear()
         self.clear()
 
         self.assertRaises(ValidationError, conf.load)
 
-        settings.AUTOMATED_LOGGING['unspecified']['max_age'] = (
+        settings.AUTOMATED_LOGGING["unspecified"]["max_age"] = (
             timedelta.max.total_seconds() + 1
         )
         conf.load.cache_clear()
@@ -28,7 +28,7 @@ class MiscellaneousTestCase(BaseTestCase):
 
         self.assertRaises(ValidationError, conf.load)
 
-        settings.AUTOMATED_LOGGING['unspecified']['max_age'] = 'Haha, error go brrr'
+        settings.AUTOMATED_LOGGING["unspecified"]["max_age"] = "Haha, error go brrr"
         conf.load.cache_clear()
         self.clear()
 
@@ -38,8 +38,8 @@ class MiscellaneousTestCase(BaseTestCase):
         from django.conf import settings
         from automated_logging.settings import settings as conf
 
-        settings.AUTOMATED_LOGGING['unspecified']['exclude']['applications'] = [
-            'te:abc'
+        settings.AUTOMATED_LOGGING["unspecified"]["exclude"]["applications"] = [
+            "te:abc"
         ]
         conf.load.cache_clear()
         self.clear()
@@ -54,7 +54,7 @@ class MiscellaneousTestCase(BaseTestCase):
         from django.conf import settings
         from automated_logging.settings import settings as conf
 
-        settings.AUTOMATED_LOGGING['unspecified']['max_age'] = None
+        settings.AUTOMATED_LOGGING["unspecified"]["max_age"] = None
         conf.load.cache_clear()
         self.clear()
 

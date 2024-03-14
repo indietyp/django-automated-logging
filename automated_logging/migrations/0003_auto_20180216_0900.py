@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0002_auto_20180215_1540'),
+        ("automated_logging", "0002_auto_20180215_1540"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='modelobject',
-            name='value',
+            model_name="modelobject",
+            name="value",
             field=models.CharField(max_length=255, null=True),
         ),
     ]

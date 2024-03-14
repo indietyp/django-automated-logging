@@ -1,6 +1,7 @@
 """
 Model definitions for django-automated-logging.
 """
+
 import uuid
 
 from django.conf import settings
@@ -122,20 +123,20 @@ class ModelEntry(BaseModel):
         complete = True
 
     def __str__(self) -> str:
-        return f'{self.mirror.name}' f'(pk="{self.primary_key}", value="{self.value}")'
+        return f"{self.mirror.name}" f'(pk="{self.primary_key}", value="{self.value}")'
 
     def long(self) -> str:
         """
         long representation
         """
 
-        return f'{self.mirror.application.name}.{self})'
+        return f"{self.mirror.application.name}.{self})"
 
     def short(self) -> str:
         """
         short representation
         """
-        return f'{self.mirror.name}({self.primary_key})'
+        return f"{self.mirror.name}({self.primary_key})"
 
 
 class ModelEvent(BaseModel):
@@ -191,7 +192,7 @@ class ModelValueModification(BaseModel):
     previous = TextField(null=True)
     current = TextField(null=True)
 
-    event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name='modifications')
+    event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name="modifications")
 
     class Meta:
         verbose_name = "Model Entry Event Value Modification"
@@ -202,10 +203,10 @@ class ModelValueModification(BaseModel):
 
     def __str__(self) -> str:
         return (
-            f'[{self.field.mirror.application.name}:'
-            f'{self.field.mirror.name}:'
-            f'{self.field.name}] '
-            f'{self.previous} -> {self.current}'
+            f"[{self.field.mirror.application.name}:"
+            f"{self.field.mirror.name}:"
+            f"{self.field.name}] "
+            f"{self.previous} -> {self.current}"
         )
 
     def short(self) -> str:
@@ -215,7 +216,7 @@ class ModelValueModification(BaseModel):
         operation = Operation(self.operation)
         shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
 
-        return f'{shorthand}{self.field.name}'
+        return f"{shorthand}{self.field.name}"
 
 
 class ModelRelationshipModification(BaseModel):
@@ -239,7 +240,7 @@ class ModelRelationshipModification(BaseModel):
     field = ForeignKey(ModelField, on_delete=CASCADE)
     entry = ForeignKey(ModelEntry, on_delete=CASCADE)
 
-    event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name='relationships')
+    event = ForeignKey(ModelEvent, on_delete=CASCADE, related_name="relationships")
 
     class Meta:
         verbose_name = "Model Entry Event Relationship Modification"
@@ -253,10 +254,10 @@ class ModelRelationshipModification(BaseModel):
         past = {v: k for k, v in PastM2MOperationMap.items()}[operation]
 
         return (
-            f'[{self.field.mirror.application}:'
-            f'{self.field.mirror.name}:'
-            f'{self.field.name}] '
-            f'{past} {self.entry}'
+            f"[{self.field.mirror.application}:"
+            f"{self.field.mirror.name}:"
+            f"{self.field.name}] "
+            f"{past} {self.entry}"
         )
 
     def short(self) -> str:
@@ -265,7 +266,7 @@ class ModelRelationshipModification(BaseModel):
         """
         operation = Operation(self.operation)
         shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
-        return f'{shorthand}{self.entry.short()}'
+        return f"{shorthand}{self.entry.short()}"
 
     def medium(self) -> [str, str]:
         """
@@ -275,7 +276,7 @@ class ModelRelationshipModification(BaseModel):
         operation = Operation(self.operation)
         shorthand = {v: k for k, v in ShortOperationMap.items()}[operation]
 
-        return f'{shorthand}{self.field.name}', f'{self.entry.short()}'
+        return f"{shorthand}{self.field.name}", f"{self.entry.short()}"
 
 
 class RequestContext(BaseModel):
@@ -306,10 +307,10 @@ class RequestEvent(BaseModel):
     uri = TextField()
 
     request = ForeignKey(
-        RequestContext, on_delete=CASCADE, null=True, related_name='request_context'
+        RequestContext, on_delete=CASCADE, null=True, related_name="request_context"
     )
     response = ForeignKey(
-        RequestContext, on_delete=CASCADE, null=True, related_name='response_context'
+        RequestContext, on_delete=CASCADE, null=True, related_name="response_context"
     )
 
     status = PositiveSmallIntegerField()

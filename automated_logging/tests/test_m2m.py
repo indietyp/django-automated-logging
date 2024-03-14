@@ -1,6 +1,5 @@
 """ Test all Many-To-Many related things """
 
-
 import random
 
 from automated_logging.helpers import Operation
@@ -25,14 +24,14 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
 
     @staticmethod
     def generate_children(samples=10):
-        """ generate X children that are going to be used in various tests """
+        """generate X children that are going to be used in various tests"""
         children = [OrdinaryTest(random=random_string()) for _ in range(samples)]
         [c.save() for c in children]
 
         return children
 
     def test_add(self):
-        """ check if adding X members works correctly """
+        """check if adding X members works correctly"""
 
         samples = 10
         children = self.generate_children(samples)
@@ -55,11 +54,11 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
 
         for relationship in event.relationships.all():
             self.assertEqual(relationship.operation, int(Operation.CREATE))
-            self.assertEqual(relationship.field.name, 'relationship')
+            self.assertEqual(relationship.field.name, "relationship")
             self.assertIn(relationship.entry.primary_key, children)
 
     def test_delete(self):
-        """ check if deleting X elements works correctly """
+        """check if deleting X elements works correctly"""
 
         samples = 10
         removed = 5
@@ -85,11 +84,11 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
         children = {str(c.id): c for c in children}
         for relationship in event.relationships.all():
             self.assertEqual(relationship.operation, int(Operation.DELETE))
-            self.assertEqual(relationship.field.name, 'relationship')
+            self.assertEqual(relationship.field.name, "relationship")
             self.assertIn(relationship.entry.primary_key, children)
 
     def test_clear(self):
-        """ test if clearing all elements works correctly """
+        """test if clearing all elements works correctly"""
 
         samples = 10
         children = self.generate_children(samples)
@@ -113,7 +112,7 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
         children = {str(c.id): c for c in children}
         for relationship in event.relationships.all():
             self.assertEqual(relationship.operation, int(Operation.DELETE))
-            self.assertEqual(relationship.field.name, 'relationship')
+            self.assertEqual(relationship.field.name, "relationship")
             self.assertIn(relationship.entry.primary_key, children)
 
     def test_one2one(self):
@@ -141,7 +140,7 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
         self.assertEqual(event.relationships.count(), 0)
 
         modification = event.modifications.all()[0]
-        self.assertEqual(modification.field.name, 'relationship_id')
+        self.assertEqual(modification.field.name, "relationship_id")
         self.assertEqual(modification.current, repr(subject.pk))
 
     def test_foreign(self):
@@ -171,7 +170,7 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
         self.assertEqual(event.relationships.count(), 0)
 
         modification = event.modifications.all()[0]
-        self.assertEqual(modification.field.name, 'relationship_id')
+        self.assertEqual(modification.field.name, "relationship_id")
         self.assertEqual(modification.current, repr(subject.pk))
 
     # def test_no_change(self):
@@ -220,11 +219,11 @@ class LoggedOutM2MRelationshipsTestCase(BaseTestCase):
 
         self.assertEqual(event.modifications.count(), 0)
         self.assertEqual(event.relationships.count(), 1)
-        self.assertEqual(event.entry.mirror.name, 'M2MTest')
+        self.assertEqual(event.entry.mirror.name, "M2MTest")
 
         relationship = event.relationships.all()[0]
         self.assertEqual(relationship.operation, int(Operation.CREATE))
-        self.assertEqual(relationship.field.name, 'relationship')
+        self.assertEqual(relationship.field.name, "relationship")
         self.assertEqual(relationship.entry.primary_key, str(subject.id))
 
 

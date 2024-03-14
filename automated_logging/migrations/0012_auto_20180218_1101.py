@@ -4,21 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0011_auto_20180216_1545'),
+        ("automated_logging", "0011_auto_20180216_1545"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='request',
-            name='method',
-            field=models.CharField(default='GET', max_length=64),
+            model_name="request",
+            name="method",
+            field=models.CharField(default="GET", max_length=64),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='request',
-            name='url',
+            model_name="request",
+            name="url",
             field=models.CharField(max_length=255),
         ),
     ]

@@ -5,57 +5,75 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0014_auto_20180219_0859'),
+        ("automated_logging", "0014_auto_20180219_0859"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='LDAP',
+            name="LDAP",
         ),
         migrations.AlterModelOptions(
-            name='unspecified',
-            options={'verbose_name': 'Non DAL Message', 'verbose_name_plural': 'Non DAL Messages'},
+            name="unspecified",
+            options={
+                "verbose_name": "Non DAL Message",
+                "verbose_name_plural": "Non DAL Messages",
+            },
         ),
         migrations.AlterField(
-            model_name='application',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="application",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
         migrations.AlterField(
-            model_name='field',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="field",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
         migrations.AlterField(
-            model_name='model',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="model",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
         migrations.AlterField(
-            model_name='modelchangelog',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="modelchangelog",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
         migrations.AlterField(
-            model_name='modelmodification',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="modelmodification",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
         migrations.AlterField(
-            model_name='modelobject',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="modelobject",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
         migrations.AlterField(
-            model_name='request',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="request",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
         migrations.AlterField(
-            model_name='unspecified',
-            name='id',
-            field=models.UUIDField(db_index=True, default=uuid.uuid4, primary_key=True, serialize=False),
+            model_name="unspecified",
+            name="id",
+            field=models.UUIDField(
+                db_index=True, default=uuid.uuid4, primary_key=True, serialize=False
+            ),
         ),
     ]

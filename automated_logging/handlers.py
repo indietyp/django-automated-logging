@@ -73,7 +73,7 @@ class DatabaseHandler(Handler):
             return instance
 
         def database(instances, config):
-            """ wrapper so that we can actually use threading """
+            """wrapper so that we can actually use threading"""
             with transaction.atomic():
                 [i.save() for k, i in instances.items()]
 
@@ -167,8 +167,8 @@ class DatabaseHandler(Handler):
             and getattr(instance, f.name, None) is not None
             # check the attribute module really being automated_logging
             # to make sure that we do not follow down a rabbit hole
-            and getattr(instance, f.name).__class__.__module__.split('.', 1)[0]
-            == 'automated_logging'
+            and getattr(instance, f.name).__class__.__module__.split(".", 1)[0]
+            == "automated_logging"
         ]:
             setattr(
                 instance, field.name, self.prepare_save(getattr(instance, field.name))
@@ -191,7 +191,7 @@ class DatabaseHandler(Handler):
         from django.apps import apps
 
         event = UnspecifiedEvent()
-        if hasattr(record, 'message'):
+        if hasattr(record, "message"):
             event.message = record.message
         event.level = record.levelno
         event.line = record.lineno
@@ -219,8 +219,8 @@ class DatabaseHandler(Handler):
     def model(
         self,
         record: LogRecord,
-        event: 'ModelEvent',
-        modifications: List['ModelValueModification'],
+        event: "ModelEvent",
+        modifications: List["ModelValueModification"],
         data: Dict[str, Any],
     ) -> None:
         """
@@ -245,8 +245,8 @@ class DatabaseHandler(Handler):
     def m2m(
         self,
         record: LogRecord,
-        event: 'ModelEvent',
-        relationships: List['ModelRelationshipModification'],
+        event: "ModelEvent",
+        relationships: List["ModelRelationshipModification"],
         data: Dict[str, Any],
     ) -> None:
         self.prepare_save(event)
@@ -257,7 +257,7 @@ class DatabaseHandler(Handler):
             self.prepare_save(relationship)
             self.save(relationship)
 
-    def request(self, record: LogRecord, event: 'RequestEvent') -> None:
+    def request(self, record: LogRecord, event: "RequestEvent") -> None:
         """
         The request event already has a model prepared that we just
         need to prepare and save.
@@ -278,12 +278,12 @@ class DatabaseHandler(Handler):
         :param record:
         :return:
         """
-        if not hasattr(record, 'action'):
+        if not hasattr(record, "action"):
             return self.unspecified(record)
 
-        if record.action == 'model':
+        if record.action == "model":
             return self.model(record, record.event, record.modifications, record.data)
-        elif record.action == 'model[m2m]':
+        elif record.action == "model[m2m]":
             return self.m2m(record, record.event, record.relationships, record.data)
-        elif record.action == 'request':
+        elif record.action == "request":
             return self.request(record, record.event)

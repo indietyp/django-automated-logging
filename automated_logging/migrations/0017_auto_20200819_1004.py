@@ -4,14 +4,16 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0016_auto_20200803_1917'),
+        ("automated_logging", "0016_auto_20200803_1917"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='application',
-            options={'verbose_name': 'Application', 'verbose_name_plural': 'Applications'},
+            name="application",
+            options={
+                "verbose_name": "Application",
+                "verbose_name_plural": "Applications",
+            },
         ),
     ]

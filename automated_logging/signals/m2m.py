@@ -7,7 +7,6 @@ This finds the changes and redirects them to the handler,
 without doing any changes to the database.
 """
 
-
 import logging
 from typing import Optional
 
@@ -60,7 +59,7 @@ def post_processor(sender, instance, model, operation, targets):
 
     m2m_rel = find_m2m_rel(sender, model)
     if not m2m_rel:
-        logger.warning(f'[DAL] save[m2m] could not find ManyToManyField for {instance}')
+        logger.warning(f"[DAL] save[m2m] could not find ManyToManyField for {instance}")
         return
 
     field = ModelField()
@@ -75,7 +74,7 @@ def post_processor(sender, instance, model, operation, targets):
     # field
     get_or_create_meta(instance)
     if (
-        hasattr(instance._meta.dal, 'm2m_pre_clear')
+        hasattr(instance._meta.dal, "m2m_pre_clear")
         and field.name in instance._meta.dal.m2m_pre_clear
         and operation == Operation.DELETE
     ):
@@ -105,14 +104,14 @@ def post_processor(sender, instance, model, operation, targets):
     logger.log(
         settings.model.loglevel,
         f'{user or "Anonymous"} modified field '
-        f'{field.name} | Model: '
-        f'{field.mirror.application}.{field.mirror} '
+        f"{field.name} | Model: "
+        f"{field.mirror.application}.{field.mirror} "
         f'| Modifications: {", ".join([r.short() for r in relationships])}',
         extra={
-            'action': 'model[m2m]',
-            'data': {'instance': instance, 'sender': sender},
-            'relationships': relationships,
-            'event': event,
+            "action": "model[m2m]",
+            "data": {"instance": instance, "sender": sender},
+            "relationships": relationships,
+            "event": event,
         },
     )
 
@@ -135,7 +134,7 @@ def pre_clear_processor(sender, instance, pks, model, reverse, operation) -> Non
     get_or_create_meta(instance)
 
     rel = find_m2m_rel(sender, instance.__class__)
-    if 'm2m_pre_clear' not in instance._meta.dal:
+    if "m2m_pre_clear" not in instance._meta.dal:
         instance._meta.dal.m2m_pre_clear = {}
 
     cleared = getattr(instance, rel.name, [])
@@ -161,10 +160,10 @@ def m2m_changed_signal(
     # TODO: post_remove also gets triggered when there is nothing actually getting removed
     :return: None
     """
-    if action not in ['post_add', 'post_remove', 'pre_clear', 'post_clear']:
+    if action not in ["post_add", "post_remove", "pre_clear", "post_clear"]:
         return
 
-    if action == 'pre_clear':
+    if action == "pre_clear":
         operation = Operation.DELETE
 
         return pre_clear_processor(
@@ -175,9 +174,9 @@ def m2m_changed_signal(
             reverse,
             operation,
         )
-    elif action == 'post_add':
+    elif action == "post_add":
         operation = Operation.CREATE
-    elif action == 'post_clear':
+    elif action == "post_clear":
         operation = Operation.DELETE
     else:
         operation = Operation.DELETE

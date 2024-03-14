@@ -20,30 +20,30 @@ class Operation(int, Enum):
 
 DjangoOperations = [(e.value, o.lower()) for o, e in Operation.__members__.items()]
 VerbOperationMap = {
-    'create': Operation.CREATE,
-    'modify': Operation.MODIFY,
-    'delete': Operation.DELETE,
-    'add': Operation.CREATE,
-    'remove': Operation.DELETE,
+    "create": Operation.CREATE,
+    "modify": Operation.MODIFY,
+    "delete": Operation.DELETE,
+    "add": Operation.CREATE,
+    "remove": Operation.DELETE,
 }
 VerbM2MOperationMap = {
-    'add': Operation.CREATE,
-    'modify': Operation.MODIFY,
-    'remove': Operation.DELETE,
+    "add": Operation.CREATE,
+    "modify": Operation.MODIFY,
+    "remove": Operation.DELETE,
 }
 PastOperationMap = {
-    'created': Operation.CREATE,
-    'modified': Operation.MODIFY,
-    'deleted': Operation.DELETE,
+    "created": Operation.CREATE,
+    "modified": Operation.MODIFY,
+    "deleted": Operation.DELETE,
 }
 PastM2MOperationMap = {
-    'added': Operation.CREATE,
-    'modified': Operation.MODIFY,
-    'removed': Operation.DELETE,
+    "added": Operation.CREATE,
+    "modified": Operation.MODIFY,
+    "removed": Operation.DELETE,
 }
 ShortOperationMap = {
-    '+': Operation.CREATE,
-    '~': Operation.MODIFY,
-    '-': Operation.DELETE,
+    "+": Operation.CREATE,
+    "~": Operation.MODIFY,
+    "-": Operation.DELETE,
 }
 TranslationOperationMap = {**VerbOperationMap, **PastOperationMap, **ShortOperationMap}

@@ -40,18 +40,18 @@ def exclude_view(func=None, *, methods: Optional[List[str]] = ()):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        """ simple wrapper """
+        """simple wrapper"""
         thread, _ = get_or_create_thread()
 
         path = function2path(func)
         if (
-            path in thread.dal['ignore.views']
-            and thread.dal['ignore.views'][path] is not None
+            path in thread.dal["ignore.views"]
+            and thread.dal["ignore.views"][path] is not None
             and methods is not None
         ):
-            methods.update(thread.dal['ignore.views'][path])
+            methods.update(thread.dal["ignore.views"][path])
 
-        thread.dal['ignore.views'][path] = methods
+        thread.dal["ignore.views"][path] = methods
 
         return func(*args, **kwargs)
 
@@ -78,18 +78,18 @@ def include_view(func=None, *, methods: List[str] = None):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        """ simple wrapper """
+        """simple wrapper"""
         thread, _ = get_or_create_thread()
 
         path = function2path(func)
         if (
-            path in thread.dal['include.views']
-            and thread.dal['include.views'][path] is not None
+            path in thread.dal["include.views"]
+            and thread.dal["include.views"][path] is not None
             and methods is not None
         ):
-            methods.update(thread.dal['include.views'][path])
+            methods.update(thread.dal["include.views"][path])
 
-        thread.dal['include.views'][path] = methods
+        thread.dal["include.views"][path] = methods
         return func(*args, **kwargs)
 
     return wrapper
@@ -117,13 +117,13 @@ _include_models = {}
 _exclude_models = {}
 
 IgnoreModel = NamedTuple(
-    "IgnoreModel", (('operations', Set[Operation]), ('fields', Set[str]))
+    "IgnoreModel", (("operations", Set[Operation]), ("fields", Set[str]))
 )
 
 
 def _register_model(
-    registry: Dict[str, Union['IgnoreModel', 'IncludeModel']],
-    container: Type[Union['IgnoreModel', 'IncludeModel']],
+    registry: Dict[str, Union["IgnoreModel", "IncludeModel"]],
+    container: Type[Union["IgnoreModel", "IncludeModel"]],
     decorator: Callable,
     model=None,
     operations: List[str] = None,
@@ -182,7 +182,7 @@ def exclude_model(
 
 
 IncludeModel = NamedTuple(
-    "IncludeModel", (('operations', Set[Operation]), ('fields', Set[str]))
+    "IncludeModel", (("operations", Set[Operation]), ("fields", Set[str]))
 )
 
 

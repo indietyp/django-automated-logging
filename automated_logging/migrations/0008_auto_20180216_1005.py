@@ -7,15 +7,20 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0007_auto_20180216_1005'),
+        ("automated_logging", "0007_auto_20180216_1005"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='model',
-            name='application',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='atl_model_application', to='automated_logging.Application'),
+            model_name="model",
+            name="application",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="atl_model_application",
+                to="automated_logging.Application",
+            ),
         ),
     ]

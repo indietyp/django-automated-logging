@@ -15,20 +15,20 @@ logger = logging.getLogger(__name__)
 
 
 def convert(apps, schema_editor):
-    """ convert from 5.x.x to 6.x.x """
+    """convert from 5.x.x to 6.x.x"""
     alias = schema_editor.connection.alias
 
     # convert all new applications
-    logger.info('Converting Applications from 5.x.x to 6.x.x')
+    logger.info("Converting Applications from 5.x.x to 6.x.x")
     # Application does not change, except new unknown Application
-    Application = apps.get_model('automated_logging', 'Application')
+    Application = apps.get_model("automated_logging", "Application")
     applications = [Application(name=None)]
     no_application = applications[0]
 
     # convert request events
-    logger.info('Converting Request Events from 5.x.x to 6.x.x')
-    RequestOld = apps.get_model('automated_logging', 'Request')
-    RequestEvent = apps.get_model('automated_logging', 'RequestEvent')
+    logger.info("Converting Request Events from 5.x.x to 6.x.x")
+    RequestOld = apps.get_model("automated_logging", "Request")
+    RequestEvent = apps.get_model("automated_logging", "RequestEvent")
     requests = [
         RequestEvent(
             id=r.id,
@@ -38,17 +38,19 @@ def convert(apps, schema_editor):
             uri=str(r.uri),
             method=r.method[:32],
             status=r.status,
-            application=Application.objects.using(alias).get(id=r.application.id)
-            if r.application
-            else no_application,
+            application=(
+                Application.objects.using(alias).get(id=r.application.id)
+                if r.application
+                else no_application
+            ),
         )
         for r in RequestOld.objects.using(alias).all()
     ]
 
     # convert unspecified events
-    logger.info('Converting Unspecified Events from 5.x.x to 6.x.x')
-    UnspecifiedOld = apps.get_model('automated_logging', 'Unspecified')
-    UnspecifiedEvent = apps.get_model('automated_logging', 'UnspecifiedEvent')
+    logger.info("Converting Unspecified Events from 5.x.x to 6.x.x")
+    UnspecifiedOld = apps.get_model("automated_logging", "Unspecified")
+    UnspecifiedEvent = apps.get_model("automated_logging", "UnspecifiedEvent")
     unspecified = [
         UnspecifiedEvent(
             id=u.id,
@@ -65,28 +67,28 @@ def convert(apps, schema_editor):
 
     # convert model events
     logger.info(
-        'Converting Models Events from 5.x.x to 6.x.x (This might take a while)'
+        "Converting Models Events from 5.x.x to 6.x.x (This might take a while)"
     )
-    ModelOld = apps.get_model('automated_logging', 'Model')
-    ModelEvent = apps.get_model('automated_logging', 'ModelEvent')
+    ModelOld = apps.get_model("automated_logging", "Model")
+    ModelEvent = apps.get_model("automated_logging", "ModelEvent")
 
-    ModelMirror = apps.get_model('automated_logging', 'ModelMirror')
-    ModelEntry = apps.get_model('automated_logging', 'ModelEntry')
-    ModelField = apps.get_model('automated_logging', 'ModelField')
+    ModelMirror = apps.get_model("automated_logging", "ModelMirror")
+    ModelEntry = apps.get_model("automated_logging", "ModelEntry")
+    ModelField = apps.get_model("automated_logging", "ModelField")
     ModelRelationshipModification = apps.get_model(
-        'automated_logging', 'ModelRelationshipModification'
+        "automated_logging", "ModelRelationshipModification"
     )
     ModelValueModification = apps.get_model(
-        'automated_logging', 'ModelValueModification'
+        "automated_logging", "ModelValueModification"
     )
 
-    mirrors = [ModelMirror(name='', application=no_application)]
+    mirrors = [ModelMirror(name="", application=no_application)]
     no_mirror = mirrors[0]
 
-    entries = [ModelEntry(value='', primary_key='', mirror=no_mirror)]
+    entries = [ModelEntry(value="", primary_key="", mirror=no_mirror)]
     no_entry = entries[0]
 
-    fields = [ModelField(name='', mirror=no_mirror, type='')]
+    fields = [ModelField(name="", mirror=no_mirror, type="")]
     no_field = fields[0]
 
     events = []
@@ -130,7 +132,7 @@ def convert(apps, schema_editor):
         """
         ent = next((e for e in entries if e.value == value), None)
         if not ent:
-            ent = ModelEntry(value=value, primary_key='', mirror=mir)
+            ent = ModelEntry(value=value, primary_key="", mirror=mir)
             entries.append(ent)
         return ent
 
@@ -157,7 +159,7 @@ def convert(apps, schema_editor):
             None,
         )
         if not fie:
-            fie = ModelField(name=target.name, mirror=mir, type='<UNKNOWN>')
+            fie = ModelField(name=target.name, mirror=mir, type="<UNKNOWN>")
             fields.append(fie)
 
         return fie
@@ -191,7 +193,7 @@ def convert(apps, schema_editor):
             entry = next((e for e in entries if e.value == old.information.value), None)
             if not entry:
                 entry = ModelEntry(
-                    value=old.information.value, primary_key='', mirror=mirror
+                    value=old.information.value, primary_key="", mirror=mirror
                 )
                 entries.append(entry)
         event.entry = entry
@@ -238,7 +240,7 @@ def convert(apps, schema_editor):
                 }
                 for currently in old.modification.modification.currently.all():
                     # skip None string values
-                    if currently.value == 'None':
+                    if currently.value == "None":
                         currently.value = None
 
                     operation = 0
@@ -248,7 +250,7 @@ def convert(apps, schema_editor):
                     else:
                         previous = previously[currently.field.id].value
                         # previous can be "None" string
-                        if previous == 'None':
+                        if previous == "None":
                             operation = 1
                             previous = None
                         if previous is not None and currently.value is None:
@@ -270,7 +272,7 @@ def convert(apps, schema_editor):
                 ):
                     removed = previously[removed]
                     # skip None string values
-                    if removed.value == 'None':
+                    if removed.value == "None":
                         continue
 
                     val = ModelValueModification(
@@ -285,19 +287,19 @@ def convert(apps, schema_editor):
         event.user = old.user
         events.append(event)
         if idx % progress == 0:
-            logger.info(f'{(idx // progress) * 10}%...')
+            logger.info(f"{(idx // progress) * 10}%...")
         idx += 1
 
-    logger.info('Bulk Saving Converted Objects (This can take a while)')
+    logger.info("Bulk Saving Converted Objects (This can take a while)")
     Application.objects.using(alias).bulk_create(applications)
     RequestEvent.objects.using(alias).bulk_create(requests)
     UnspecifiedEvent.objects.using(alias).bulk_create(unspecified)
-    logger.info('Saved Application, RequestEvent and UnspecifiedEvent')
+    logger.info("Saved Application, RequestEvent and UnspecifiedEvent")
 
     ModelMirror.objects.using(alias).bulk_create(mirrors)
     ModelEntry.objects.using(alias).bulk_create(entries)
     ModelField.objects.using(alias).bulk_create(fields)
-    logger.info('Saved ModelMirror, ModelEntry, ModelField')
+    logger.info("Saved ModelMirror, ModelEntry, ModelField")
 
     ModelEvent.objects.using(alias).bulk_create(events)
 
@@ -307,13 +309,13 @@ def convert(apps, schema_editor):
     )
 
     logger.info(
-        'Saved ModelValueModification, ModelRelationshipModification and ModelEvent'
+        "Saved ModelValueModification, ModelRelationshipModification and ModelEvent"
     )
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('automated_logging', '0015_auto_20181229_2323'),
+        ("automated_logging", "0015_auto_20181229_2323"),
     ]
 
     operations = [
@@ -341,10 +343,10 @@ class Migration(migrations.Migration):
         #     },
         # ),
         migrations.CreateModel(
-            name='ModelEntry',
+            name="ModelEntry",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -352,21 +354,21 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('value', models.TextField()),
-                ('primary_key', models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("value", models.TextField()),
+                ("primary_key", models.TextField()),
             ],
             options={
-                'verbose_name': 'Model Entry',
-                'verbose_name_plural': 'Model Entries',
+                "verbose_name": "Model Entry",
+                "verbose_name_plural": "Model Entries",
             },
         ),
         migrations.CreateModel(
-            name='ModelEvent',
+            name="ModelEvent",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -374,12 +376,12 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
                 (
-                    'operation',
+                    "operation",
                     models.SmallIntegerField(
-                        choices=[(1, 'create'), (0, 'modify'), (-1, 'delete')],
+                        choices=[(1, "create"), (0, "modify"), (-1, "delete")],
                         null=True,
                         validators=[
                             django.core.validators.MinValueValidator(-1),
@@ -388,19 +390,19 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'snapshot',
+                    "snapshot",
                     picklefield.fields.PickledObjectField(editable=False, null=True),
                 ),
-                ('performance', models.DurationField(null=True)),
+                ("performance", models.DurationField(null=True)),
                 (
-                    'entry',
+                    "entry",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='automated_logging.ModelEntry',
+                        to="automated_logging.ModelEntry",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
@@ -409,15 +411,15 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                'verbose_name': 'Model Event',
-                'verbose_name_plural': 'Model Events',
+                "verbose_name": "Model Event",
+                "verbose_name_plural": "Model Events",
             },
         ),
         migrations.CreateModel(
-            name='ModelField',
+            name="ModelField",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -425,21 +427,21 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255)),
-                ('type', models.CharField(max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255)),
+                ("type", models.CharField(max_length=255)),
             ],
             options={
-                'verbose_name': 'Model Field',
-                'verbose_name_plural': 'Model Fields',
+                "verbose_name": "Model Field",
+                "verbose_name_plural": "Model Fields",
             },
         ),
         migrations.CreateModel(
-            name='RequestContext',
+            name="RequestContext",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -447,23 +449,23 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
                 (
-                    'content',
+                    "content",
                     picklefield.fields.PickledObjectField(editable=False, null=True),
                 ),
-                ('type', models.CharField(max_length=255)),
+                ("type", models.CharField(max_length=255)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='UnspecifiedEvent',
+            name="UnspecifiedEvent",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -471,30 +473,30 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('message', models.TextField(null=True)),
-                ('level', models.PositiveIntegerField(default=20)),
-                ('line', models.PositiveIntegerField(null=True)),
-                ('file', models.TextField(null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("message", models.TextField(null=True)),
+                ("level", models.PositiveIntegerField(default=20)),
+                ("line", models.PositiveIntegerField(null=True)),
+                ("file", models.TextField(null=True)),
                 (
-                    'application',
+                    "application",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='automated_logging.Application',
+                        to="automated_logging.Application",
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Unspecified Event',
-                'verbose_name_plural': 'Unspecified Events',
+                "verbose_name": "Unspecified Event",
+                "verbose_name_plural": "Unspecified Events",
             },
         ),
         migrations.CreateModel(
-            name='RequestEvent',
+            name="RequestEvent",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -502,39 +504,39 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('uri', models.TextField()),
-                ('status', models.PositiveSmallIntegerField()),
-                ('method', models.CharField(max_length=32)),
-                ('ip', models.GenericIPAddressField(null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("uri", models.TextField()),
+                ("status", models.PositiveSmallIntegerField()),
+                ("method", models.CharField(max_length=32)),
+                ("ip", models.GenericIPAddressField(null=True)),
                 (
-                    'application',
+                    "application",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='automated_logging.Application',
+                        to="automated_logging.Application",
                     ),
                 ),
                 (
-                    'request',
-                    models.ForeignKey(
-                        null=True,
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name='request_context',
-                        to='automated_logging.RequestContext',
-                    ),
-                ),
-                (
-                    'response',
+                    "request",
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='response_context',
-                        to='automated_logging.RequestContext',
+                        related_name="request_context",
+                        to="automated_logging.RequestContext",
                     ),
                 ),
                 (
-                    'user',
+                    "response",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="response_context",
+                        to="automated_logging.RequestContext",
+                    ),
+                ),
+                (
+                    "user",
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
@@ -543,15 +545,15 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                'verbose_name': 'Request Event',
-                'verbose_name_plural': 'Request Events',
+                "verbose_name": "Request Event",
+                "verbose_name_plural": "Request Events",
             },
         ),
         migrations.CreateModel(
-            name='ModelValueModification',
+            name="ModelValueModification",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -559,12 +561,12 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
                 (
-                    'operation',
+                    "operation",
                     models.SmallIntegerField(
-                        choices=[(1, 'create'), (0, 'modify'), (-1, 'delete')],
+                        choices=[(1, "create"), (0, "modify"), (-1, "delete")],
                         null=True,
                         validators=[
                             django.core.validators.MinValueValidator(-1),
@@ -572,34 +574,34 @@ class Migration(migrations.Migration):
                         ],
                     ),
                 ),
-                ('previous', models.TextField(null=True)),
-                ('current', models.TextField(null=True)),
+                ("previous", models.TextField(null=True)),
+                ("current", models.TextField(null=True)),
                 (
-                    'event',
+                    "event",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='modifications',
-                        to='automated_logging.ModelEvent',
+                        related_name="modifications",
+                        to="automated_logging.ModelEvent",
                     ),
                 ),
                 (
-                    'field',
+                    "field",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='automated_logging.ModelField',
+                        to="automated_logging.ModelField",
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Model Entry Event Value Modification',
-                'verbose_name_plural': 'Model Entry Event Value Modifications',
+                "verbose_name": "Model Entry Event Value Modification",
+                "verbose_name_plural": "Model Entry Event Value Modifications",
             },
         ),
         migrations.CreateModel(
-            name='ModelRelationshipModification',
+            name="ModelRelationshipModification",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -607,12 +609,12 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
                 (
-                    'operation',
+                    "operation",
                     models.SmallIntegerField(
-                        choices=[(1, 'create'), (0, 'modify'), (-1, 'delete')],
+                        choices=[(1, "create"), (0, "modify"), (-1, "delete")],
                         null=True,
                         validators=[
                             django.core.validators.MinValueValidator(-1),
@@ -621,38 +623,38 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'event',
+                    "event",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='relationships',
-                        to='automated_logging.ModelEvent',
+                        related_name="relationships",
+                        to="automated_logging.ModelEvent",
                     ),
                 ),
                 (
-                    'field',
+                    "field",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='automated_logging.ModelField',
+                        to="automated_logging.ModelField",
                     ),
                 ),
                 (
-                    'entry',
+                    "entry",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='automated_logging.ModelEntry',
+                        to="automated_logging.ModelEntry",
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Model Entry Event Relationship Modification',
-                'verbose_name_plural': 'Model Entry Event Relationship Modifications',
+                "verbose_name": "Model Entry Event Relationship Modification",
+                "verbose_name_plural": "Model Entry Event Relationship Modifications",
             },
         ),
         migrations.CreateModel(
-            name='ModelMirror',
+            name="ModelMirror",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         db_index=True,
                         default=uuid.uuid4,
@@ -660,41 +662,41 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255)),
                 (
-                    'application',
+                    "application",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='automated_logging.Application',
+                        to="automated_logging.Application",
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Model Mirror',
-                'verbose_name_plural': 'Model Mirrors',
+                "verbose_name": "Model Mirror",
+                "verbose_name_plural": "Model Mirrors",
             },
         ),
         migrations.AddField(
-            model_name='modelfield',
-            name='mirror',
+            model_name="modelfield",
+            name="mirror",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                to='automated_logging.ModelMirror',
+                to="automated_logging.ModelMirror",
             ),
         ),
         migrations.AddField(
-            model_name='modelentry',
-            name='mirror',
+            model_name="modelentry",
+            name="mirror",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                to='automated_logging.ModelMirror',
+                to="automated_logging.ModelMirror",
             ),
         ),
         migrations.AlterField(
-            model_name='application',
-            name='name',
+            model_name="application",
+            name="name",
             field=models.CharField(max_length=255, null=True),
         ),
         # end of adding
@@ -703,86 +705,86 @@ class Migration(migrations.Migration):
         # migrations.RenameModel('ApplicationTemp', 'Application'),
         # removing 5.x.x
         migrations.RemoveField(
-            model_name='field',
-            name='model',
+            model_name="field",
+            name="model",
         ),
         migrations.RemoveField(
-            model_name='model',
-            name='application',
+            model_name="model",
+            name="application",
         ),
         migrations.RemoveField(
-            model_name='model',
-            name='information',
+            model_name="model",
+            name="information",
         ),
         migrations.RemoveField(
-            model_name='model',
-            name='modification',
+            model_name="model",
+            name="modification",
         ),
         migrations.RemoveField(
-            model_name='model',
-            name='user',
+            model_name="model",
+            name="user",
         ),
         migrations.RemoveField(
-            model_name='modelchangelog',
-            name='information',
+            model_name="modelchangelog",
+            name="information",
         ),
         migrations.RemoveField(
-            model_name='modelchangelog',
-            name='inserted',
+            model_name="modelchangelog",
+            name="inserted",
         ),
         migrations.RemoveField(
-            model_name='modelchangelog',
-            name='modification',
+            model_name="modelchangelog",
+            name="modification",
         ),
         migrations.RemoveField(
-            model_name='modelchangelog',
-            name='removed',
+            model_name="modelchangelog",
+            name="removed",
         ),
         migrations.RemoveField(
-            model_name='modelmodification',
-            name='currently',
+            model_name="modelmodification",
+            name="currently",
         ),
         migrations.RemoveField(
-            model_name='modelmodification',
-            name='previously',
+            model_name="modelmodification",
+            name="previously",
         ),
         migrations.RemoveField(
-            model_name='modelobject',
-            name='field',
+            model_name="modelobject",
+            name="field",
         ),
         migrations.RemoveField(
-            model_name='modelobject',
-            name='type',
+            model_name="modelobject",
+            name="type",
         ),
         migrations.RemoveField(
-            model_name='request',
-            name='application',
+            model_name="request",
+            name="application",
         ),
         migrations.RemoveField(
-            model_name='request',
-            name='user',
+            model_name="request",
+            name="user",
         ),
         migrations.DeleteModel(
-            name='Unspecified',
+            name="Unspecified",
         ),
         # migrations.DeleteModel(name='Application',),
         migrations.DeleteModel(
-            name='Field',
+            name="Field",
         ),
         migrations.DeleteModel(
-            name='Model',
+            name="Model",
         ),
         migrations.DeleteModel(
-            name='ModelChangelog',
+            name="ModelChangelog",
         ),
         migrations.DeleteModel(
-            name='ModelModification',
+            name="ModelModification",
         ),
         migrations.DeleteModel(
-            name='ModelObject',
+            name="ModelObject",
         ),
         migrations.DeleteModel(
-            name='Request',
+            name="Request",
         ),
         # end of removing
     ]

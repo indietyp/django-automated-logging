@@ -8,11 +8,11 @@ if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
 RequestInformation = NamedTuple(
-    'RequestInformation',
+    "RequestInformation",
     [
-        ('request', HttpRequest),
-        ('response', Optional[HttpResponse]),
-        ('exception', Optional[Exception]),
+        ("request", HttpRequest),
+        ("response", Optional[HttpResponse]),
+        ("exception", Optional[Exception]),
     ],
 )
 
@@ -101,7 +101,7 @@ class AutomatedLoggingMiddleware:
         :return: Optional[RequestInformation]
         """
 
-        if getattr(AutomatedLoggingMiddleware.thread, '__dal__', None):
+        if getattr(AutomatedLoggingMiddleware.thread, "__dal__", None):
             return RequestInformation(*AutomatedLoggingMiddleware.thread.__dal__)
 
         return None
@@ -109,7 +109,7 @@ class AutomatedLoggingMiddleware:
     @staticmethod
     def get_current_user(
         environ: RequestInformation = None,
-    ) -> Optional['AbstractUser']:
+    ) -> Optional["AbstractUser"]:
         """
         Helper staticmethod that returns the current user, taken from
         the current environment.

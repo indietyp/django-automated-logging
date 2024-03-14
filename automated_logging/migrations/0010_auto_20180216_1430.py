@@ -6,44 +6,61 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('automated_logging', '0009_auto_20180216_1006'),
+        ("automated_logging", "0009_auto_20180216_1006"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Field',
+            name="Field",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, primary_key=True, serialize=False
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='ModelStorage',
+            name="ModelStorage",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, primary_key=True, serialize=False
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=255)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.AddField(
-            model_name='field',
-            name='model',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='automated_logging.ModelStorage'),
+            model_name="field",
+            name="model",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="automated_logging.ModelStorage",
+            ),
         ),
         migrations.AddField(
-            model_name='modelobject',
-            name='field',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='automated_logging.Field'),
+            model_name="modelobject",
+            name="field",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="automated_logging.Field",
+            ),
         ),
     ]

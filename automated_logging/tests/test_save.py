@@ -1,4 +1,5 @@
 """ Test the save functionality """
+
 import datetime
 
 from django.http import JsonResponse
@@ -40,22 +41,22 @@ class LoggedOutSaveModificationsTestCase(BaseTestCase):
         self.assertEqual(event.entry.primary_key, str(instance.pk))
         self.assertEqual(event.entry.value, repr(instance))
 
-        self.assertEqual(event.entry.mirror.name, 'OrdinaryTest')
-        self.assertEqual(event.entry.mirror.application.name, 'automated_logging')
+        self.assertEqual(event.entry.mirror.name, "OrdinaryTest")
+        self.assertEqual(event.entry.mirror.application.name, "automated_logging")
 
         modifications = event.modifications.all()
         # pk and random added and modified
         self.assertEqual(modifications.count(), 2)
-        self.assertEqual({m.field.name for m in modifications}, {'random', 'id'})
+        self.assertEqual({m.field.name for m in modifications}, {"random", "id"})
 
-        modification = [m for m in modifications if m.field.name == 'random'][0]
+        modification = [m for m in modifications if m.field.name == "random"][0]
         self.assertEqual(modification.operation, int(Operation.CREATE))
         self.assertEqual(modification.previous, None)
         self.assertEqual(modification.current, value)
         self.assertEqual(modification.event, event)
 
-        self.assertEqual(modification.field.name, 'random')
-        self.assertEqual(modification.field.type, 'CharField')
+        self.assertEqual(modification.field.name, "random")
+        self.assertEqual(modification.field.type, "CharField")
 
         relationships = event.relationships.all()
         self.assertEqual(relationships.count(), 0)
@@ -119,7 +120,7 @@ class LoggedOutSaveModificationsTestCase(BaseTestCase):
 
         instance.random = random1
         instance.random2 = random2
-        instance.save(update_fields=['random2'])
+        instance.save(update_fields=["random2"])
 
         events = ModelEvent.objects.all()
         self.assertEqual(events.count(), 1)
@@ -130,7 +131,7 @@ class LoggedOutSaveModificationsTestCase(BaseTestCase):
 
         modification = modifications[0]
         self.assertEqual(modification.operation, int(Operation.CREATE))
-        self.assertEqual(modification.field.name, 'random2')
+        self.assertEqual(modification.field.name, "random2")
 
     def test_delete(self):
         """
@@ -187,7 +188,7 @@ class LoggedOutSaveModificationsTestCase(BaseTestCase):
 
         self.bypass_request_restrictions()
 
-        settings.AUTOMATED_LOGGING['model']['performance'] = True
+        settings.AUTOMATED_LOGGING["model"]["performance"] = True
         conf.load.cache_clear()
 
         ModelEvent.objects.all().delete()
@@ -210,7 +211,7 @@ class LoggedOutSaveModificationsTestCase(BaseTestCase):
 
         self.bypass_request_restrictions()
 
-        settings.AUTOMATED_LOGGING['model']['snapshot'] = True
+        settings.AUTOMATED_LOGGING["model"]["snapshot"] = True
         conf.load.cache_clear()
 
         instance = OrdinaryTest(random=random_string())
@@ -243,11 +244,11 @@ class LoggedInSaveModificationsTestCase(BaseTestCase):
         return JsonResponse({})
 
     def test_user(self):
-        """ Test if DAL recognizes the user through the middleware """
+        """Test if DAL recognizes the user through the middleware"""
         self.bypass_request_restrictions()
 
-        response = self.request('GET', self.view)
-        self.assertEqual(response.content, b'{}')
+        response = self.request("GET", self.view)
+        self.assertEqual(response.content, b"{}")
 
         events = ModelEvent.objects.all()
         self.assertEqual(events.count(), 1)

@@ -57,17 +57,17 @@ def request_finished_signal(sender, **kwargs) -> None:
     if not settings.request.data.query:
         request.uri = urllib.parse.urlparse(request.uri).path
 
-    if 'request' in settings.request.data.enabled:
+    if "request" in settings.request.data.enabled:
         request_context = RequestContext()
         request_context.content = environ.request.body
         request_context.type = environ.request.content_type
 
         request.request = request_context
 
-    if 'response' in settings.request.data.enabled:
+    if "response" in settings.request.data.enabled:
         response_context = RequestContext()
         response_context.content = environ.response.content
-        response_context.type = environ.response['Content-Type']
+        response_context.type = environ.response["Content-Type"]
 
         request.response = response_context
 
@@ -86,19 +86,19 @@ def request_finished_signal(sender, **kwargs) -> None:
 
     request.application = Application(name=None)
     if function:
-        application = function.__module__.split('.')[0]
+        application = function.__module__.split(".")[0]
         request.application = Application(name=application)
 
     if request_exclusion(request, function):
         return
-    
-    logger_ip = f' from {request.ip}' if get_client_ip and settings.request.ip else ''
+
+    logger_ip = f" from {request.ip}" if get_client_ip and settings.request.ip else ""
     logger.log(
         level,
-        f'[{request.method}] [{request.status}] '
+        f"[{request.method}] [{request.status}] "
         f'{getattr(request, "user", None) or "Anonymous"} '
-        f'at {request.uri}{logger_ip}',
-        extra={'action': 'request', 'event': request},
+        f"at {request.uri}{logger_ip}",
+        extra={"action": "request", "event": request},
     )
 
 
@@ -113,9 +113,9 @@ def request_exception(sender, request, **kwargs):
     :return: -
     """
 
-    status = int(request.status_code) if hasattr(request, 'status_code') else None
-    method = request.method if hasattr(request, 'method') else None
-    reason = request.reason_phrase if hasattr(request, 'reason_phrase') else None
+    status = int(request.status_code) if hasattr(request, "status_code") else None
+    method = request.method if hasattr(request, "method") else None
+    reason = request.reason_phrase if hasattr(request, "reason_phrase") else None
     level = logging.CRITICAL if status and status <= 500 else logging.WARNING
 
     is_wsgi = isinstance(request, WSGIRequest)

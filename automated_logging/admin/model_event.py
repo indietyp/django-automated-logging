@@ -15,75 +15,75 @@ from automated_logging.models import (
 
 
 class ModelValueModificationInline(ReadOnlyTabularInlineMixin):
-    """ inline for all modifications """
+    """inline for all modifications"""
 
     model = ModelValueModification
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.readonly_fields = [*self.readonly_fields, 'get_uuid', 'get_field']
+        self.readonly_fields = [*self.readonly_fields, "get_uuid", "get_field"]
 
     def get_uuid(self, instance):
-        """ make the uuid small """
-        return str(instance.id).split('-')[0]
+        """make the uuid small"""
+        return str(instance.id).split("-")[0]
 
-    get_uuid.short_description = 'UUID'
+    get_uuid.short_description = "UUID"
 
     def get_field(self, instance):
-        """ show the field name """
+        """show the field name"""
         return instance.field.name
 
-    get_field.short_description = 'Field'
+    get_field.short_description = "Field"
 
-    fields = ('get_uuid', 'operation', 'get_field', 'previous', 'current')
+    fields = ("get_uuid", "operation", "get_field", "previous", "current")
     can_delete = False
 
-    verbose_name = 'Modification'
-    verbose_name_plural = 'Modifications'
+    verbose_name = "Modification"
+    verbose_name_plural = "Modifications"
 
 
 class ModelRelationshipModificationInline(ReadOnlyTabularInlineMixin):
-    """ inline for all relationship modifications """
+    """inline for all relationship modifications"""
 
     model = ModelRelationshipModification
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.readonly_fields = [*self.readonly_fields, 'get_uuid', 'get_field']
+        self.readonly_fields = [*self.readonly_fields, "get_uuid", "get_field"]
 
     def get_uuid(self, instance):
-        """ make the uuid small """
-        return str(instance.id).split('-')[0]
+        """make the uuid small"""
+        return str(instance.id).split("-")[0]
 
-    get_uuid.short_description = 'UUID'
+    get_uuid.short_description = "UUID"
 
     def get_field(self, instance):
-        """ show the field name """
+        """show the field name"""
         return instance.field.name
 
-    get_field.short_description = 'Field'
+    get_field.short_description = "Field"
 
-    fields = ('get_uuid', 'operation', 'get_field', 'entry')
+    fields = ("get_uuid", "operation", "get_field", "entry")
     can_delete = False
 
-    verbose_name = 'Relationship'
-    verbose_name_plural = 'Relationships'
+    verbose_name = "Relationship"
+    verbose_name_plural = "Relationships"
 
 
 @register(ModelEvent)
 class ModelEventAdmin(ReadOnlyAdminMixin):
-    """ admin page specification for ModelEvent """
+    """admin page specification for ModelEvent"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.readonly_fields = [
             *self.readonly_fields,
-            'get_application',
-            'get_user',
-            'get_model_link',
+            "get_application",
+            "get_user",
+            "get_model_link",
         ]
 
     def get_modifications(self, instance):
@@ -94,30 +94,30 @@ class ModelEventAdmin(ReadOnlyAdminMixin):
         https://github.com/django/django/tree/master/django/contrib/admin/static/admin/img
         """
         colors = {
-            Operation.CREATE: '#70bf2b',
-            Operation.MODIFY: '#efb80b',
-            Operation.DELETE: '#dd4646',
+            Operation.CREATE: "#70bf2b",
+            Operation.MODIFY: "#efb80b",
+            Operation.DELETE: "#dd4646",
         }
         return format_html(
-            ', '.join(
+            ", ".join(
                 [
                     *[
                         f'<span style="color: {colors[Operation(m.operation)]};">'
-                        f'{m.short()}'
-                        f'</span>'
+                        f"{m.short()}"
+                        f"</span>"
                         for m in instance.modifications.all()
                     ],
                     *[
                         f'<span style="color: {colors[Operation(r.operation)]};">'
-                        f'{r.medium()[0]}'
-                        f'</span>[{r.medium()[1]}]'
+                        f"{r.medium()[0]}"
+                        f"</span>[{r.medium()[1]}]"
                         for r in instance.relationships.all()
                     ],
                 ],
             )
         )
 
-    get_modifications.short_description = 'Modifications'
+    get_modifications.short_description = "Modifications"
 
     def get_model(self, instance):
         """
@@ -126,13 +126,13 @@ class ModelEventAdmin(ReadOnlyAdminMixin):
         """
         return instance.entry.short()
 
-    get_model.short_description = 'Model'
+    get_model.short_description = "Model"
 
     def get_model_link(self, instance):
-        """ get the model with a link to the entry """
+        """get the model with a link to the entry"""
         return self.model_admin_url(instance.entry)
 
-    get_model_link.short_description = 'Model'
+    get_model_link.short_description = "Model"
 
     def get_application(self, instance):
         """
@@ -142,53 +142,53 @@ class ModelEventAdmin(ReadOnlyAdminMixin):
         """
         return instance.entry.mirror.application
 
-    get_application.short_description = 'Application'
+    get_application.short_description = "Application"
 
     def get_id(self, instance):
-        """ shorten the id to the first 8 digits """
-        return str(instance.id).split('-')[0]
+        """shorten the id to the first 8 digits"""
+        return str(instance.id).split("-")[0]
 
-    get_id.short_description = 'UUID'
+    get_id.short_description = "UUID"
 
     def get_user(self, instance):
-        """ return the user with a link """
+        """return the user with a link"""
         return self.model_admin_url(instance.user) if instance.user else None
 
-    get_user.short_description = 'User'
+    get_user.short_description = "User"
 
     list_display = (
-        'get_id',
-        'updated_at',
-        'user',
-        'get_application',
-        'get_model',
-        'get_modifications',
+        "get_id",
+        "updated_at",
+        "user",
+        "get_application",
+        "get_model",
+        "get_modifications",
     )
 
     list_filter = (
-        'updated_at',
-        ('user', RelatedOnlyFieldListFilter),
-        ('entry__mirror__application', RelatedOnlyFieldListFilter),
-        ('entry__mirror', RelatedOnlyFieldListFilter),
+        "updated_at",
+        ("user", RelatedOnlyFieldListFilter),
+        ("entry__mirror__application", RelatedOnlyFieldListFilter),
+        ("entry__mirror", RelatedOnlyFieldListFilter),
     )
 
-    date_hierarchy = 'updated_at'
-    ordering = ('-updated_at',)
+    date_hierarchy = "updated_at"
+    ordering = ("-updated_at",)
 
     fieldsets = (
         (
-            'Information',
+            "Information",
             {
-                'fields': (
-                    'id',
-                    'get_user',
-                    'updated_at',
-                    'get_application',
-                    'get_model_link',
+                "fields": (
+                    "id",
+                    "get_user",
+                    "updated_at",
+                    "get_application",
+                    "get_model_link",
                 )
             },
         ),
-        ('Introspection', {'fields': ('performance', 'snapshot')}),
+        ("Introspection", {"fields": ("performance", "snapshot")}),
     )
     inlines = [ModelValueModificationInline, ModelRelationshipModificationInline]
 
