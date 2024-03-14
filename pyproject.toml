@@ -28,7 +28,7 @@ classifiers = [
 packages = [{include = "automated_logging"}]
 
 [tool.poetry.dependencies]
-python = ">=3.8, <4"
+python = ">=3.10, <4"
 django = ">=3.2, <6"
 marshmallow = "^3.21.1"
 django-picklefield = "^3.1"
