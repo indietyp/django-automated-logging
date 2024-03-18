@@ -1,3 +1,5 @@
+
+
 # 6.2.0
 
 * **Changed:** Dependencies have been upgraded and newer django versions have been added 

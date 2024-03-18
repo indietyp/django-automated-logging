@@ -27,12 +27,14 @@ How to install?
 `pip install django-automated-logging` or `poetry add django-automated-logging`
 
 ### What is the purpose?
+
 The goal of DAL is to provide an easy, accessible and DRY way to log the inner working of you applications.
 Ultimately giving you the chance to easily see what is happening without excessive manual print/logging statements.
 
 The application uses minimal requirements and is performant.
 
 ### How does it work?
+
 The application facilitates the built-in logging mechanic
 by providing a custom handler, that just needs to be added to the `LOGGING` configuration.
 
@@ -85,6 +87,14 @@ Initial Configuration is via your projects `settings.py`
 5. execute: `python manage.py migrate automated_logging`
 
 `LOGGING` configuration details are just recommendations.
+
+### Migrations
+
+When migrating from 5.x.x to 6.x.x the logs are converted between the two versions.
+This can take a while, and depending on the size of your database might lead to `'Server has gone away’` errors on
+MySQL.
+You can increase the `max_allowed_packet` variable in your MySQL configuration to fix this, or
+set `DAL_SKIP_CONVERSION = true` as an environment variable to skip the conversion.
 
 ### Configuration
 
@@ -150,9 +160,11 @@ from automated_logging.helpers import namedtuple2dict
 pprint(namedtuple2dict(default))
 ```
 
-**Recommendation:** include the `globals` application defaults as those modules can be particularly verbose or be duplicates.
+**Recommendation:** include the `globals` application defaults as those modules can be particularly verbose or be
+duplicates.
 
-There are *three* different independent modules available `request` (for request logging), `unspecified` (for general logging messages), and `models` (for model changes).
+There are *three* different independent modules available `request` (for request logging), `unspecified` (for general
+logging messages), and `models` (for model changes).
 They can be enabled and disabled by including them in the `modules` configuration.
 
 The `loglevel` setting indicates the severity for the logging messages sent from the module.
@@ -162,7 +174,8 @@ The `loglevel` setting indicates the severity for the logging messages sent from
 
 *New in 6.x.x:* Saving can be threaded by `thread: True` for the handler settings. **This is highly experimental**
 
-*New in 6.x.x:* every field in `exclude` can be either be a `glob` (prefixing the string with `gl:`), a `regex` (prefixing the string with `re:`) or plain (prefixing the string with `pl:`). The default is `glob`.
+*New in 6.x.x:* every field in `exclude` can be either be a `glob` (prefixing the string with `gl:`), a `regex` (
+prefixing the string with `re:`) or plain (prefixing the string with `pl:`). The default is `glob`.
 
 ### Decorators
 
@@ -171,10 +184,12 @@ You can explicitly exclude or include views/models, by using the new decorators.
 ```python
 from automated_logging.decorators import include_view, include_model, exclude_view, exclude_model
 
+
 @include_view(methods=None)
 @exclude_view(methods=[])
 def view(request):
     pass
+
 
 @include_model(operations=None, fields=None)
 @exclude_model(operations=[], fields=[])
@@ -182,14 +197,17 @@ class ExampleModel:
     pass
 ```
 
-`include` *always* takes precedence over `exclude`, if you use multiple `include` or `exclude` instead of overwriting they will *update/extend* the previous definition.
+`include` *always* takes precedence over `exclude`, if you use multiple `include` or `exclude` instead of overwriting
+they will *update/extend* the previous definition.
 
-`operations` can be either `create`, `modify`, `delete`. `fields` is a list model specific fields to be included/excluded.
+`operations` can be either `create`, `modify`, `delete`. `fields` is a list model specific fields to be
+included/excluded.
 `methods` is a list methods to be included/excluded.
 
 ### Class-Based Configuration
 
-Class-Based Configuration is done over a specific meta class `LoggingIgnore`. Decorators take precedence over class-based configuration, but class-based configuration takes precedence over AUTOMATED_LOGGING configuration.
+Class-Based Configuration is done over a specific meta class `LoggingIgnore`. Decorators take precedence over
+class-based configuration, but class-based configuration takes precedence over AUTOMATED_LOGGING configuration.
 
 ```python
 class ExampleModel:
@@ -199,11 +217,13 @@ class ExampleModel:
         operations = []
 ```
 
-as described above `operations` and `fields` work the same way. `complete = True` means that a model is excluded no matter what.
+as described above `operations` and `fields` work the same way. `complete = True` means that a model is excluded no
+matter what.
 
 ## Changelog
 
 ### Version 6.0.0
+
 - **Added:** ``batch`` settings to the handler
 - **Added:** decorators
 - **Added:** class-based configuration
@@ -220,14 +240,15 @@ as described above `operations` and `fields` work the same way. `complete = True
 - **Moved:** `max_age` is now part of the `settings.py` configuration.
 
 ### Version 5.0.0
+
 - **Added:** ``maxage`` handler setting to automatically remove database entries after a certain amount of time.
 - **Added:** query string in requests can now be enabled/disabled (are now disabled by default)
 - **Fixed:** Value and URI could be longer than 255 characters. DAL would throw an exception. This is fixed.
 
-
 ## Roadmap
 
 ### Version 6.1.x
+
 - [ ] archive options
 - [ ] decorators greater flexibility
 - [ ] wiki -> documentation
@@ -235,7 +256,9 @@ as described above `operations` and `fields` work the same way. `complete = True
 - [ ] and more!
 
 ### Version 7.x.x
+
 - [ ] implementation of a git like versioning interface
 
 ### Version 8.x.x
+
 - [ ] temporary world domination
