@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-automated-logging"
-version = "6.2.1"
+version = "6.2.2"
 description = "Django Database Based Automated Logging - finally solved and done in a proper way."
 authors = ["Bilal Mahmoud <bilalmahmoud@posteo.net>"]
 license = "MIT"

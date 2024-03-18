@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def convert(apps, schema_editor):
     """convert from 5.x.x to 6.x.x"""
-    if os.environ.get("DAL_SKIP_CONVERSION").lower() == "true":
+    if os.environ.get("DAL_SKIP_CONVERSION", "").lower() == "true":
         logger.info("Skipping conversion")
         return
 
